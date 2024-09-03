@@ -34,6 +34,7 @@ import com.github.standobyte.jojo.util.mc.reflection.ClientReflection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.IVertexBuilder;
 
 import it.unimi.dsi.fastutil.objects.ObjectList;
 import net.minecraft.client.Minecraft;
@@ -48,6 +49,7 @@ import net.minecraft.util.math.vector.Vector3d;
 
 
 public class HumanoidStandModel<T extends StandEntity> extends StandEntityModel<T> {
+    protected ModelRenderer root;
     protected ModelRenderer head;
     protected ModelRenderer body;
     protected ModelRenderer upperPart;
@@ -176,6 +178,13 @@ public class HumanoidStandModel<T extends StandEntity> extends StandEntityModel<
     public void afterInit() {
         super.afterInit();
         
+        if (root == null) {
+            root = new ModelRenderer(this);
+            root.setPos(0.0F, 0.0F, 0.0F);
+            root.addChild(head);
+            root.addChild(body);
+        }
+        
         namedModelParts.put("head", head);
         namedModelParts.put("body", body);
         namedModelParts.put("upperPart", upperPart);
@@ -255,6 +264,17 @@ public class HumanoidStandModel<T extends StandEntity> extends StandEntityModel<
             leftLeg.visible = false;
             rightLeg.visible = false;
             break;
+        }
+    }
+
+    @Override
+    public void renderToBuffer(MatrixStack pMatrixStack, IVertexBuilder pBuffer, int pPackedLight, 
+            int pPackedOverlay, float pRed, float pGreen, float pBlue, float pAlpha) {
+        if (root.visible) {
+            pMatrixStack.pushPose();
+            root.translateAndRotate(pMatrixStack);
+            super.renderToBuffer(pMatrixStack, pBuffer, pPackedLight, pPackedOverlay, pRed, pGreen, pBlue, pAlpha);
+            pMatrixStack.popPose();
         }
     }
 

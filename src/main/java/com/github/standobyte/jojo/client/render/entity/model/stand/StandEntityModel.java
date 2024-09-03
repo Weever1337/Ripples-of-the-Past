@@ -16,6 +16,9 @@ import org.apache.commons.lang3.mutable.MutableFloat;
 import com.github.standobyte.jojo.action.stand.StandEntityAction.Phase;
 import com.github.standobyte.jojo.client.ClientUtil;
 import com.github.standobyte.jojo.client.render.entity.model.animnew.INamedModelParts;
+import com.github.standobyte.jojo.client.render.entity.model.animnew.stand.IStandAnimator;
+import com.github.standobyte.jojo.client.render.entity.model.animnew.stand.LegacyStandAnimator;
+import com.github.standobyte.jojo.client.render.entity.model.stand.StandModelRegistry.StandModelRegistryObj;
 import com.github.standobyte.jojo.client.render.entity.pose.IModelPose;
 import com.github.standobyte.jojo.client.render.entity.pose.ModelPose;
 import com.github.standobyte.jojo.client.render.entity.pose.ModelPose.ModelAnim;
@@ -44,8 +47,10 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.vector.Vector3f;
 
 public abstract class StandEntityModel<T extends StandEntity> extends AgeableModel<T> implements IHasArm, INamedModelParts {
-    ResourceLocation modelId = null;
+    ResourceLocation modelId;
+    StandModelRegistryObj registryObj;
     protected Map<String, ModelRenderer> namedModelParts = new HashMap<>();
+    private IStandAnimator legacyStandAnimHandler;
     
     protected VisibilityMode visibilityMode = VisibilityMode.ALL;
     protected float yRotRad;
@@ -55,13 +60,14 @@ public abstract class StandEntityModel<T extends StandEntity> extends AgeableMod
 
     private boolean initialized = false;
     public float idleLoopTickStamp = 0;
-    private ModelPose<T> poseReset;
-    protected IModelPose<T> idlePose;
-    protected IModelPose<T> idleLoop;
-    private List<IModelPose<T>> summonPoses;
-    protected final Map<StandPose, IActionAnimation<T>> actionAnim = new HashMap<>();
+    
+    @Deprecated private ModelPose<T> poseReset;
+    @Deprecated protected IModelPose<T> idlePose;
+    @Deprecated protected IModelPose<T> idleLoop;
+    @Deprecated private List<IModelPose<T>> summonPoses;
+    @Deprecated protected final Map<StandPose, IActionAnimation<T>> actionAnim = new HashMap<>();
     @Nullable
-    private IActionAnimation<T> currentActionAnim = null;
+    @Deprecated private IActionAnimation<T> currentActionAnim = null;
     
     private Map<ModelRenderer, MutableFloat> secondXRotMap = new HashMap<>();
     
@@ -88,6 +94,7 @@ public abstract class StandEntityModel<T extends StandEntity> extends AgeableMod
             initOpposites();
             initPoses();
             initActionPoses();
+            legacyStandAnimHandler = new LegacyStandAnimator<>(poseReset, idlePose, idleLoop, summonPoses, actionAnim);
             initialized = true;
         }
     }
@@ -145,7 +152,7 @@ public abstract class StandEntityModel<T extends StandEntity> extends AgeableMod
 //        initActionPoses();
 
         StandPose pose = entity.getStandPose();
-        if (pose == StandPose.SUMMON && (ticks > SUMMON_ANIMATION_LENGTH || entity.isArmsOnlyMode())) {
+        if (pose == StandPose.SUMMON && entity.isArmsOnlyMode()) {
             entity.setStandPose(StandPose.IDLE);
             pose = StandPose.IDLE;
         }
@@ -163,49 +170,40 @@ public abstract class StandEntityModel<T extends StandEntity> extends AgeableMod
     
     protected void poseStand(T entity, float ticks, float yRotOffsetRad, float xRotRad, 
             StandPose standPose, Optional<Phase> actionPhase, float phaseCompletion, HandSide swingingHand) {
-        
-//        Animation newIdleAnim = CustomResources.getStandModelAnimations().getAnim(getModelId(), "idle");
-//        if (newIdleAnim != null) {
-//            StandAnimator.animate(this, newIdleAnim, ticks - idleLoopTickStamp, 1);
-//        }
-        
-        legacyPoseStand(entity, ticks, yRotOffsetRad, xRotRad, standPose, actionPhase, phaseCompletion, swingingHand);
+        IStandAnimator standAnimator = getAnimator();
+        if (standAnimator != null && standAnimator.poseStand(entity, this, ticks, yRotOffsetRad, xRotRad, 
+                standPose, actionPhase, phaseCompletion, swingingHand)) {
+            return;
+        }
+    }
+    
+    protected IStandAnimator getAnimator() {
+        if (registryObj != null) {
+            IStandAnimator anims = registryObj.getGeckoAnims();
+            if (anims != null) {
+                return anims;
+            }
+        }
+        return legacyStandAnimHandler;
     }
     
     public ModelRenderer getModelPart(String name) {
         return namedModelParts.get(name);
     }
     
-    
-    
-    protected void legacyPoseStand(T entity, float ticks, float yRotOffsetRad, float xRotRad, 
-            StandPose standPose, Optional<Phase> actionPhase, float phaseCompletion, HandSide swingingHand) {
-        if (actionAnim.containsKey(standPose)) {
-            idlePose.poseModel(1.0F, entity, ticks, yRotOffsetRad, xRotRad, swingingHand);
-            onPose(entity, ticks);
-            
-            currentActionAnim = getActionAnim(entity, standPose);
-            if (currentActionAnim != null) {
-                currentActionAnim.animate(actionPhase.get(), phaseCompletion, 
-                        entity, ticks, yRotOffsetRad, xRotRad, swingingHand);
-            }
-        }
-        else if (standPose == StandPose.SUMMON && summonPoses.size() > 0) {
-            poseSummon(entity, ticks, yRotOffsetRad, xRotRad, swingingHand);
-        }
-        else {
-            poseIdleLoop(entity, ticks, yRotOffsetRad, xRotRad, swingingHand);
-        }
-    }
 
+    
+    @Deprecated
+    public IActionAnimation<T> dammit(T entity, StandPose poseType) {
+        return getActionAnim(entity, poseType);
+    }
+    
+    @Deprecated
     protected IActionAnimation<T> getActionAnim(T entity, StandPose poseType) {
         return actionAnim.get(poseType);
     }
 
-    private void onPose(T entity, float ticks) {
-        idleLoopTickStamp = ticks;
-    }
-
+    @Deprecated
     protected final ModelAnim<T> HEAD_ROTATION = (rotationAmount, entity, ticks, yRotOffsetRad, xRotRad) -> {
         headParts().forEach(part -> {
             part.yRot = MathUtil.rotLerpRad(rotationAmount, part.yRot, yRotOffsetRad);
@@ -213,27 +211,14 @@ public abstract class StandEntityModel<T extends StandEntity> extends AgeableMod
             part.zRot = 0;
         });
     };
-    
-    protected void poseSummon(T entity, float ticks, float yRotOffsetRad, float xRotRad, HandSide swingingHand) {
-        resetPose(entity);
-        onPose(entity, ticks);
-        
-        summonPoses.get(entity.getSummonPoseRandomByte() % summonPoses.size())
-        .poseModel(1.0F, entity, ticks, yRotOffsetRad, xRotRad, swingingHand);
 
-        idlePose.poseModel(summonPoseRotation(ticks), entity, ticks, yRotOffsetRad, xRotRad, swingingHand);
-    }
-    
-    private static float summonPoseRotation(float ticks) {
-        return MathHelper.clamp(
-                (ticks - SUMMON_ANIMATION_LENGTH) / (SUMMON_ANIMATION_LENGTH * (1 - SUMMON_ANIMATION_POSE_REVERSE_POINT)) + 1, 
-                0F, 1F);
-    }
-    
-    public void poseIdleLoop(T entity, float ticks, float yRotOffsetRad, float xRotRad, HandSide swingingHand) {
-        idleLoop.poseModel(ticks - idleLoopTickStamp, entity, ticks, yRotOffsetRad, xRotRad, swingingHand);
-    }
-    
+    @Deprecated
+    protected void poseSummon(T entity, float ticks, float yRotOffsetRad, float xRotRad, HandSide swingingHand) {}
+
+    @Deprecated
+    public void poseIdleLoop(T entity, float ticks, float yRotOffsetRad, float xRotRad, HandSide swingingHand) {}
+
+    @Deprecated
     protected void initPoses() {
         if (poseReset == null)
             poseReset = initPoseReset();
@@ -248,35 +233,60 @@ public abstract class StandEntityModel<T extends StandEntity> extends AgeableMod
             summonPoses = initSummonPoses();
     }
 
+    @Deprecated
     protected void initActionPoses() {}
 
-
-
+    @Deprecated
     protected abstract ModelPose<T> initPoseReset();
 
+    @Deprecated
     protected IModelPose<T> initBaseIdlePose() {
         return initIdlePose().setAdditionalAnim(HEAD_ROTATION);
     }
 
+    @Deprecated
     protected ModelPose<T> initIdlePose() {
         return initPoseReset();
     }
 
+    @Deprecated
     protected IModelPose<T> initIdlePose2Loop() {
         return initIdlePose();
     }
 
-    private static final float SUMMON_ANIMATION_LENGTH = 20.0F;
-    private static final float SUMMON_ANIMATION_POSE_REVERSE_POINT = 0.75F;
+    @Deprecated
     protected List<IModelPose<T>> initSummonPoses() {
         return Arrays.stream(initSummonPoseRotations())
                 .map(rotationAngles -> new ModelPose<T>(rotationAngles))
                 .collect(Collectors.toCollection(ArrayList::new));
     }
 
+    @Deprecated
     protected RotationAngle[][] initSummonPoseRotations() {
         return new RotationAngle[0][0];
     }
+
+    @Deprecated
+    public void resetPose(T entity) {
+    }
+    
+    
+    public void setStandPose(StandPose pose, StandEntity entity) {
+        entity.setStandPose(pose);
+        this.standPose = pose;
+    }
+    
+    @Deprecated
+    public void setCurrentModelAnim(IActionAnimation<T> anim) {
+        this.currentActionAnim = anim;
+    }
+    
+    @Deprecated
+    public void onPose(T entity, float ticks) {
+        idleLoopTickStamp = ticks;
+    }
+    
+    
     
     @Deprecated
     public void renderFirstPersonArms(HandSide handSide, MatrixStack matrixStack, 
@@ -345,10 +355,6 @@ public abstract class StandEntityModel<T extends StandEntity> extends AgeableMod
         BarrageSwingsHolder<T, M> barrageSwings = (BarrageSwingsHolder<T, M>) entity.getBarrageSwingsHolder();
         barrageSwings.renderBarrageSwings(thisModel, entity, matrixStack, buffer, 
                 packedLight, packedOverlay, yRotRad, xRotRad, red, green, blue, alpha);
-    }
-
-    public void resetPose(T entity) {
-        poseReset.poseModel(1, entity, 0, 0, 0, entity.getPunchingHand());
     }
     
     protected void initOpposites() {}

@@ -17,7 +17,9 @@ import org.apache.logging.log4j.Logger;
 import com.github.standobyte.jojo.JojoMod;
 import com.github.standobyte.jojo.client.render.entity.model.animnew.ParseAnims;
 import com.github.standobyte.jojo.client.render.entity.model.animnew.mojang.Animation;
-import com.github.standobyte.jojo.client.render.entity.model.animnew.stand.StandAnimator;
+import com.github.standobyte.jojo.client.render.entity.model.animnew.stand.GeckoStandAnimator;
+import com.github.standobyte.jojo.client.render.entity.model.stand.StandModelRegistry;
+import com.github.standobyte.jojo.client.render.entity.model.stand.StandModelRegistry.StandModelRegistryObj;
 import com.google.common.collect.Maps;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
@@ -34,7 +36,7 @@ import net.minecraft.util.ResourceLocation;
 public class GeckoAnimLoader extends ReloadListener<Map<ResourceLocation, JsonElement>> {
     private static final Logger LOGGER = LogManager.getLogger();
     private final Gson gson;
-    private final Map<ResourceLocation, StandAnimator> loadedAnims = new HashMap<>();
+    private final Map<ResourceLocation, GeckoStandAnimator> loadedAnims = new HashMap<>();
     
     public GeckoAnimLoader(Gson gson) {
         this.gson = gson;
@@ -78,10 +80,11 @@ public class GeckoAnimLoader extends ReloadListener<Map<ResourceLocation, JsonEl
     @Override
     protected void apply(Map<ResourceLocation, JsonElement> pObject, IResourceManager pResourceManager, IProfiler pProfiler) {
         loadedAnims.clear();
+        StandModelRegistry.values().forEach(StandModelRegistryObj::beforeGeckoAnimReload);
         
         for (Map.Entry<ResourceLocation, JsonElement> rawModelEntry : pObject.entrySet()) {
             JsonObject modelAnimsJson = rawModelEntry.getValue().getAsJsonObject().getAsJsonObject("animations");
-            StandAnimator singleModelAnims = new StandAnimator();
+            GeckoStandAnimator singleModelAnims = new GeckoStandAnimator();
             for (Map.Entry<String, JsonElement> animJson : modelAnimsJson.entrySet()) {
                 try {
                     Animation animation = ParseAnims.parseAnim(animJson.getValue().getAsJsonObject());
@@ -92,14 +95,21 @@ public class GeckoAnimLoader extends ReloadListener<Map<ResourceLocation, JsonEl
                     e.printStackTrace();
                 }
             }
-            loadedAnims.put(rawModelEntry.getKey(), singleModelAnims);
+            
+            ResourceLocation key = rawModelEntry.getKey();
+            loadedAnims.put(key, singleModelAnims);
+            StandModelRegistryObj model = StandModelRegistry.getRegisteredModel(key);
+            singleModelAnims.onLoad();
+            if (model != null) {
+                model.onGeckoAnimLoaded(singleModelAnims);
+            }
         }
     }
     
     
     @Nullable
     public Animation getAnim(ResourceLocation modelId, String animName) {
-        StandAnimator modelAnims = loadedAnims.get(modelId);
+        GeckoStandAnimator modelAnims = loadedAnims.get(modelId);
         return modelAnims != null ? modelAnims.getNamedAnim(animName) : null;
     }
     

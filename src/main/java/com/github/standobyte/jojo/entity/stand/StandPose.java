@@ -5,7 +5,7 @@ public class StandPose {
     public final boolean armsObstructView;
     
     public StandPose(String name, boolean armsObstructView) {
-        this.name = name;
+        this.name = name.toLowerCase();
         this.armsObstructView = armsObstructView;
     }
     
@@ -13,8 +13,7 @@ public class StandPose {
         this(name, false);
     }
     
-    @Override
-    public String toString() {
+    public String getName() {
         return name;
     }
     
