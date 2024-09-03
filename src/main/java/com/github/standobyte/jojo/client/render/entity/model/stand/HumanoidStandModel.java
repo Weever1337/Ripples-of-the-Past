@@ -680,12 +680,12 @@ public class HumanoidStandModel<T extends StandEntity> extends StandEntityModel<
     }
 
     @Override
-    protected Iterable<ModelRenderer> headParts() {
+    public Iterable<ModelRenderer> headParts() {
         return ImmutableList.of(head);
     }
 
     @Override
-    protected Iterable<ModelRenderer> bodyParts() {
+    public Iterable<ModelRenderer> bodyParts() {
         return ImmutableList.of(body);
     }
     

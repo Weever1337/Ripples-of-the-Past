@@ -3,6 +3,7 @@ package com.github.standobyte.jojo.client.render.entity.model.animnew;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.IntFunction;
 import java.util.stream.StreamSupport;
 
 import com.github.standobyte.jojo.client.render.entity.model.animnew.mojang.Animation;
@@ -18,10 +19,9 @@ import it.unimi.dsi.fastutil.floats.Float2ObjectArrayMap;
 import it.unimi.dsi.fastutil.floats.Float2ObjectMap;
 import net.minecraft.util.math.vector.Vector3f;
 
-public class ParseAnims {
+public class ParseGeckoAnims {
     
-    
-    
+    // "geckolib_format_version": 2
     public static Animation parseAnim(JsonObject animJson) {
         float lengthSecs = animJson.get("animation_length").getAsFloat();
         Animation.Builder builder = Animation.Builder.create(lengthSecs);
@@ -84,12 +84,16 @@ public class ParseAnims {
                 timeline.put(time, new Keyframe(time, rotVec, lerp));
             }
             
-            Keyframe[] keyframes = timeline.float2ObjectEntrySet().stream()
-                    .sorted(Comparator.comparingDouble(e -> e.getFloatKey()))
-                    .map(e -> e.getValue())
-                    .toArray(Keyframe[]::new);
+            Keyframe[] keyframes = keyframesToArray(timeline, Keyframe[]::new);
             anim.addBoneAnimation(boneName, new Transformation(target, keyframes));
         }
+    }
+    
+    public static <T> T[] keyframesToArray(Float2ObjectMap<T> parsedTimeline, IntFunction<T[]> arrayConstructor) {
+        return parsedTimeline.float2ObjectEntrySet().stream()
+                .sorted(Comparator.comparingDouble(e -> e.getFloatKey()))
+                .map(e -> e.getValue())
+                .toArray(arrayConstructor);
     }
     
     private static Vector3f fromJson(JsonArray array) {

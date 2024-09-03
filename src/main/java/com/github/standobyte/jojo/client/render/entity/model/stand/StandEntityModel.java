@@ -16,6 +16,7 @@ import org.apache.commons.lang3.mutable.MutableFloat;
 import com.github.standobyte.jojo.action.stand.StandEntityAction.Phase;
 import com.github.standobyte.jojo.client.ClientUtil;
 import com.github.standobyte.jojo.client.render.entity.model.animnew.INamedModelParts;
+import com.github.standobyte.jojo.client.render.entity.model.animnew.stand.GeckoStandAnimator;
 import com.github.standobyte.jojo.client.render.entity.model.animnew.stand.IStandAnimator;
 import com.github.standobyte.jojo.client.render.entity.model.animnew.stand.LegacyStandAnimator;
 import com.github.standobyte.jojo.client.render.entity.model.stand.StandModelRegistry.StandModelRegistryObj;
@@ -175,6 +176,11 @@ public abstract class StandEntityModel<T extends StandEntity> extends AgeableMod
                 standPose, actionPhase, phaseCompletion, swingingHand)) {
             return;
         }
+        
+        if (standAnimator != legacyStandAnimHandler && !GeckoStandAnimator.IS_TESTING_GECKO) {
+            legacyStandAnimHandler.poseStand(entity, this, ticks, yRotOffsetRad, xRotRad, 
+                    standPose, actionPhase, phaseCompletion, swingingHand);
+        }
     }
     
     protected IStandAnimator getAnimator() {
@@ -190,8 +196,23 @@ public abstract class StandEntityModel<T extends StandEntity> extends AgeableMod
     public ModelRenderer getModelPart(String name) {
         return namedModelParts.get(name);
     }
-    
 
+
+    /**
+     * For addon devs - if you ever override the headParts() or bodyParts() methods in your model, 
+     * make these methods public, so that I can safely remove this cursed thing below in the future
+     * without breaking your addon.
+     */
+    @Deprecated
+    public Iterable<ModelRenderer> headPartsPublic() {
+        return headParts();
+    }
+
+    @Deprecated
+    public Iterable<ModelRenderer> bodyPartsPublic() {
+        return bodyParts();
+    }
+    
     
     @Deprecated
     public IActionAnimation<T> dammit(T entity, StandPose poseType) {

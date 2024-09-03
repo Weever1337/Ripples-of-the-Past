@@ -20,15 +20,16 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.vector.Vector3f;
 
 public class GeckoStandAnimator implements IStandAnimator {
-    private final Map<String, Animation> namedAnimations = new HashMap<>();
-    private final List<Animation> summonAnims = new ArrayList<>();
-    private Animation idleAnim;
+    public static boolean IS_TESTING_GECKO = true; // if false, the legacy code animator is used as a fallback
+    private final Map<String, StandActionAnimation> namedAnimations = new HashMap<>();
+    private final List<StandActionAnimation> summonAnims = new ArrayList<>();
+    private StandActionAnimation idleAnim;
     
     public GeckoStandAnimator() {}
     
     
-    public void putNamedAnim(String name, Animation anim) {
-        Animation prevAnim = namedAnimations.put(name, anim);
+    public void putNamedAnim(String name, StandActionAnimation anim) {
+        StandActionAnimation prevAnim = namedAnimations.put(name, anim);
         if (name.startsWith("summon")) {
             if (prevAnim != null) {
                 summonAnims.remove(prevAnim);
@@ -40,7 +41,7 @@ public class GeckoStandAnimator implements IStandAnimator {
         }
     }
 
-    public Animation getNamedAnim(String name) {
+    public StandActionAnimation getNamedAnim(String name) {
         return namedAnimations.get(name);
     }
     
@@ -52,53 +53,65 @@ public class GeckoStandAnimator implements IStandAnimator {
     public boolean poseStand(StandEntity entity, StandEntityModel<?> model, float ticks, float yRotOffsetRad, float xRotRad, 
             StandPose standPose, Optional<Phase> actionPhase, float phaseCompletion, HandSide swingingHand) {
         if (standPose == StandPose.SUMMON && summonAnims.size() > 0) {
-            Animation summonAnim = summonAnims.get(entity.getSummonPoseRandomByte() % summonAnims.size());
+            StandActionAnimation summonAnim = summonAnims.get(entity.getSummonPoseRandomByte() % summonAnims.size());
 
-            if (ticks > summonAnim.lengthInSeconds() * 20) {
+            if (ticks > summonAnim.anim.lengthInSeconds() * 20) {
                 standPose = StandPose.IDLE;
                 model.setStandPose(standPose, entity);
             }
 
             model.idleLoopTickStamp = ticks;
-            animate(model, summonAnim, ticks, 1);
-            return true;
+            return summonAnim.poseStand(entity, model, ticks, yRotOffsetRad, xRotRad, 
+                    standPose, actionPhase, phaseCompletion, swingingHand);
         }
         
-        if (standPose != null && standPose != StandPose.IDLE && namedAnimations.containsKey(standPose.getName())) {
+        if (standPose != null && standPose != StandPose.IDLE) {
             model.idleLoopTickStamp = ticks;
             
-            Animation anim = namedAnimations.get(standPose.getName());
-            if (anim != null) {
-                animate(model, anim, ticks, 1);
-                return true;
+            if (namedAnimations.containsKey(standPose.getName())) {
+                StandActionAnimation anim = namedAnimations.get(standPose.getName());
+                if (anim != null) {
+                    return anim.poseStand(entity, model, ticks, yRotOffsetRad, xRotRad, 
+                            standPose, actionPhase, phaseCompletion, swingingHand);
+                }
             }
+            return false;
         }
         
         if (idleAnim != null) {
-            animate(model, idleAnim, ticks, 1);
-            return true;
+            return idleAnim.poseStand(entity, model, ticks, yRotOffsetRad, xRotRad, 
+                    standPose, actionPhase, phaseCompletion, swingingHand);
         }
         
         return false;
     }
     
     
+    public static float ticksToSecs(Animation animation, float ticks) {
+        return animation.looping() ? (ticks / 20.0f) % animation.lengthInSeconds() : ticks / 20.0f;
+    }
+    
+    public static Vector3f lerpKeyframes(Keyframe[] keyframes, float seconds, float animSpeed) {
+        int i = Math.max(0, MathHelper.binarySearch(0, keyframes.length, index -> seconds <= keyframes[index].timestamp()) - 1);
+        int j = Math.min(keyframes.length - 1, i + 1);
+        Keyframe keyframe = keyframes[i];
+        Keyframe keyframe2 = keyframes[j];
+        float h = seconds - keyframe.timestamp();
+        float k = j != i ? MathHelper.clamp(h / (keyframe2.timestamp() - keyframe.timestamp()), 0.0f, 1.0f) : 0.0f;
+        keyframe2.interpolation().apply(TEMP, k, keyframes, i, j, animSpeed);
+        return TEMP;
+    }
+    
     private static final Vector3f TEMP = new Vector3f();
-    public static void animate(StandEntityModel<?> model, Animation animation, float ticks, float scale) {
-        float seconds = animation.looping() ? (ticks / 20.0f) % animation.lengthInSeconds() : ticks / 20.0f;
+    public static void animate(StandEntityModel<?> model, Animation animation, float ticks, float animSpeed) {
+        float seconds = ticksToSecs(animation, ticks);
         for (Map.Entry<String, List<Transformation>> entry : animation.boneAnimations().entrySet()) {
             ModelRenderer modelPart = model.getModelPart(entry.getKey());
             if (modelPart != null) {
                 List<Transformation> transformations = entry.getValue();
                 for (Transformation tf : transformations) {
                     Keyframe[] keyframes = tf.keyframes();
-                    int i = Math.max(0, MathHelper.binarySearch(0, keyframes.length, index -> seconds <= keyframes[index].timestamp()) - 1);
-                    int j = Math.min(keyframes.length - 1, i + 1);
-                    Keyframe keyframe = keyframes[i];
-                    Keyframe keyframe2 = keyframes[j];
-                    float h = seconds - keyframe.timestamp();
-                    float k = j != i ? MathHelper.clamp(h / (keyframe2.timestamp() - keyframe.timestamp()), 0.0f, 1.0f) : 0.0f;
-                    keyframe2.interpolation().apply(TEMP, k, keyframes, i, j, scale);
+                    lerpKeyframes(keyframes, seconds, animSpeed);
                     tf.target().apply(modelPart, TEMP);
                 }
             }
