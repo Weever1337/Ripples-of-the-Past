@@ -37,7 +37,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.registries.ForgeRegistries;
 
 public class CrazyDiamondRepairItem extends StandEntityAction {
-    public static final StandPose ITEM_FIX_POSE = new StandPose("CD_ITEM_FIX");
+    public static final StandPose ITEM_FIX_POSE = new StandPose("item_fix");
     private final StandRelativeOffset userOffsetLeftArm;
 
     public CrazyDiamondRepairItem(StandEntityAction.Builder builder) {

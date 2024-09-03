@@ -30,7 +30,7 @@ public class GeckoStandAnimator implements IStandAnimator {
     
     public void putNamedAnim(String name, StandActionAnimation anim) {
         StandActionAnimation prevAnim = namedAnimations.put(name, anim);
-        if (name.startsWith("summon")) {
+        if (name.startsWith(StandPose.SUMMON.getName())) {
             if (prevAnim != null) {
                 summonAnims.remove(prevAnim);
             }
@@ -87,9 +87,6 @@ public class GeckoStandAnimator implements IStandAnimator {
     }
     
     
-    public static float ticksToSecs(Animation animation, float ticks) {
-        return animation.looping() ? (ticks / 20.0f) % animation.lengthInSeconds() : ticks / 20.0f;
-    }
     
     public static Vector3f lerpKeyframes(Keyframe[] keyframes, float seconds, float animSpeed) {
         int i = Math.max(0, MathHelper.binarySearch(0, keyframes.length, index -> seconds <= keyframes[index].timestamp()) - 1);
@@ -104,7 +101,11 @@ public class GeckoStandAnimator implements IStandAnimator {
     
     private static final Vector3f TEMP = new Vector3f();
     public static void animate(StandEntityModel<?> model, Animation animation, float ticks, float animSpeed) {
-        float seconds = ticksToSecs(animation, ticks);
+        float seconds = animation.looping() ? (ticks / 20.0f) % animation.lengthInSeconds() : ticks / 20.0f;
+        animateSecs(model, animation, seconds, animSpeed);
+    }
+    
+    public static void animateSecs(StandEntityModel<?> model, Animation animation, float seconds, float animSpeed) {
         for (Map.Entry<String, List<Transformation>> entry : animation.boneAnimations().entrySet()) {
             ModelRenderer modelPart = model.getModelPart(entry.getKey());
             if (modelPart != null) {

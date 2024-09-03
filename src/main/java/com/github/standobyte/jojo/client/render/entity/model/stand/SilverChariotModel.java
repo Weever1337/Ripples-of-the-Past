@@ -143,6 +143,7 @@ public class SilverChariotModel extends HumanoidStandModel<SilverChariotEntity> 
         }
     }
 
+    // TODO remove allat, we're gonna parse the gecko animations now
     @Override
     protected ModelPose<SilverChariotEntity> initPoseReset() {
         return super.initPoseReset()

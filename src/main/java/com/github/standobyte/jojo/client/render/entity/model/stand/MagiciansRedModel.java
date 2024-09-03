@@ -140,6 +140,7 @@ public class MagiciansRedModel extends HumanoidStandModel<MagiciansRedEntity> {
         torso.texOffs(24, 73).addBox(-2.5F, 4.0F, -2.3F, 5.0F, 6.0F, 1.0F, 0.0F, false);
     }
 
+    // TODO remove allat, we're gonna parse the gecko animations now
     @Override
     protected ModelPose<MagiciansRedEntity> initPoseReset() {
         return super.initPoseReset()

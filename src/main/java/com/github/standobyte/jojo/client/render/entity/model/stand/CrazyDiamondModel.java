@@ -413,6 +413,7 @@ public class CrazyDiamondModel extends HumanoidStandModel<CrazyDiamondEntity> {
         rightLowerLeg.texOffs(112, 125).addBox(1.9F, 3.0F, -0.5F, 1.0F, 1.0F, 1.0F, -0.2F, false);
     }
 
+    // TODO remove allat, we're gonna parse the gecko animations now
     @Override
     protected RotationAngle[][] initSummonPoseRotations() {
         return new RotationAngle[][] {

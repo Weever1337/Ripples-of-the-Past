@@ -76,6 +76,7 @@ public class HierophantGreenModel extends HumanoidStandModel<HierophantGreenEnti
         bone12.texOffs(42, 91).addBox(-0.5F, -4.5F, -1.5F, 1.0F, 5.0F, 4.0F, 0.0F, true);
     }
 
+    // TODO remove allat, we're gonna parse the gecko animations now
     @Override
     protected RotationAngle[][] initSummonPoseRotations() {
         return new RotationAngle[][] {

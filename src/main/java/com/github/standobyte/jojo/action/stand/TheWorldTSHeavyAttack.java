@@ -40,7 +40,7 @@ import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.World;
 
 public class TheWorldTSHeavyAttack extends StandEntityAction implements IHasStandPunch {
-    public static final StandPose TS_PUNCH_POSE = new StandPose("TS_PUNCH");
+    public static final StandPose TS_PUNCH_POSE = new StandPose("time_breaker");
     private final Supplier<TimeStopInstant> theWorldTimeStopBlink;
     
     @Deprecated

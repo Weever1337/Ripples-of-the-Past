@@ -470,7 +470,14 @@ public class TheWorldModel extends HumanoidStandModel<TheWorldEntity> {
         rightLowerLeg.texOffs(64, 118).addBox(-2.0F, 0.0F, -2.0F, 4.0F, 6.0F, 4.0F, -0.001F, false);
         rightLowerLeg.texOffs(80, 118).addBox(-2.0F, 0.0F, -2.0F, 4.0F, 6.0F, 4.0F, 0.2F, false);
     }
+    
+    @Override
+    public void afterInit() {
+        super.afterInit();
+        namedModelParts.put("heartLargeAbdomen", heartLargeAbdomen);
+    }
 
+    // TODO remove allat, we're gonna parse the gecko animations now
     @Override
     protected RotationAngle[][] initSummonPoseRotations() {
         return new RotationAngle[][] {

@@ -23,12 +23,15 @@ import it.unimi.dsi.fastutil.floats.Float2ObjectArrayMap;
 import it.unimi.dsi.fastutil.floats.Float2ObjectMap;
 import net.minecraft.util.HandSide;
 import net.minecraft.util.JSONUtils;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.vector.Vector3f;
 
 public class StandActionAnimation implements IStandAnimator {
     public static final float ANIM_SPEED = 1;
     public final Animation anim;
+    
     @Nullable private Keyframe[] headRot;
+    @Nullable private Float2ObjectMap<Phase> phasesTimeline;
     
     public StandActionAnimation(Animation anim) {
         this.anim = anim;
@@ -40,6 +43,7 @@ public class StandActionAnimation implements IStandAnimator {
         JsonObject instructionsJson = animJson.getAsJsonObject("timeline");
         if (instructionsJson != null) {
             Float2ObjectMap<Keyframe> headRotTimeline = new Float2ObjectArrayMap<>();
+            Float2ObjectMap<Phase> phasesTimeline = new Float2ObjectArrayMap<>();
             
             for (Map.Entry<String, JsonElement> keyframeEntry : instructionsJson.entrySet()) {
                 float time = Float.parseFloat(keyframeEntry.getKey());
@@ -58,8 +62,10 @@ public class StandActionAnimation implements IStandAnimator {
                                 Interpolation lerp = Interpolations.LINEAR;
                                 headRotTimeline.put(time, new Keyframe(time, new Vector3f(headRotVal, 0, 0), lerp));
                                 break;
-//                            case "phase":
-//                                break;
+                            case "phase":
+                                Phase phase = Phase.valueOf(assignment[1]);
+                                phasesTimeline.put(time, phase);
+                                break;
                             }
                         }
                     }
@@ -69,7 +75,9 @@ public class StandActionAnimation implements IStandAnimator {
             if (!headRotTimeline.isEmpty()) {
                 standAnim.headRot = ParseGeckoAnims.keyframesToArray(headRotTimeline, Keyframe[]::new);
             }
-            
+            if (!phasesTimeline.isEmpty()) {
+                standAnim.phasesTimeline = phasesTimeline;
+            }
         }
         
         return standAnim;
@@ -80,8 +88,34 @@ public class StandActionAnimation implements IStandAnimator {
     @Override
     public boolean poseStand(StandEntity entity, StandEntityModel<?> model, float ticks, float yRotOffsetRad, float xRotRad, 
             StandPose standPose, Optional<Phase> actionPhase, float phaseCompletion, HandSide swingingHand) {
-        GeckoStandAnimator.animate(model, anim, ticks, ANIM_SPEED);
-        float seconds = GeckoStandAnimator.ticksToSecs(anim, ticks);
+        float seconds;
+        if (actionPhase.isPresent() && phasesTimeline != null) {
+            Phase taskPhase = actionPhase.get();
+            
+            Float prevPhaseTime = null;
+            Float curPhaseTime = null;
+            Float2ObjectMap.Entry<Phase> prevAnimPhase = null;
+            for (Float2ObjectMap.Entry<Phase> animPhase : phasesTimeline.float2ObjectEntrySet()) {
+                if (animPhase.getValue().ordinal() > taskPhase.ordinal()) {
+                    prevPhaseTime = prevAnimPhase != null ? prevAnimPhase.getFloatKey() : 0;
+                    curPhaseTime = animPhase.getFloatKey();
+                    break;
+                }
+                prevAnimPhase = animPhase;
+            }
+            if (prevPhaseTime == null) {
+                prevPhaseTime = prevAnimPhase.getValue() == taskPhase ? prevAnimPhase.getFloatKey() : anim.lengthInSeconds();
+                curPhaseTime = anim.lengthInSeconds();
+            }
+            
+            seconds = MathHelper.lerp(phaseCompletion, prevPhaseTime, curPhaseTime);
+        }
+        else {
+            seconds = anim.looping() ? (ticks / 20.0f) % anim.lengthInSeconds() : ticks / 20.0f;
+        }
+        
+        GeckoStandAnimator.animateSecs(model, anim, seconds, ANIM_SPEED);
+        
         if (headRot != null) {
             float headRotAmount = GeckoStandAnimator.lerpKeyframes(headRot, seconds, ANIM_SPEED).x();
             model.headPartsPublic().forEach(part -> {

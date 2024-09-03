@@ -544,7 +544,36 @@ public class StarPlatinumModel extends HumanoidStandModel<StarPlatinumEntity> {
 //            shoulderPad.zRot = arm.zRot / 2;
 //        }
 //    }
+    
+    
+    
+    private final List<ModelRenderer> hairToAnimateManually;
+    private static final float TWO_PI = (float) Math.PI * 2;
+    private float ticksPrev;
+    private void manualAnimateHair() {
+        for (int i = 0; i < hairToAnimateManually.size(); i++) {
+            ModelRenderer hair = hairToAnimateManually.get(i);
+            float xV = (ticks + hair.x) / 71F;
+            xV -= (int) xV;
+            float yV = (ticks + hair.y) / 31F;
+            yV -= (int) yV;
+            float xRotAnim = MathHelper.sin(xV * TWO_PI);
+            float yRotAnim = MathHelper.sin(yV * TWO_PI);
 
+            float xVPrev = (ticksPrev + hair.x) / 71F;
+            xVPrev -= (int) xVPrev;
+            float yVPrev = (ticksPrev + hair.y) / 31F;
+            yVPrev -= (int) yVPrev;
+            xRotAnim -= MathHelper.sin(xVPrev * TWO_PI);
+            yRotAnim -= MathHelper.sin(yVPrev * TWO_PI);
+
+            hair.xRot += xRotAnim * 0.05F;
+            hair.yRot += yRotAnim * 0.0125F;
+        }
+        ticksPrev = ticks;
+    }
+
+    // TODO remove allat, we're gonna parse the gecko animations now
     @Override
     protected RotationAngle[][] initSummonPoseRotations() {
         return new RotationAngle[][] {
@@ -657,33 +686,5 @@ public class StarPlatinumModel extends HumanoidStandModel<StarPlatinumEntity> {
                 RotationAngle.fromDegrees(frontFabric,      -10.5,      0,          0),
                 RotationAngle.fromDegrees(backFabric,       11,         0,          0)
         });
-    }
-    
-    
-    
-    private final List<ModelRenderer> hairToAnimateManually;
-    private static final float TWO_PI = (float) Math.PI * 2;
-    private float ticksPrev;
-    private void manualAnimateHair() {
-        for (int i = 0; i < hairToAnimateManually.size(); i++) {
-            ModelRenderer hair = hairToAnimateManually.get(i);
-            float xV = (ticks + hair.x) / 71F;
-            xV -= (int) xV;
-            float yV = (ticks + hair.y) / 31F;
-            yV -= (int) yV;
-            float xRotAnim = MathHelper.sin(xV * TWO_PI);
-            float yRotAnim = MathHelper.sin(yV * TWO_PI);
-
-            float xVPrev = (ticksPrev + hair.x) / 71F;
-            xVPrev -= (int) xVPrev;
-            float yVPrev = (ticksPrev + hair.y) / 31F;
-            yVPrev -= (int) yVPrev;
-            xRotAnim -= MathHelper.sin(xVPrev * TWO_PI);
-            yRotAnim -= MathHelper.sin(yVPrev * TWO_PI);
-
-            hair.xRot += xRotAnim * 0.05F;
-            hair.yRot += yRotAnim * 0.0125F;
-        }
-        ticksPrev = ticks;
     }
 }
