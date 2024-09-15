@@ -58,9 +58,17 @@ public class ParseGeckoAnims {
         if (keyframesJson != null) {
             Float2ObjectMap<Keyframe> timeline = new Float2ObjectArrayMap<>();
             for (Map.Entry<String, JsonElement> rotationJson : keyframesJson.entrySet()) {
-                float time = Float.parseFloat(rotationJson.getKey());
+                float time;
+                JsonObject rotation;
+                try {
+                    time = Float.parseFloat(rotationJson.getKey());
+                    rotation = rotationJson.getValue().getAsJsonObject();
+                }
+                catch (NumberFormatException singleKeyframe) {
+                    time = 0;
+                    rotation = keyframesJson; // in this case this object is not actually a json object mapping time to keyframes, but the keyframe itself
+                }
                 
-                JsonObject rotation = rotationJson.getValue().getAsJsonObject();
                 JsonElement rotVecJsonElem = rotation.get("vector");
                 if (rotVecJsonElem == null && rotation.has("post")) rotVecJsonElem = rotation.get("post").getAsJsonObject().get("vector");
                 JsonArray rotVecJson = rotVecJsonElem.getAsJsonArray();

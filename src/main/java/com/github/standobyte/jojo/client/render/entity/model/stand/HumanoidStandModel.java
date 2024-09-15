@@ -199,6 +199,8 @@ public class HumanoidStandModel<T extends StandEntity> extends StandEntityModel<
         namedModelParts.put("rightLowerLeg", rightLowerLeg);
     }
 
+    @Deprecated private final Map<Supplier<ModelRenderer>, Consumer<ModelRenderer>> baseHumanoidBoxGenerators;
+    @Deprecated
     protected final void addHumanoidBaseBoxes(@Nullable Predicate<ModelRenderer> partPredicate) {
         for (Map.Entry<Supplier<ModelRenderer>, Consumer<ModelRenderer>> entry : baseHumanoidBoxGenerators.entrySet()) {
             ModelRenderer modelRenderer = entry.getKey().get();
@@ -207,8 +209,6 @@ public class HumanoidStandModel<T extends StandEntity> extends StandEntityModel<
             }
         }
     }
-    
-    private final Map<Supplier<ModelRenderer>, Consumer<ModelRenderer>> baseHumanoidBoxGenerators;
 
     @Override
     public void updatePartsVisibility(VisibilityMode mode) {

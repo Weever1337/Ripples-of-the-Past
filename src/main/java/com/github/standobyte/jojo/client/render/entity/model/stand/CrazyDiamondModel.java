@@ -23,23 +23,7 @@ import net.minecraft.util.HandSide;
 
 public class CrazyDiamondModel extends HumanoidStandModel<CrazyDiamondEntity> {
     private final ModelRenderer helmet;
-    private final ModelRenderer bone2;
-    private final ModelRenderer bone12;
-    private final ModelRenderer bone13;
-    private final ModelRenderer bone14;
-    private final ModelRenderer bone15;
-    private final ModelRenderer rightEar;
-    private final ModelRenderer bone3;
-    private final ModelRenderer bone4;
-    private final ModelRenderer bone5;
-    private final ModelRenderer bone6;
-    private final ModelRenderer bone7;
-    private final ModelRenderer leftEar;
-    private final ModelRenderer bone;
     private final ModelRenderer heartSmall2;
-    private final ModelRenderer smallHeartCube4;
-    private final ModelRenderer smallHeartCube5;
-    private final ModelRenderer smallHeartCube6;
     private final ModelRenderer tube;
     private final ModelRenderer tube2;
     private final ModelRenderer tube3;
@@ -47,33 +31,17 @@ public class CrazyDiamondModel extends HumanoidStandModel<CrazyDiamondEntity> {
     private final ModelRenderer tube5;
     private final ModelRenderer tube6;
     private final ModelRenderer heartLarge;
-    private final ModelRenderer largeHeartCube1;
-    private final ModelRenderer largeHeartCube2;
     private final ModelRenderer heart3;
-    private final ModelRenderer heartCube7;
-    private final ModelRenderer heartCube8;
-    private final ModelRenderer heartCube9;
+    private final ModelRenderer groinPiece;
     private final ModelRenderer heartLeftShoulder;
-    private final ModelRenderer largeHeartCube7;
-    private final ModelRenderer largeHeartCube8;
     private final ModelRenderer heartRightShoulder;
-    private final ModelRenderer largeHeartCube3;
-    private final ModelRenderer largeHeartCube4;
     private final ModelRenderer heartLeftLeg;
-    private final ModelRenderer heartCube5;
-    private final ModelRenderer heartCube6;
-    private final ModelRenderer heartCube10;
     private final ModelRenderer heartRightLeg;
-    private final ModelRenderer heartCube2;
-    private final ModelRenderer heartCube3;
-    private final ModelRenderer heartCube4;
 
     public CrazyDiamondModel() {
         super();
         
         addHumanoidBaseBoxes(null);
-        texWidth = 128;
-        texHeight = 128;
 
         helmet = new ModelRenderer(this);
         helmet.setPos(0.0F, 24.5F, 0.0F);
@@ -84,6 +52,19 @@ public class CrazyDiamondModel extends HumanoidStandModel<CrazyDiamondEntity> {
         helmet.texOffs(99, 8).addBox(-1.0F, -33.0F, -4.4F, 2.0F, 4.0F, 1.0F, 0.0F, false);
         helmet.texOffs(63, 14).addBox(-1.0F, -27.375F, -4.65F, 2.0F, 1.0F, 1.0F, -0.125F, false);
 
+        ModelRenderer bone2;
+        ModelRenderer bone12;
+        ModelRenderer bone13;
+        ModelRenderer bone14;
+        ModelRenderer bone15;
+        ModelRenderer rightEar;
+        ModelRenderer bone3;
+        ModelRenderer bone4;
+        ModelRenderer bone5;
+        ModelRenderer bone6;
+        ModelRenderer bone7;
+        ModelRenderer leftEar;
+        ModelRenderer bone;
         bone2 = new ModelRenderer(this);
         bone2.setPos(0.0F, -33.0F, -5.4F);
         helmet.addChild(bone2);
@@ -177,6 +158,9 @@ public class CrazyDiamondModel extends HumanoidStandModel<CrazyDiamondEntity> {
         head.addChild(heartSmall2);
         
 
+        ModelRenderer smallHeartCube4;
+        ModelRenderer smallHeartCube5;
+        ModelRenderer smallHeartCube6;
         smallHeartCube4 = new ModelRenderer(this);
         smallHeartCube4.setPos(0.0F, 0.0F, 0.0F);
         heartSmall2.addChild(smallHeartCube4);
@@ -204,9 +188,13 @@ public class CrazyDiamondModel extends HumanoidStandModel<CrazyDiamondEntity> {
         torso.texOffs(29, 64).addBox(0.5F, 1.25F, -2.75F, 3.0F, 3.0F, 1.0F, 0.1F, false);
         torso.texOffs(20, 64).addBox(-3.5F, 1.25F, -2.75F, 3.0F, 3.0F, 1.0F, 0.1F, false);
         torso.texOffs(24, 73).addBox(-2.5F, 4.0F, -2.3F, 5.0F, 6.0F, 1.0F, 0.0F, false);
-        torso.texOffs(24, 80).addBox(-1.0F, 10.75F, -2.5F, 2.0F, 4.0F, 1.0F, 0.0F, false);
         torso.texOffs(108, 106).addBox(3.65F, 10.5F, -1.5F, 1.0F, 3.0F, 3.0F, -0.25F, true);
         torso.texOffs(76, 106).addBox(-4.65F, 10.5F, -1.5F, 1.0F, 3.0F, 3.0F, -0.25F, false);
+
+        groinPiece = new ModelRenderer(this);
+        groinPiece.setPos(0.0F, 24.0F, 0.0F);
+        torso.addChild(groinPiece);
+        groinPiece.texOffs(24, 80).addBox(-1.0F, -13.25F, -2.5F, 2.0F, 4.0F, 1.0F, 0.0F, false);
 
         tube = new ModelRenderer(this);
         tube.setPos(1.0F, 1.25F, 2.0F);
@@ -257,6 +245,8 @@ public class CrazyDiamondModel extends HumanoidStandModel<CrazyDiamondEntity> {
         torso.addChild(heartLarge);
         
 
+        ModelRenderer largeHeartCube1;
+        ModelRenderer largeHeartCube2;
         largeHeartCube1 = new ModelRenderer(this);
         largeHeartCube1.setPos(0.0F, 0.0F, 0.0F);
         heartLarge.addChild(largeHeartCube1);
@@ -274,6 +264,9 @@ public class CrazyDiamondModel extends HumanoidStandModel<CrazyDiamondEntity> {
         torso.addChild(heart3);
         
 
+        ModelRenderer heartCube7;
+        ModelRenderer heartCube8;
+        ModelRenderer heartCube9;
         heartCube7 = new ModelRenderer(this);
         heartCube7.setPos(0.0F, 0.05F, 0.0F);
         heart3.addChild(heartCube7);
@@ -306,6 +299,8 @@ public class CrazyDiamondModel extends HumanoidStandModel<CrazyDiamondEntity> {
         setRotationAngle(heartLeftShoulder, 0.1745F, -1.5708F, 0.0F);
         
 
+        ModelRenderer largeHeartCube7;
+        ModelRenderer largeHeartCube8;
         largeHeartCube7 = new ModelRenderer(this);
         largeHeartCube7.setPos(0.0F, 0.0F, -0.5F);
         heartLeftShoulder.addChild(largeHeartCube7);
@@ -334,6 +329,8 @@ public class CrazyDiamondModel extends HumanoidStandModel<CrazyDiamondEntity> {
         setRotationAngle(heartRightShoulder, 0.1745F, 1.5708F, 0.0F);
         
 
+        ModelRenderer largeHeartCube3;
+        ModelRenderer largeHeartCube4;
         largeHeartCube3 = new ModelRenderer(this);
         largeHeartCube3.setPos(0.0F, 0.0F, -0.5F);
         heartRightShoulder.addChild(largeHeartCube3);
@@ -356,6 +353,9 @@ public class CrazyDiamondModel extends HumanoidStandModel<CrazyDiamondEntity> {
         leftLeg.addChild(heartLeftLeg);
         
 
+        ModelRenderer heartCube5;
+        ModelRenderer heartCube6;
+        ModelRenderer heartCube10;
         heartCube5 = new ModelRenderer(this);
         heartCube5.setPos(0.0F, 0.05F, 0.0F);
         heartLeftLeg.addChild(heartCube5);
@@ -388,6 +388,9 @@ public class CrazyDiamondModel extends HumanoidStandModel<CrazyDiamondEntity> {
         rightLeg.addChild(heartRightLeg);
         
 
+        ModelRenderer heartCube2;
+        ModelRenderer heartCube3;
+        ModelRenderer heartCube4;
         heartCube2 = new ModelRenderer(this);
         heartCube2.setPos(0.0F, 0.05F, 0.0F);
         heartRightLeg.addChild(heartCube2);
@@ -412,66 +415,21 @@ public class CrazyDiamondModel extends HumanoidStandModel<CrazyDiamondEntity> {
         rightLowerLeg.texOffs(80, 125).addBox(-2.9F, 3.0F, -0.5F, 1.0F, 1.0F, 1.0F, -0.2F, false);
         rightLowerLeg.texOffs(112, 125).addBox(1.9F, 3.0F, -0.5F, 1.0F, 1.0F, 1.0F, -0.2F, false);
     }
+    
+    @Override
+    public void afterInit() {
+        super.afterInit();
+        
+        namedModelParts.put("tube", tube);
+        namedModelParts.put("tube2", tube2);
+        namedModelParts.put("tube3", tube3);
+        namedModelParts.put("tube4", tube4);
+        namedModelParts.put("tube5", tube5);
+        namedModelParts.put("tube6", tube6);
+        namedModelParts.put("groinPiece", groinPiece);
+    }
 
     // TODO remove allat, we're gonna parse the gecko animations now
-    @Override
-    protected RotationAngle[][] initSummonPoseRotations() {
-        return new RotationAngle[][] {
-            new RotationAngle[] {
-                    RotationAngle.fromDegrees(head, -32.5F, 52.5F, -5),
-                    RotationAngle.fromDegrees(body, -7.5F, 37.5F, 0),
-                    RotationAngle.fromDegrees(upperPart, 0, 12.5F, 0),
-                    RotationAngle.fromDegrees(leftArm, 25.1426F, 18.0217F, -54.0834F),
-                    RotationAngle.fromDegrees(leftForeArm, -37.1572F, -2.0551F, 44.1678F),
-                    RotationAngle.fromDegrees(rightArm, -60.3335F, -8.4521F, 68.4237F),
-                    RotationAngle.fromDegrees(rightForeArm, -135, 22.5F, -90),
-                    RotationAngle.fromDegrees(leftLeg, -10.1402F, 10.7145F, 3.1723F),
-                    RotationAngle.fromDegrees(leftLowerLeg, 45, 0, 0),
-                    RotationAngle.fromDegrees(rightLeg, 27.9546F, 33.9337F, 7.8335F),
-                    RotationAngle.fromDegrees(rightLowerLeg, 29.6217F, 4.9809F, -8.6822F)
-            },
-            new RotationAngle[] {
-                    RotationAngle.fromDegrees(head, 0, 0, 0),
-                    RotationAngle.fromDegrees(body, 15, 0, -10),
-                    RotationAngle.fromDegrees(upperPart, 0, -12.5F, 0),
-                    RotationAngle.fromDegrees(leftArm, -49.8651F, 9.3787F, -53.3701F),
-                    RotationAngle.fromDegrees(leftForeArm, -93.6597F, -5.1369F, 84.6506F),
-                    RotationAngle.fromDegrees(rightArm, 30.2141F, -5.5863F, 54.7232F),
-                    RotationAngle.fromDegrees(rightForeArm, 0, 0, 0),
-                    RotationAngle.fromDegrees(leftLeg, -20, 0, -45),
-                    RotationAngle.fromDegrees(leftLowerLeg, 30, 0, 37.5F),
-                    RotationAngle.fromDegrees(rightLeg, -74.6528F, 12.0675F, 3.284F),
-                    RotationAngle.fromDegrees(rightLowerLeg, 100, 0, 0)
-            },
-            new RotationAngle[] {
-                    RotationAngle.fromDegrees(head, -4.3644F, 30.3695F, -8.668F),
-                    RotationAngle.fromDegrees(body, -35, -25, 7),
-                    RotationAngle.fromDegrees(upperPart, 0, 10, 0),
-                    RotationAngle.fromDegrees(leftArm, 12.5F, 0, -20),
-                    RotationAngle.fromDegrees(leftForeArm, 7.5F, 0, -10),
-                    RotationAngle.fromDegrees(rightArm, 37.5F, 7.5F, -7.5F),
-                    RotationAngle.fromDegrees(rightForeArm, -7.5F, 0, 0),
-                    RotationAngle.fromDegrees(leftLeg, -43.5572F, 57.6471F, -22.5553F),
-                    RotationAngle.fromDegrees(leftLowerLeg, 77.4538F, 4.8812F, -1.0848F),
-                    RotationAngle.fromDegrees(rightLeg, -65, 60, 20),
-                    RotationAngle.fromDegrees(rightLowerLeg, 107.7531F, 9.5327F, 3.0351F)
-            },
-            new RotationAngle[] {
-                    RotationAngle.fromDegrees(head, 0, 75, 0),
-                    RotationAngle.fromDegrees(body, -10, 60, 0),
-                    RotationAngle.fromDegrees(upperPart, 0, 0, 0),
-                    RotationAngle.fromDegrees(leftArm, 16.7363F, 5.188F, -39.2363F),
-                    RotationAngle.fromDegrees(leftForeArm, -52.4165F, 42.9971F, 31.9928F),
-                    RotationAngle.fromDegrees(rightArm, -60, 0, 75),
-                    RotationAngle.fromDegrees(rightForeArm, -154.2444F, 12.7F, -103.0794F),
-                    RotationAngle.fromDegrees(leftLeg, 12.5F, 0, 0),
-                    RotationAngle.fromDegrees(leftLowerLeg, 22.5F, 0, 0),
-                    RotationAngle.fromDegrees(rightLeg, -56.6544F, 29.5657F, 5.3615F),
-                    RotationAngle.fromDegrees(rightLowerLeg, 112.5F, 0, 0)
-            }
-        };
-    }
-    
     @Override
     protected void initActionPoses() {
         ModelPose<CrazyDiamondEntity> heavyPunchPose1 = new ModelPose<>(new RotationAngle[] {
@@ -705,29 +663,4 @@ public class CrazyDiamondModel extends HumanoidStandModel<CrazyDiamondEntity> {
         super.initActionPoses();
     }
     
-    @Override
-    protected ModelPose<CrazyDiamondEntity> initIdlePose() {
-        return new ModelPose<>(new RotationAngle[] {
-                RotationAngle.fromDegrees(body, 5.7686F, 29.8742F, 5.3807F),
-                RotationAngle.fromDegrees(upperPart, 0, 6, 0),
-                RotationAngle.fromDegrees(leftArm, 3.25F, -6.25F, -42.5F),
-                RotationAngle.fromDegrees(leftForeArm, -75, -15, 92.5F),
-                RotationAngle.fromDegrees(rightArm, 35, -15, 40),
-                RotationAngle.fromDegrees(rightForeArm, -85, -5, -20),
-                RotationAngle.fromDegrees(leftLeg, -52.5F, -15, 0),
-                RotationAngle.fromDegrees(leftLowerLeg, 97.5F, 10, 0),
-                RotationAngle.fromDegrees(rightLeg, 7.9315F, -12.0964F, -4.5742F),
-                RotationAngle.fromDegrees(rightLowerLeg, 10, -5, 0)
-        });
-    }
-
-    @Override
-    protected ModelPose<CrazyDiamondEntity> initIdlePose2Loop() {
-        return new ModelPose<>(new RotationAngle[] {
-                RotationAngle.fromDegrees(leftArm, 7.9708F, -6.7104F, -40.0269F),
-                RotationAngle.fromDegrees(leftForeArm, -74.8671F, -9.523F, 91.3614F),
-                RotationAngle.fromDegrees(rightArm, 40.9054F, -11.7546F, 36.0897F),
-                RotationAngle.fromDegrees(rightForeArm, -92.4423F, -9.9808F, -20.4419F)
-        });
-    }
 }

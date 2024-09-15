@@ -13,7 +13,6 @@ import com.github.standobyte.jojo.entity.stand.stands.TheWorldEntity;
 
 import net.minecraft.client.renderer.model.ModelRenderer;
 import net.minecraft.util.Direction;
-import net.minecraft.util.HandSide;
 import net.minecraft.util.math.vector.Vector3f;
 
 //Made with Blockbench 4.8.3
@@ -479,44 +478,6 @@ public class TheWorldModel extends HumanoidStandModel<TheWorldEntity> {
 
     // TODO remove allat, we're gonna parse the gecko animations now
     @Override
-    protected RotationAngle[][] initSummonPoseRotations() {
-        return new RotationAngle[][] {
-            new RotationAngle[] {
-                    new RotationAngle(head, 0.0F, -0.3491F, -0.0873F),
-                    new RotationAngle(body, 0.2618F, 0.0F, 0.0F),
-                    new RotationAngle(leftArm, -0.2618F, -0.7854F, -1.8326F),
-                    new RotationAngle(leftForeArm, -0.7854F, 0.0F, 0.0F),
-                    new RotationAngle(rightArm, 0.5236F, 0.0F, 0.0F),
-                    new RotationAngle(rightForeArm, 0.0F, 3.1416F, 2.1817F),
-                    new RotationAngle(leftLeg, -1.5708F, 0.0F, 0.0F),
-                    new RotationAngle(leftLowerLeg, 2.0944F, 0.0F, 0.0F),
-                    new RotationAngle(rightLeg, -1.1345F, 0.2618F, 0.0F),
-                    new RotationAngle(rightLowerLeg, 0.5236F, 0.0F, 0.0F)
-            },
-//            new RotationAngle[] {
-//                    new RotationAngle(leftArm, 0.0F, -0.5236F, -0.8727F),
-//                    new RotationAngle(leftForeArm, 0.0F, 1.1781F, 0.9599F),
-//                    new RotationAngle(rightArm, 0.0F, 0.5236F, 1.309F),
-//                    new RotationAngle(rightForeArm, 0.0F, -1.1781F, -0.9599F),
-//                    new RotationAngle(leftLeg, 0.0F, 0.0F, -0.1745F),
-//                    new RotationAngle(rightLeg, -0.4363F, 0.0F, 0.1745F),
-//                    new RotationAngle(rightLowerLeg, 1.0472F, 0.0F, 0.0F)
-//            },
-            new RotationAngle[] {
-                    new RotationAngle(head, 0.0F, 1.3963F, 0.0F),
-                    new RotationAngle(body, 0.0F, 1.8326F, 0.0F),
-                    new RotationAngle(leftArm, 0.0F, 0.0F, -0.6981F),
-                    new RotationAngle(leftForeArm, 0.0F, 0.0F, 1.3963F),
-                    new RotationAngle(rightArm, -1.8326F, -0.3491F, 0.0F),
-                    new RotationAngle(rightForeArm, -0.5236F, 0.7854F, -0.7854F),
-                    new RotationAngle(leftLeg, 0.2182F, 0.0F, 0.0F),
-                    new RotationAngle(rightLeg, -0.2182F, 0.0F, 0.0F),
-                    new RotationAngle(rightLowerLeg, 0.4363F, 0.0F, 0.0F)
-            }
-        };
-    }
-    
-    @Override
     protected void initActionPoses() {
         ModelPose<TheWorldEntity> heavyPunchPose1 = new ModelPose<>(new RotationAngle[] {
                 new RotationAngle(leftArm, 0.0F, 0.0F, -0.5236F),
@@ -651,43 +612,6 @@ public class TheWorldModel extends HumanoidStandModel<TheWorldEntity> {
                 .build(idlePose));
         
         super.initActionPoses();
-    }
-    
-    @Override
-    protected ModelPose<TheWorldEntity> initIdlePose() {
-        return new ModelPose<>(new RotationAngle[] {
-                new RotationAngle(upperPart, 0, 0, 0),
-                RotationAngle.fromDegrees(body,             -10.3453,   14.7669,    -2.664),
-                RotationAngle.fromDegrees(leftArm,          12.2616,    9.8242,     -25.0612),
-                RotationAngle.fromDegrees(leftForeArm,      -12.0884,   2.8002,     18.5715),
-                RotationAngle.fromDegrees(rightArm,         3.0667,     -8.1272,    29.6295),
-                RotationAngle.fromDegrees(rightForeArm,     -34.6,      -4.5795,    -21.7089),
-                RotationAngle.fromDegrees(leftLeg,          20.2151,    -12.1546,   -12.2229),
-                RotationAngle.fromDegrees(leftLowerLeg,     7.5,        0,          0),
-                RotationAngle.fromDegrees(rightLeg,         6.8105,     -11.2924,   10.6414),
-                RotationAngle.fromDegrees(rightLowerLeg,    20,         0,          0),
-                RotationAngle.fromDegrees(heartLargeAbdomen,-10.2443,   3.4058,     0)
-        });
-    }
-
-    @Override
-    protected ModelPose<TheWorldEntity> initIdlePose2Loop() {
-        return new ModelPose<>(new RotationAngle[] {
-                RotationAngle.fromDegrees(leftArm,          18.8684,    10.8486,    -30.036),
-                RotationAngle.fromDegrees(leftForeArm,      -19.3046,   3.8358,     23.4714),
-                RotationAngle.fromDegrees(rightArm,         8.0667,     -8.1272,    29.6295),
-                RotationAngle.fromDegrees(rightForeArm,     -44.4869,   -2.7976,    -23.4661),
-                RotationAngle.fromDegrees(leftLeg,          22.7151,    -12.1546,   -12.2229),
-                RotationAngle.fromDegrees(leftLowerLeg,     12.5,        0,         0),
-                RotationAngle.fromDegrees(rightLeg,         9.2581,     -8.8099,    10.9413),
-                RotationAngle.fromDegrees(rightLowerLeg,    25,         0,          0),
-                RotationAngle.fromDegrees(heartLargeAbdomen,-8.2352,    2.4217,     0.178)
-        });
-    }
-    
-    @Override
-    public void poseIdleLoop(TheWorldEntity entity, float ticks, float yRotOffsetRad, float xRotRad, HandSide swingingHand) {
-        super.poseIdleLoop(entity, ticks, yRotOffsetRad, xRotRad, swingingHand);
     }
     
 }
