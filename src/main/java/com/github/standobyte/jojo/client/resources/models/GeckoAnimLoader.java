@@ -93,8 +93,7 @@ public class GeckoAnimLoader extends ReloadListener<Map<ResourceLocation, JsonEl
                 try {
                     JsonObject animJson = animJsonEntry.getValue().getAsJsonObject();
                     Animation animation = ParseGeckoAnims.parseAnim(animJson);
-                    StandActionAnimation animWrapper = StandActionAnimation.fromJson(animation, animJson);
-                    standModelAnims.putNamedAnim(animJsonEntry.getKey(), animWrapper);
+                    standModelAnims.animFromJson(animation, animJson, animJsonEntry.getKey());
                 }
                 catch (Exception e) {
                     LOGGER.error("Failed to load animation {} from {}", animJsonEntry.getKey(), rawModelEntry.getKey());
