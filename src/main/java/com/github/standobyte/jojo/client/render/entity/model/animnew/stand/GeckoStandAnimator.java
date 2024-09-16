@@ -29,7 +29,7 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.vector.Vector3f;
 
 public class GeckoStandAnimator implements IStandAnimator {
-    public static boolean IS_TESTING_GECKO = true; // if false, the legacy code animator is used as a fallback
+    public static boolean IS_TESTING_GECKO = false; // if false, the legacy code animator is used as a fallback
     private final Map<String, StandActionAnimation> namedAnimations = new HashMap<>();
     private final List<StandActionAnimation> summonAnims = new ArrayList<>();
     private StandActionAnimation idleAnim;
@@ -87,12 +87,17 @@ public class GeckoStandAnimator implements IStandAnimator {
             return false;
         }
         
+        IStandAnimator idleAnim = getIdleAnim(entity);
         if (idleAnim != null) {
             return idleAnim.poseStand(entity, model, ticks, yRotOffsetRad, xRotRad, 
                     standPose, actionPhase, phaseCompletion, swingingHand);
         }
         
         return false;
+    }
+    
+    protected IStandAnimator getIdleAnim(StandEntity entity) {
+        return idleAnim;
     }
     
     

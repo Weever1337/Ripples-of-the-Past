@@ -27,6 +27,6 @@ public class MagiciansRedRenderer extends StandEntityRenderer<MagiciansRedEntity
         super(renderManager, 
                 StandModelRegistry.registerModel(new ResourceLocation(JojoMod.MOD_ID, "magicians_red"), MagiciansRedModel::new), 
                 new ResourceLocation(JojoMod.MOD_ID, "textures/entity/stand/magicians_red.png"), 0);
-        addLayer(new MagiciansRedFlameLayer(this));
+        addLayer(new MagiciansRedFlameLayer(this, model.getRegistryObj()));
     }
 }

@@ -5,7 +5,6 @@ import java.util.Collections;
 import java.util.List;
 
 import com.github.standobyte.jojo.action.stand.StandEntityAction;
-import com.github.standobyte.jojo.client.ClientUtil;
 import com.github.standobyte.jojo.client.render.entity.pose.IModelPose;
 import com.github.standobyte.jojo.client.render.entity.pose.ModelPose;
 import com.github.standobyte.jojo.client.render.entity.pose.ModelPoseTransition;
@@ -16,7 +15,6 @@ import com.github.standobyte.jojo.entity.stand.StandPose;
 import com.github.standobyte.jojo.entity.stand.stands.StarPlatinumEntity;
 
 import net.minecraft.client.renderer.model.ModelRenderer;
-import net.minecraft.util.Direction;
 import net.minecraft.util.math.MathHelper;
 
 //Made with Blockbench 4.8.3
@@ -81,8 +79,13 @@ public class StarPlatinumModel extends HumanoidStandModel<StarPlatinumEntity> {
         ModelRenderer hair47;
         ModelRenderer hair48;
 
+        root = new ModelRenderer(this);
+        root.setPos(0.0F, 0.0F, 0.0F);
+        
+
         head = new ModelRenderer(this);
         head.setPos(0.0F, 0.0F, 0.0F);
+        root.addChild(head);
         head.texOffs(0, 0).addBox(-4.0F, -8.0F, -4.0F, 8.0F, 8.0F, 8.0F, 0.0F, false);
         head.texOffs(45, 14).addBox(-4.0F, -6.0F, -4.0F, 8.0F, 1.0F, 8.0F, 0.075F, false);
         head.texOffs(24, 0).addBox(-4.5F, -4.0F, -3.0F, 1.0F, 2.0F, 2.0F, 0.0F, false);
@@ -384,6 +387,7 @@ public class StarPlatinumModel extends HumanoidStandModel<StarPlatinumEntity> {
 
         body = new ModelRenderer(this);
         body.setPos(0.0F, 0.0F, 0.0F);
+        root.addChild(body);
         
 
         upperPart = new ModelRenderer(this);
@@ -448,11 +452,7 @@ public class StarPlatinumModel extends HumanoidStandModel<StarPlatinumEntity> {
         leftArm.addChild(leftForeArm);
         leftForeArm.texOffs(32, 118).addBox(-2.0F, 0.0F, -2.0F, 4.0F, 6.0F, 4.0F, -0.001F, false);
         leftForeArm.texOffs(48, 95).addBox(-2.0F, -0.1F, -2.0F, 4.0F, 2.0F, 4.0F, 0.185F, false);
-        leftForeArm.texOffs(48, 98).addBox(-2.0F, 3.0F, -2.0F, 4.0F, 3.0F, 4.0F, 0.15F, false);
-        ClientUtil.editLatestCube(leftForeArm, gloveBox -> {
-            ClientUtil.setFaceUv(gloveBox, Direction.UP,   48, 99, 52, 95, this);
-            ClientUtil.setFaceUv(gloveBox, Direction.DOWN, 60, 95, 64, 99, this);
-        });
+        leftForeArm.texOffs(48, 95).addBox(-2.0F, 3.0F, -2.0F, 4.0F, 3.0F, 4.0F, 0.15F, false);
         leftForeArm.texOffs(48, 114).addBox(1.6F, 3.2F, -0.5F, 1.0F, 1.0F, 1.0F, -0.2F, true);
         leftForeArm.texOffs(48, 116).addBox(1.6F, 3.8F, -1.0F, 1.0F, 1.0F, 2.0F, -0.2F, true);
         leftForeArm.texOffs(48, 119).addBox(1.6F, 4.4F, -1.5F, 1.0F, 1.0F, 3.0F, -0.2F, true);
@@ -475,11 +475,7 @@ public class StarPlatinumModel extends HumanoidStandModel<StarPlatinumEntity> {
         rightArm.addChild(rightForeArm);
         rightForeArm.texOffs(0, 118).addBox(-2.0F, 0.0F, -2.0F, 4.0F, 6.0F, 4.0F, -0.001F, false);
         rightForeArm.texOffs(16, 95).addBox(-2.0F, -0.1F, -2.0F, 4.0F, 2.0F, 4.0F, 0.185F, false);
-        rightForeArm.texOffs(16, 98).addBox(-2.0F, 3.0F, -2.0F, 4.0F, 3.0F, 4.0F, 0.15F, false);
-        ClientUtil.editLatestCube(rightForeArm, gloveBox -> {
-            ClientUtil.setFaceUv(gloveBox, Direction.UP,   16, 99, 20, 95, this);
-            ClientUtil.setFaceUv(gloveBox, Direction.DOWN, 28, 95, 32, 99, this);
-        });
+        rightForeArm.texOffs(16, 95).addBox(-2.0F, 3.0F, -2.0F, 4.0F, 3.0F, 4.0F, 0.15F, false);
         rightForeArm.texOffs(16, 114).addBox(-2.6F, 3.2F, -0.5F, 1.0F, 1.0F, 1.0F, -0.2F, false);
         rightForeArm.texOffs(16, 116).addBox(-2.6F, 3.8F, -1.0F, 1.0F, 1.0F, 2.0F, -0.2F, false);
         rightForeArm.texOffs(16, 119).addBox(-2.6F, 4.4F, -1.5F, 1.0F, 1.0F, 3.0F, -0.2F, false);
@@ -529,6 +525,15 @@ public class StarPlatinumModel extends HumanoidStandModel<StarPlatinumEntity> {
                 hair21, hair22, hair23, hair24, hair25, hair26, hair27, hair28, hair29, hair30, 
                 hair31, hair32, hair33, hair34, hair35, hair36, hair37, hair38, hair39, hair40, 
                 hair41, hair42, hair43, hair44, hair45, hair46, hair47, hair48);
+    }
+    
+    @Override
+    public void afterInit() {
+        super.afterInit();
+        namedModelParts.put("leftShoulder", leftShoulder);
+        namedModelParts.put("rightShoulder", rightShoulder);
+        namedModelParts.put("frontFabric", frontFabric);
+        namedModelParts.put("backFabric", backFabric);
     }
     
     @Override

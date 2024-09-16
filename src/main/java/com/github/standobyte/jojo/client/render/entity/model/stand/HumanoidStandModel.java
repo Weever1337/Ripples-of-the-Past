@@ -170,6 +170,7 @@ public class HumanoidStandModel<T extends StandEntity> extends StandEntityModel<
                 .build();
     }
     
+    @Deprecated
     protected final XRotationModelRenderer convertLimb(ModelRenderer limbModelPart) {
         return new XRotationModelRenderer(this);
     }

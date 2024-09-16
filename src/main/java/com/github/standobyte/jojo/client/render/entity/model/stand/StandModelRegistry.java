@@ -20,9 +20,15 @@ public class StandModelRegistry {
     
     public static <T extends StandEntity, M extends StandEntityModel<T>> M registerModel(
             ResourceLocation modelId, Supplier<? extends M> constructor) {
-        M model = constructor.get();
-        registerStandModel(model, modelId, constructor);
-        return model;
+        try {
+            M model = constructor.get();
+            registerStandModel(model, modelId, constructor);
+            return model;
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            throw e;
+        }
     }
     
     @Nullable
@@ -79,7 +85,7 @@ public class StandModelRegistry {
         
         
         @Nullable
-        public GeckoStandAnimator getGeckoAnims() {
+        public GeckoStandAnimator getDefaultGeckoAnims() {
             return anims;
         }
         

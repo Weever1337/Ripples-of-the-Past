@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
@@ -50,7 +51,9 @@ import net.minecraft.util.math.vector.Vector3f;
 public abstract class StandEntityModel<T extends StandEntity> extends AgeableModel<T> implements IHasArm, INamedModelParts {
     ResourceLocation modelId;
     StandModelRegistryObj registryObj;
+    
     protected Map<String, ModelRenderer> namedModelParts = new HashMap<>();
+    protected Supplier<IStandAnimator> getDefaultGeckoAnimator;
     private IStandAnimator legacyStandAnimHandler;
     
     protected VisibilityMode visibilityMode = VisibilityMode.ALL;
@@ -67,8 +70,7 @@ public abstract class StandEntityModel<T extends StandEntity> extends AgeableMod
     @Deprecated protected IModelPose<T> idleLoop;
     @Deprecated private List<IModelPose<T>> summonPoses;
     @Deprecated protected final Map<StandPose, IActionAnimation<T>> actionAnim = new HashMap<>();
-    @Nullable
-    @Deprecated private IActionAnimation<T> currentActionAnim = null;
+    @Deprecated @Nullable private IActionAnimation<T> currentActionAnim = null;
     
     private Map<ModelRenderer, MutableFloat> secondXRotMap = new HashMap<>();
     
@@ -80,7 +82,7 @@ public abstract class StandEntityModel<T extends StandEntity> extends AgeableMod
             float babyHeadScale, float babyBodyScale, float bodyYOffset) {
         this(RenderType::entityTranslucent, scaleHead, yHeadOffset, zHeadOffset, babyHeadScale, babyBodyScale, bodyYOffset);
     }
-
+    
     protected StandEntityModel(Function<ResourceLocation, RenderType> renderType, boolean scaleHead, float yHeadOffset, float zHeadOffset, 
             float babyHeadScale, float babyBodyScale, float bodyYOffset) {
         super(renderType, scaleHead, yHeadOffset, zHeadOffset, babyHeadScale, babyBodyScale, bodyYOffset);
@@ -89,6 +91,10 @@ public abstract class StandEntityModel<T extends StandEntity> extends AgeableMod
     public final ResourceLocation getModelId() {
         return modelId;
     }
+    
+    public final StandModelRegistryObj getRegistryObj() {
+        return registryObj;
+    }
 
     public void afterInit() {
         if (!initialized) { 
@@ -96,8 +102,25 @@ public abstract class StandEntityModel<T extends StandEntity> extends AgeableMod
             initPoses();
             initActionPoses();
             legacyStandAnimHandler = new LegacyStandAnimator<>(poseReset, idlePose, idleLoop, summonPoses, actionAnim);
+            if (registryObj != null && getDefaultGeckoAnimator == null) {
+                getDefaultGeckoAnimator = registryObj::getDefaultGeckoAnims;
+            }
             initialized = true;
         }
+    }
+    
+    public void setAnimatorSupplier(Supplier<IStandAnimator> supplier) {
+        this.getDefaultGeckoAnimator = supplier;
+    }
+    
+    public IStandAnimator getAnimator() {
+        if (getDefaultGeckoAnimator != null) {
+            IStandAnimator anims = getDefaultGeckoAnimator.get();
+            if (anims != null) {
+                return anims;
+            }
+        }
+        return legacyStandAnimHandler;
     }
 
     public static final void setRotationAngle(ModelRenderer modelRenderer, float x, float y, float z) {
@@ -181,16 +204,6 @@ public abstract class StandEntityModel<T extends StandEntity> extends AgeableMod
             legacyStandAnimHandler.poseStand(entity, this, ticks, yRotOffsetRad, xRotRad, 
                     standPose, actionPhase, phaseCompletion, swingingHand);
         }
-    }
-    
-    protected IStandAnimator getAnimator() {
-        if (registryObj != null) {
-            IStandAnimator anims = registryObj.getGeckoAnims();
-            if (anims != null) {
-                return anims;
-            }
-        }
-        return legacyStandAnimHandler;
     }
     
     public ModelRenderer getModelPart(String name) {
