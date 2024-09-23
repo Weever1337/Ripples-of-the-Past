@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import javax.annotation.Nullable;
+
 import com.github.standobyte.jojo.action.stand.StandEntityAction.Phase;
 import com.github.standobyte.jojo.client.render.entity.model.animnew.Interpolations;
 import com.github.standobyte.jojo.client.render.entity.model.animnew.ParseGeckoAnims;
@@ -96,7 +98,7 @@ public class GeckoStandAnimator implements IStandAnimator {
         return false;
     }
     
-    protected IStandAnimator getIdleAnim(StandEntity entity) {
+    public IStandAnimator getIdleAnim(@Nullable StandEntity entity) {
         return idleAnim;
     }
     

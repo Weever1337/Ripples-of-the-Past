@@ -62,7 +62,7 @@ public class StandActionAnimation implements IStandAnimator {
         
         if (headRot != null) {
             float headRotAmount = GeckoStandAnimator.lerpKeyframes(headRot, seconds, ANIM_SPEED).x();
-            model.headPartsPublic().forEach(part -> {
+            model.headParts().forEach(part -> {
                 part.yRot = MathUtil.rotLerpRad(headRotAmount, part.yRot, yRotOffsetRad);
                 part.xRot = MathUtil.rotLerpRad(headRotAmount, part.xRot, xRotRad);
                 part.zRot = 0;

@@ -101,7 +101,7 @@ public abstract class StandEntityModel<T extends StandEntity> extends AgeableMod
             initOpposites();
             initPoses();
             initActionPoses();
-            legacyStandAnimHandler = new LegacyStandAnimator<>(poseReset, idlePose, idleLoop, summonPoses, actionAnim);
+            legacyStandAnimHandler = new LegacyStandAnimator<>(this, poseReset, idlePose, idleLoop, summonPoses, actionAnim);
             if (registryObj != null && getDefaultGeckoAnimator == null) {
                 getDefaultGeckoAnimator = registryObj::getDefaultGeckoAnims;
             }
@@ -206,27 +206,12 @@ public abstract class StandEntityModel<T extends StandEntity> extends AgeableMod
         }
     }
     
+    @Override
     public ModelRenderer getModelPart(String name) {
         return namedModelParts.get(name);
     }
 
 
-    /**
-     * For addon devs - if you ever override the headParts() or bodyParts() methods in your model, 
-     * make these methods public, so that I can safely remove this cursed thing below in the future
-     * without breaking your addon.
-     */
-    @Deprecated
-    public Iterable<ModelRenderer> headPartsPublic() {
-        return headParts();
-    }
-
-    @Deprecated
-    public Iterable<ModelRenderer> bodyPartsPublic() {
-        return bodyParts();
-    }
-    
-    
     @Deprecated
     public IActionAnimation<T> dammit(T entity, StandPose poseType) {
         return getActionAnim(entity, poseType);
@@ -339,6 +324,12 @@ public abstract class StandEntityModel<T extends StandEntity> extends AgeableMod
     }
 
     public abstract ModelRenderer getArm(HandSide side);
+
+    @Override
+    public abstract Iterable<ModelRenderer> headParts();
+    
+    @Override
+    public abstract Iterable<ModelRenderer> bodyParts();
     
     
     

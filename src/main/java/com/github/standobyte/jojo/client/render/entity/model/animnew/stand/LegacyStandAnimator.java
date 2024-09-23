@@ -17,18 +17,21 @@ import net.minecraft.util.HandSide;
 import net.minecraft.util.math.MathHelper;
 
 public class LegacyStandAnimator<T extends StandEntity> implements IStandAnimator {
-     private ModelPose<T> poseReset;
-     protected IModelPose<T> idlePose;
-     protected IModelPose<T> idleLoop;
-     private List<IModelPose<T>> summonPoses;
-     protected Map<StandPose, IActionAnimation<T>> actionAnim = new HashMap<>();
+    private StandEntityModel<T> model;
+    private ModelPose<T> poseReset;
+    protected IModelPose<T> idlePose;
+    protected IModelPose<T> idleLoop;
+    private List<IModelPose<T>> summonPoses;
+    protected Map<StandPose, IActionAnimation<T>> actionAnim = new HashMap<>();
     
     public LegacyStandAnimator(
+            StandEntityModel<T> model,
             ModelPose<T> poseReset,
             IModelPose<T> idlePose,
             IModelPose<T> idleLoop,
             List<IModelPose<T>> summonPoses,
             Map<StandPose, IActionAnimation<T>> actionAnim) {
+        this.model = model;
         this.poseReset = poseReset;
         this.idlePose = idlePose;
         this.idleLoop = idleLoop;
