@@ -468,7 +468,9 @@ public class StandEntityRenderer<T extends StandEntity, M extends StandEntityMod
                 LivingRenderer.getOverlayCoords(entity, getWhiteOverlayProgress(entity, partialTick)), 1.0F, 1.0F, 1.0F, entity.getAlpha(partialTick));
     }
     
-    
+    /**
+     * Used only in Stand skins UI
+     */
     public void renderIdleWithSkin(MatrixStack matrixStack, StandSkin standSkin, IRenderTypeBuffer buffer, float ticks) {
         matrixStack.pushPose();
         Optional<ResourceLocation> nonDefaultSkin = standSkin.getNonDefaultLocation();

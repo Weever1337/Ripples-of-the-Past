@@ -217,7 +217,7 @@ public class ModStandsInit {
                             .speed(16.0, 19.0)
                             .range(2.0, 10.0)
                             .durability(16.0, 20.0)
-                            .precision(20.0)
+                            .precision(19.999, 20.001)
                             .randomWeight(1)
                             )
                     .addSummonShout(ModSounds.JOTARO_STAR_PLATINUM)
