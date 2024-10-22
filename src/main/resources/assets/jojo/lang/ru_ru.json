@@ -693,6 +693,7 @@
   "_jojo.command.id_ambiguous": "Ambiguous id: %s",
   "commands.stand.give.success.single": "Выдан %s игроку %s",
   "commands.stand.give.success.multiple": "Выдан %s %s игрокам",
+  "commands.stand.give.success.single.random": "Выдан случайный Стенд игроку %s",
   "commands.stand.give.success.multiple.random": "Выданы случайные Стенды %s игрокам",
   "commands.stand.give.failed.single.has": "У %s уже есть Стенд",
   "commands.stand.give.failed.multiple.have": "У всех %s игроков уже есть Стенды",

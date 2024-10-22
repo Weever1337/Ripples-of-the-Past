@@ -393,6 +393,7 @@
   "stand.unknown": "未知のスタンドです: %s",
   "commands.stand.give.success.single": "%s を %s に与えました",
   "commands.stand.give.success.multiple": "%s を %sに与えました",
+  "commands.stand.give.success.single.random": "%s にランダムなスタンドを与えました",
   "commands.stand.give.success.multiple.random": "%s にランダムなスタンドを与えました",
   "commands.stand.give.failed.single.has": "%s は既にスタンドを持っています",
   "commands.stand.give.failed.multiple.have": "全ての%s は既にスタンドを持っています",

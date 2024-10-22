@@ -566,6 +566,7 @@
  "non_stand.unknown": "未知的力量: %s",
  "commands.stand.give.success.single": "已將 %s 給予 %s ",
  "commands.stand.give.success.multiple": "已將 %s 給予玩家 %s",
+ "commands.stand.give.success.single.random": "Gave a random Stand to %s",
  "commands.stand.give.success.multiple.random": "已給予 %s 隨機的替身 ",
  "commands.stand.give.failed.single.has": "玩家 %s 已經擁有替身了",
  "commands.stand.give.failed.multiple.have": "所有玩家已經擁有 %s 這個替身了",

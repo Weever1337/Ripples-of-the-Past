@@ -716,6 +716,7 @@
  "jojo.command.id_ambiguous": "不明确的ID: %s",
  "commands.stand.give.success.single": "已将 %s 给于 %s ",
  "commands.stand.give.success.multiple": "已将 %s 给与玩家 %s",
+ "commands.stand.give.success.single.random": "Gave a random Stand to %s",
  "commands.stand.give.success.multiple.random": "已给于 %s 随机的替身 ",
  "commands.stand.give.failed.single.has": "玩家 %s 已经拥有替身了",
  "commands.stand.give.failed.multiple.have": "所有玩家已拥有 %s 这个替身了",

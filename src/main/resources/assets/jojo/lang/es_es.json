@@ -487,6 +487,7 @@
   "stand.unknown": "Stand Desconocido: %s",
   "commands.stand.give.success.single": "Dio %s a %s",
   "commands.stand.give.success.multiple": "Dio %s a %s jugadores",
+  "commands.stand.give.success.single.random": "Dio Stand aleatorio a %s",
   "commands.stand.give.success.multiple.random": "Dio Stands aleatorios a %s jugadores",
   "commands.stand.give.failed.single.has": "%s ya tiene Stand",
   "commands.stand.give.failed.multiple.have": "Todos %s Los jugadores ya tienen Stands",

@@ -360,6 +360,7 @@
   "stand.unknown" : "Невідомий Станд: %s",
   "commands.stand.give.success.single" : "Надати %s до %s",
   "commands.stand.give.success.multiple" : "Надати %s до %s гравців",
+  "commands.stand.give.success.single.random": "Надання рандомний Станд до %s",
   "commands.stand.give.success.multiple.random" : "Надання рандомних Стандів до %s гравців",
   "commands.stand.give.failed.single.has" : "%s вже має Станд",
   "commands.stand.give.failed.multiple.have" : "Усі %s гравці вже мають Станди",
