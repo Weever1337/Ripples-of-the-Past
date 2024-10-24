@@ -54,16 +54,24 @@ public class HumanoidStandModel<T extends StandEntity> extends StandEntityModel<
     protected ModelRenderer body;
     protected ModelRenderer upperPart;
     protected ModelRenderer torso;
-    protected XRotationModelRenderer leftArm;
+    @Deprecated protected XRotationModelRenderer leftArm;
+    protected ModelRenderer leftArmXRot;
+    protected ModelRenderer leftArmBone;
     protected ModelRenderer leftArmJoint;
     protected ModelRenderer leftForeArm;
-    protected XRotationModelRenderer rightArm;
+    @Deprecated protected XRotationModelRenderer rightArm;
+    protected ModelRenderer rightArmXRot;
+    protected ModelRenderer rightArmBone;
     protected ModelRenderer rightArmJoint;
     protected ModelRenderer rightForeArm;
-    protected XRotationModelRenderer leftLeg;
+    @Deprecated protected XRotationModelRenderer leftLeg;
+    protected ModelRenderer leftLegXRot;
+    protected ModelRenderer leftLegBone;
     protected ModelRenderer leftLegJoint;
     protected ModelRenderer leftLowerLeg;
-    protected XRotationModelRenderer rightLeg;
+    @Deprecated protected XRotationModelRenderer rightLeg;
+    protected ModelRenderer rightLegXRot;
+    protected ModelRenderer rightLegBone;
     protected ModelRenderer rightLegJoint;
     protected ModelRenderer rightLowerLeg;
     
@@ -191,12 +199,20 @@ public class HumanoidStandModel<T extends StandEntity> extends StandEntityModel<
         namedModelParts.put("upperPart", upperPart);
         namedModelParts.put("torso", torso);
         namedModelParts.put("leftArm", leftArm);
+        namedModelParts.put("leftArmXRot", leftArmXRot);
+        namedModelParts.put("leftArmBone", leftArmBone);
         namedModelParts.put("leftForeArm", leftForeArm);
         namedModelParts.put("rightArm", rightArm);
+        namedModelParts.put("rightArmXRot", rightArmXRot);
+        namedModelParts.put("rightArmBone", rightArmBone);
         namedModelParts.put("rightForeArm", rightForeArm);
         namedModelParts.put("leftLeg", leftLeg);
+        namedModelParts.put("leftLegXRot", leftLegXRot);
+        namedModelParts.put("leftLegBone", leftLegBone);
         namedModelParts.put("leftLowerLeg", leftLowerLeg);
         namedModelParts.put("rightLeg", rightLeg);
+        namedModelParts.put("rightLegXRot", rightLegXRot);
+        namedModelParts.put("rightLegBone", rightLegBone);
         namedModelParts.put("rightLowerLeg", rightLowerLeg);
     }
 
@@ -510,9 +526,9 @@ public class HumanoidStandModel<T extends StandEntity> extends StandEntityModel<
     public ModelRenderer getArm(HandSide side) {
         switch (side) {
         case LEFT:
-            return leftArm;
+            return leftArmXRot != null ? leftArmXRot : leftArm;
         case RIGHT:
-            return rightArm;
+            return rightArmXRot != null ? rightArmXRot : rightArm;
         }
         return null;
     }
@@ -538,9 +554,9 @@ public class HumanoidStandModel<T extends StandEntity> extends StandEntityModel<
     public ModelRenderer getLeg(HandSide side) {
         switch (side) {
         case LEFT:
-            return leftLeg;
+            return leftLegXRot != null ? leftLegXRot : leftLeg;
         case RIGHT:
-            return rightLeg;
+            return rightLegXRot != null ? rightLegXRot : rightLeg;
         }
         return null;
     }

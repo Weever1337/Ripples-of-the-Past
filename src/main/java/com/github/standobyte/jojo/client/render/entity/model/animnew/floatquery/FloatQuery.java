@@ -48,7 +48,7 @@ public class FloatQuery implements IFloatSupplier {
             case "query.head_y_rotation":
                 return QueryType.HEAD_Y_ROTATION;
             }
-            throw new IllegalArgumentException(String.format("Unknown query (%s).", string));
+            return null;
         }
     }
     

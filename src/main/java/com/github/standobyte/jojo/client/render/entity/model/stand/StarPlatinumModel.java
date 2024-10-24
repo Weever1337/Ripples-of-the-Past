@@ -427,21 +427,26 @@ public class StarPlatinumModel extends HumanoidStandModel<StarPlatinumEntity> {
         torso.addChild(backFabric);
         backFabric.texOffs(0, 92).addBox(-2.0F, -0.5F, 0.0F, 4.0F, 5.0F, 0.0F, 0.0F, false);
 
-        leftArm = convertLimb(new ModelRenderer(this));
-        leftArm.setPos(6.0F, -10.0F, 0.0F);
-        upperPart.addChild(leftArm);
-        leftArm.texOffs(32, 108).addBox(-2.0F, -2.0F, -2.0F, 4.0F, 6.0F, 4.0F, 0.0F, false);
-        leftArm.texOffs(50, 105).addBox(-1.0F, -2.0F, -2.0F, 3.0F, 6.0F, 4.0F, 0.1F, true);
-        leftArm.texOffs(44, 109).addBox(-1.0F, 3.0F, 1.5F, 2.0F, 2.0F, 1.0F, 0.0F, false);
+        leftArmXRot = new ModelRenderer(this);
+        leftArmXRot.setPos(6.0F, -10.0F, 0.0F);
+        upperPart.addChild(leftArmXRot);
+        
+
+        leftArmBone = new ModelRenderer(this);
+        leftArmBone.setPos(0.0F, 0.0F, 0.0F);
+        leftArmXRot.addChild(leftArmBone);
+        leftArmBone.texOffs(32, 108).addBox(-2.0F, -2.0F, -2.0F, 4.0F, 6.0F, 4.0F, 0.0F, false);
+        leftArmBone.texOffs(50, 105).addBox(-1.0F, -2.0F, -2.0F, 3.0F, 6.0F, 4.0F, 0.1F, true);
+        leftArmBone.texOffs(44, 109).addBox(-1.0F, 3.0F, 1.5F, 2.0F, 2.0F, 1.0F, 0.0F, false);
 
         leftArmJoint = new ModelRenderer(this);
         leftArmJoint.setPos(0.0F, 4.0F, 0.0F);
-        leftArm.addChild(leftArmJoint);
+        leftArmBone.addChild(leftArmJoint);
         leftArmJoint.texOffs(32, 102).addBox(-1.5F, -1.5F, -1.5F, 3.0F, 3.0F, 3.0F, -0.1F, true);
 
         leftForeArm = new ModelRenderer(this);
         leftForeArm.setPos(0.0F, 4.0F, 0.0F);
-        leftArm.addChild(leftForeArm);
+        leftArmBone.addChild(leftForeArm);
         leftForeArm.texOffs(32, 118).addBox(-2.0F, 0.0F, -2.0F, 4.0F, 6.0F, 4.0F, -0.001F, false);
         leftForeArm.texOffs(48, 95).addBox(-2.0F, -0.1F, -2.0F, 4.0F, 2.0F, 4.0F, 0.185F, false);
         leftForeArm.texOffs(48, 95).addBox(-2.0F, 3.0F, -2.0F, 4.0F, 3.0F, 4.0F, 0.15F, false);
@@ -450,21 +455,26 @@ public class StarPlatinumModel extends HumanoidStandModel<StarPlatinumEntity> {
         leftForeArm.texOffs(48, 119).addBox(1.6F, 4.4F, -1.5F, 1.0F, 1.0F, 3.0F, -0.2F, true);
         leftForeArm.texOffs(48, 123).addBox(1.6F, 5.0F, -2.0F, 1.0F, 1.0F, 4.0F, -0.2F, true);
 
-        rightArm = convertLimb(new ModelRenderer(this));
-        rightArm.setPos(-6.0F, -10.0F, 0.0F);
-        upperPart.addChild(rightArm);
-        rightArm.texOffs(0, 108).addBox(-2.0F, -2.0F, -2.0F, 4.0F, 6.0F, 4.0F, 0.0F, false);
-        rightArm.texOffs(18, 105).addBox(-2.0F, -2.0F, -2.0F, 3.0F, 6.0F, 4.0F, 0.1F, false);
-        rightArm.texOffs(12, 109).addBox(-1.0F, 3.0F, 1.5F, 2.0F, 2.0F, 1.0F, 0.0F, false);
+        rightArmXRot = new ModelRenderer(this);
+        rightArmXRot.setPos(-6.0F, -10.0F, 0.0F);
+        upperPart.addChild(rightArmXRot);
+        
+
+        rightArmBone = new ModelRenderer(this);
+        rightArmBone.setPos(0.0F, 0.0F, 0.0F);
+        rightArmXRot.addChild(rightArmBone);
+        rightArmBone.texOffs(0, 108).addBox(-2.0F, -2.0F, -2.0F, 4.0F, 6.0F, 4.0F, 0.0F, false);
+        rightArmBone.texOffs(18, 105).addBox(-2.0F, -2.0F, -2.0F, 3.0F, 6.0F, 4.0F, 0.1F, false);
+        rightArmBone.texOffs(12, 109).addBox(-1.0F, 3.0F, 1.5F, 2.0F, 2.0F, 1.0F, 0.0F, false);
 
         rightArmJoint = new ModelRenderer(this);
         rightArmJoint.setPos(0.0F, 4.0F, 0.0F);
-        rightArm.addChild(rightArmJoint);
+        rightArmBone.addChild(rightArmJoint);
         rightArmJoint.texOffs(0, 102).addBox(-1.5F, -1.5F, -1.5F, 3.0F, 3.0F, 3.0F, -0.1F, false);
 
         rightForeArm = new ModelRenderer(this);
         rightForeArm.setPos(0.0F, 4.0F, 0.0F);
-        rightArm.addChild(rightForeArm);
+        rightArmBone.addChild(rightForeArm);
         rightForeArm.texOffs(0, 118).addBox(-2.0F, 0.0F, -2.0F, 4.0F, 6.0F, 4.0F, -0.001F, false);
         rightForeArm.texOffs(16, 95).addBox(-2.0F, -0.1F, -2.0F, 4.0F, 2.0F, 4.0F, 0.185F, false);
         rightForeArm.texOffs(16, 95).addBox(-2.0F, 3.0F, -2.0F, 4.0F, 3.0F, 4.0F, 0.15F, false);
@@ -473,40 +483,50 @@ public class StarPlatinumModel extends HumanoidStandModel<StarPlatinumEntity> {
         rightForeArm.texOffs(16, 119).addBox(-2.6F, 4.4F, -1.5F, 1.0F, 1.0F, 3.0F, -0.2F, false);
         rightForeArm.texOffs(16, 123).addBox(-2.6F, 5.0F, -2.0F, 1.0F, 1.0F, 4.0F, -0.2F, false);
 
-        leftLeg = convertLimb(new ModelRenderer(this));
-        leftLeg.setPos(2.0F, 12.0F, 0.0F);
-        body.addChild(leftLeg);
-        leftLeg.texOffs(96, 108).addBox(-2.0F, 0.0F, -2.0F, 4.0F, 6.0F, 4.0F, 0.0F, false);
-        leftLeg.texOffs(112, 108).addBox(-2.0F, 0.0F, -2.0F, 4.0F, 6.0F, 4.0F, 0.1F, false);
-        leftLeg.texOffs(108, 119).addBox(-1.15F, 4.5F, -2.5F, 2.0F, 2.0F, 1.0F, 0.0F, true);
+        leftLegXRot = new ModelRenderer(this);
+        leftLegXRot.setPos(2.0F, 12.0F, 0.0F);
+        body.addChild(leftLegXRot);
+        
+
+        leftLegBone = new ModelRenderer(this);
+        leftLegBone.setPos(0.0F, 0.0F, 0.0F);
+        leftLegXRot.addChild(leftLegBone);
+        leftLegBone.texOffs(96, 108).addBox(-2.0F, 0.0F, -2.0F, 4.0F, 6.0F, 4.0F, 0.0F, false);
+        leftLegBone.texOffs(112, 108).addBox(-2.0F, 0.0F, -2.0F, 4.0F, 6.0F, 4.0F, 0.1F, false);
+        leftLegBone.texOffs(108, 119).addBox(-1.15F, 4.5F, -2.5F, 2.0F, 2.0F, 1.0F, 0.0F, true);
 
         leftLegJoint = new ModelRenderer(this);
         leftLegJoint.setPos(0.0F, 6.0F, 0.0F);
-        leftLeg.addChild(leftLegJoint);
+        leftLegBone.addChild(leftLegJoint);
         leftLegJoint.texOffs(96, 102).addBox(-1.5F, -1.5F, -1.5F, 3.0F, 3.0F, 3.0F, -0.1F, true);
 
         leftLowerLeg = new ModelRenderer(this);
         leftLowerLeg.setPos(0.0F, 6.0F, 0.0F);
-        leftLeg.addChild(leftLowerLeg);
+        leftLegBone.addChild(leftLowerLeg);
         leftLowerLeg.texOffs(96, 118).addBox(-2.0F, 0.0F, -2.0F, 4.0F, 6.0F, 4.0F, -0.001F, false);
         leftLowerLeg.texOffs(112, 118).addBox(-2.0F, 0.0F, -2.0F, 4.0F, 6.0F, 4.0F, 0.15F, false);
         leftLowerLeg.texOffs(108, 102).addBox(-2.0F, 0.8F, -2.0F, 4.0F, 1.0F, 4.0F, 0.1F, true);
 
-        rightLeg = convertLimb(new ModelRenderer(this));
-        rightLeg.setPos(-2.0F, 12.0F, 0.0F);
-        body.addChild(rightLeg);
-        rightLeg.texOffs(64, 108).addBox(-2.0F, 0.0F, -2.0F, 4.0F, 6.0F, 4.0F, 0.0F, false);
-        rightLeg.texOffs(80, 108).addBox(-2.0F, 0.0F, -2.0F, 4.0F, 6.0F, 4.0F, 0.1F, false);
-        rightLeg.texOffs(76, 119).addBox(-0.85F, 4.5F, -2.5F, 2.0F, 2.0F, 1.0F, 0.0F, false);
+        rightLegXRot = new ModelRenderer(this);
+        rightLegXRot.setPos(-2.0F, 12.0F, 0.0F);
+        body.addChild(rightLegXRot);
+        
+
+        rightLegBone = new ModelRenderer(this);
+        rightLegBone.setPos(0.0F, 0.0F, 0.0F);
+        rightLegXRot.addChild(rightLegBone);
+        rightLegBone.texOffs(64, 108).addBox(-2.0F, 0.0F, -2.0F, 4.0F, 6.0F, 4.0F, 0.0F, false);
+        rightLegBone.texOffs(80, 108).addBox(-2.0F, 0.0F, -2.0F, 4.0F, 6.0F, 4.0F, 0.1F, false);
+        rightLegBone.texOffs(76, 119).addBox(-0.85F, 4.5F, -2.5F, 2.0F, 2.0F, 1.0F, 0.0F, false);
 
         rightLegJoint = new ModelRenderer(this);
         rightLegJoint.setPos(0.0F, 6.0F, 0.0F);
-        rightLeg.addChild(rightLegJoint);
+        rightLegBone.addChild(rightLegJoint);
         rightLegJoint.texOffs(64, 102).addBox(-1.5F, -1.5F, -1.5F, 3.0F, 3.0F, 3.0F, -0.1F, false);
 
         rightLowerLeg = new ModelRenderer(this);
         rightLowerLeg.setPos(0.0F, 6.0F, 0.0F);
-        rightLeg.addChild(rightLowerLeg);
+        rightLegBone.addChild(rightLowerLeg);
         rightLowerLeg.texOffs(64, 118).addBox(-2.0F, 0.0F, -2.0F, 4.0F, 6.0F, 4.0F, -0.001F, false);
         rightLowerLeg.texOffs(80, 118).addBox(-2.0F, 0.0F, -2.0F, 4.0F, 6.0F, 4.0F, 0.15F, false);
         rightLowerLeg.texOffs(76, 102).addBox(-2.0F, 0.8F, -2.0F, 4.0F, 1.0F, 4.0F, 0.1F, false);

@@ -27,7 +27,11 @@ public interface IFloatSupplier {
                 throw new IllegalArgumentException(String.format(
                         "Math expressions or formulas are not yet supported (%s).", string));
             }
-            return new FloatQuery(FloatQuery.QueryType.fromName(string));
+            FloatQuery.QueryType queryType = FloatQuery.QueryType.fromName(string);
+            if (queryType == null) {
+                throw new IllegalArgumentException(String.format("Unknown query (%s).", string));
+            }
+            return new FloatQuery(queryType);
         }
     }
 }
