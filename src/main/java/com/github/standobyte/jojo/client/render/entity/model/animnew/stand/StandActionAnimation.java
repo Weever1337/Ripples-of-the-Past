@@ -11,6 +11,7 @@ import com.github.standobyte.jojo.client.render.entity.model.stand.StandEntityMo
 import com.github.standobyte.jojo.entity.stand.StandEntity;
 import com.github.standobyte.jojo.entity.stand.StandPose;
 
+import it.unimi.dsi.fastutil.floats.Float2ObjectArrayMap;
 import it.unimi.dsi.fastutil.floats.Float2ObjectMap;
 import net.minecraft.util.HandSide;
 import net.minecraft.util.math.MathHelper;
@@ -60,6 +61,22 @@ public class StandActionAnimation implements IStandAnimator {
         GeckoStandAnimator.animateSecs(model, anim, seconds, ANIM_SPEED, animContext);
         
         return true;
+    }
+    
+    
+    public void parseAssignmentInstruction(String field, String value, float keyframeTime) {
+        switch (field) {
+        case "phase":
+            Phase phase = Phase.valueOf(value);
+            if (phasesTimeline == null) {
+                phasesTimeline = new Float2ObjectArrayMap<>();
+            }
+            phasesTimeline.put(keyframeTime, phase);
+            break;
+        case "barrage":
+            
+            break;
+        }
     }
     
 }

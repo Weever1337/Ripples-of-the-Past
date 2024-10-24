@@ -21,22 +21,22 @@ public class StandPose {
         return name;
     }
     
-    public StandActionAnimation getAnim(List<StandActionAnimation> anims, StandEntity standEntity) {
-        return anims.get(0);
+    public StandActionAnimation getAnim(List<StandActionAnimation> variants, StandEntity standEntity) {
+        return variants.get(0);
     }
     
     public static final StandPose IDLE = new StandPose("idle");
     public static final StandPose SUMMON = new StandPose("summon") {
         @Override
-        public StandActionAnimation getAnim(List<StandActionAnimation> anims, StandEntity standEntity) {
-            return anims.get(standEntity.getSummonPoseRandomByte() % anims.size());
+        public StandActionAnimation getAnim(List<StandActionAnimation> variants, StandEntity standEntity) {
+            return variants.get(standEntity.getSummonPoseRandomByte() % variants.size());
         }
     };
     public static final StandPose BLOCK = new StandPose("block");
     public static final StandPose LIGHT_ATTACK = new StandPose("jab") {
         @Override
-        public StandActionAnimation getAnim(List<StandActionAnimation> anims, StandEntity standEntity) {
-            return super.getAnim(anims, standEntity); // FIXME string jab anims one after another (string as in the punches, not the class)
+        public StandActionAnimation getAnim(List<StandActionAnimation> variants, StandEntity standEntity) {
+            return super.getAnim(variants, standEntity); // FIXME string jab anims one after another (string as in the punches, not the class)
         }
     };
     public static final StandPose HEAVY_ATTACK = new StandPose("heavy_punch");

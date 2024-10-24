@@ -20,8 +20,6 @@ import com.github.standobyte.jojo.entity.stand.StandPose;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
-import it.unimi.dsi.fastutil.floats.Float2ObjectArrayMap;
-import it.unimi.dsi.fastutil.floats.Float2ObjectMap;
 import net.minecraft.client.renderer.model.ModelRenderer;
 import net.minecraft.util.HandSide;
 import net.minecraft.util.JSONUtils;
@@ -136,8 +134,6 @@ public class GeckoStandAnimator implements IStandAnimator {
         
         JsonObject instructionsJson = animJson.getAsJsonObject("timeline");
         if (instructionsJson != null) {
-            Float2ObjectMap<Phase> phasesTimeline = new Float2ObjectArrayMap<>();
-            
             for (Map.Entry<String, JsonElement> keyframeEntry : instructionsJson.entrySet()) {
                 float time = Float.parseFloat(keyframeEntry.getKey());
                 JsonElement value = keyframeEntry.getValue();
@@ -145,23 +141,13 @@ public class GeckoStandAnimator implements IStandAnimator {
                 for (JsonElement instrJson : instructions) {
                     if (JSONUtils.isStringValue(instrJson)) {
                         String instr = instrJson.getAsString();
-                        
                         String[] assignment = instr.split("[ ]*=[ ]*");
                         if (assignment.length == 2) {
                             if (assignment[1].endsWith(";")) assignment[1] = assignment[1].substring(0, assignment[1].length() - 1);
-                            switch (assignment[0]) {
-                            case "phase":
-                                Phase phase = Phase.valueOf(assignment[1]);
-                                phasesTimeline.put(time, phase);
-                                break;
-                            }
+                            standAnim.parseAssignmentInstruction(assignment[0], assignment[1], time);
                         }
                     }
                 }
-            }
-            
-            if (!phasesTimeline.isEmpty()) {
-                standAnim.phasesTimeline = phasesTimeline;
             }
         }
         
