@@ -6,8 +6,8 @@ import java.util.Optional;
 import java.util.function.IntFunction;
 import java.util.stream.StreamSupport;
 
+import com.github.standobyte.jojo.client.render.entity.model.animnew.floatquery.KeyframeWithQuery;
 import com.github.standobyte.jojo.client.render.entity.model.animnew.mojang.Animation;
-import com.github.standobyte.jojo.client.render.entity.model.animnew.mojang.Keyframe;
 import com.github.standobyte.jojo.client.render.entity.model.animnew.mojang.Transformation;
 import com.github.standobyte.jojo.client.render.entity.model.animnew.mojang.Transformation.Interpolation;
 import com.github.standobyte.jojo.util.general.MathUtil;
@@ -17,7 +17,6 @@ import com.google.gson.JsonObject;
 
 import it.unimi.dsi.fastutil.floats.Float2ObjectArrayMap;
 import it.unimi.dsi.fastutil.floats.Float2ObjectMap;
-import net.minecraft.util.math.vector.Vector3f;
 
 public class ParseGeckoAnims {
     
@@ -56,7 +55,7 @@ public class ParseGeckoAnims {
     private static void parseKeyframes(Animation.Builder anim, JsonObject boneTfJson, String targetName, Transformation.Target target, String boneName) {
         JsonObject keyframesJson = boneTfJson.getAsJsonObject(targetName);
         if (keyframesJson != null) {
-            Float2ObjectMap<Keyframe> timeline = new Float2ObjectArrayMap<>();
+            Float2ObjectMap<KeyframeWithQuery> timeline = new Float2ObjectArrayMap<>();
             for (Map.Entry<String, JsonElement> rotationJson : keyframesJson.entrySet()) {
                 float time;
                 JsonObject rotation;
@@ -72,7 +71,8 @@ public class ParseGeckoAnims {
                 JsonElement rotVecJsonElem = rotation.get("vector");
                 if (rotVecJsonElem == null && rotation.has("post")) rotVecJsonElem = rotation.get("post").getAsJsonObject().get("vector");
                 JsonArray rotVecJson = rotVecJsonElem.getAsJsonArray();
-                Vector3f rotVec = fromJson(rotVecJson);
+                
+                KeyframeWithQuery rotVec = KeyframeWithQuery.parseJsonVec(rotVecJson);
                 if ("rotation".equals(targetName)) {
                     rotVec.mul(MathUtil.DEG_TO_RAD);
                 }
@@ -89,10 +89,10 @@ public class ParseGeckoAnims {
                         })
                         .orElse(new double[0]);
                 Interpolation lerp = Interpolations.getLerpMode(easingName, easingArgs);
-                timeline.put(time, new Keyframe(time, rotVec, lerp));
+                timeline.put(time, rotVec.withKeyframe(time, lerp));
             }
             
-            Keyframe[] keyframes = keyframesToArray(timeline, Keyframe[]::new);
+            KeyframeWithQuery[] keyframes = keyframesToArray(timeline, KeyframeWithQuery[]::new);
             anim.addBoneAnimation(boneName, new Transformation(target, keyframes));
         }
     }
@@ -104,10 +104,4 @@ public class ParseGeckoAnims {
                 .toArray(arrayConstructor);
     }
     
-    private static Vector3f fromJson(JsonArray array) {
-        return new Vector3f(
-                array.get(0).getAsFloat(),
-                array.get(1).getAsFloat(),
-                array.get(2).getAsFloat());
-    }
 }

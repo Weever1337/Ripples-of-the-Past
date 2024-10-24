@@ -188,10 +188,13 @@
 							"easing": "linear"
 						}
 					}
+				},
+				"head": {
+					"rotation": {
+						"vector": ["query.head_x_rotation", "query.head_y_rotation", 0],
+						"easing": "linear"
+					}
 				}
-			},
-			"timeline": {
-				"0.0": "headRot = 1;"
 			}
 		},
 		"summon1": {
@@ -205,7 +208,7 @@
 							"easing": "linear"
 						},
 						"1.0": {
-							"vector": [0, 0, 0],
+							"vector": ["query.head_x_rotation", "query.head_y_rotation", 0],
 							"easing": "linear"
 						}
 					}
@@ -348,10 +351,6 @@
 						}
 					}
 				}
-			},
-			"timeline": {
-				"0.75": "headRot = 0;",
-				"1.0": "headRot = 1;"
 			}
 		},
 		"summon2": {
@@ -365,7 +364,7 @@
 							"easing": "linear"
 						},
 						"1.0": {
-							"vector": [0, 0, 0],
+							"vector": ["query.head_x_rotation", "query.head_y_rotation", 0],
 							"easing": "linear"
 						}
 					}
@@ -514,10 +513,6 @@
 						}
 					}
 				}
-			},
-			"timeline": {
-				"0.75": "headRot = 0;",
-				"1.0": "headRot = 1;"
 			}
 		},
 		"summon3": {
@@ -531,7 +526,7 @@
 							"easing": "linear"
 						},
 						"1.0": {
-							"vector": [0, 0, 0],
+							"vector": ["query.head_x_rotation", "query.head_y_rotation", 0],
 							"easing": "linear"
 						}
 					}
@@ -680,10 +675,6 @@
 						}
 					}
 				}
-			},
-			"timeline": {
-				"0.75": "headRot = 0;",
-				"1.0": "headRot = 1;"
 			}
 		},
 		"jab1": {
@@ -1859,17 +1850,7 @@
 				},
 				"leftArm": {
 					"rotation": {
-						"0.0": {
-							"vector": [-90, 0, -90]
-						},
-						"0.1": {
-							"vector": [22.5, 0, -60],
-							"easing": "easeInCubic"
-						},
-						"0.2": {
-							"vector": [-90, 0, -90],
-							"easing": "easeInCubic"
-						}
+						"vector": ["query.head_x_rotation", 0, 0]
 					}
 				},
 				"leftForeArm": {
@@ -1889,17 +1870,7 @@
 				},
 				"rightArm": {
 					"rotation": {
-						"0.0": {
-							"vector": [22.5, 0, 60]
-						},
-						"0.1": {
-							"vector": [-90, 0, 90],
-							"easing": "easeInCubic"
-						},
-						"0.2": {
-							"vector": [22.5, 0, 60],
-							"easing": "easeInCubic"
-						}
+						"vector": ["query.head_x_rotation", 0, 0]
 					}
 				},
 				"rightForeArm": {
@@ -1964,6 +1935,36 @@
 						},
 						"0.2": {
 							"vector": [0, 30, 0],
+							"easing": "easeInCubic"
+						}
+					}
+				},
+				"leftArmBone": {
+					"rotation": {
+						"0.0": {
+							"vector": [-90, 0, -90]
+						},
+						"0.1": {
+							"vector": [22.5, 0, -60],
+							"easing": "easeInCubic"
+						},
+						"0.2": {
+							"vector": [-90, 0, -90],
+							"easing": "easeInCubic"
+						}
+					}
+				},
+				"rightArmBone": {
+					"rotation": {
+						"0.0": {
+							"vector": [22.5, 0, 60]
+						},
+						"0.1": {
+							"vector": [-90, 0, 90],
+							"easing": "easeInCubic"
+						},
+						"0.2": {
+							"vector": [22.5, 0, 60],
 							"easing": "easeInCubic"
 						}
 					}

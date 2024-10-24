@@ -5,12 +5,11 @@ import java.util.Optional;
 import javax.annotation.Nullable;
 
 import com.github.standobyte.jojo.action.stand.StandEntityAction.Phase;
+import com.github.standobyte.jojo.client.render.entity.model.animnew.floatquery.FloatQuery;
 import com.github.standobyte.jojo.client.render.entity.model.animnew.mojang.Animation;
-import com.github.standobyte.jojo.client.render.entity.model.animnew.mojang.Keyframe;
 import com.github.standobyte.jojo.client.render.entity.model.stand.StandEntityModel;
 import com.github.standobyte.jojo.entity.stand.StandEntity;
 import com.github.standobyte.jojo.entity.stand.StandPose;
-import com.github.standobyte.jojo.util.general.MathUtil;
 
 import it.unimi.dsi.fastutil.floats.Float2ObjectMap;
 import net.minecraft.util.HandSide;
@@ -20,7 +19,6 @@ public class StandActionAnimation implements IStandAnimator {
     public static final float ANIM_SPEED = 1;
     public final Animation anim;
     
-    @Nullable Keyframe[] headRot;
     @Nullable Float2ObjectMap<Phase> phasesTimeline;
     
     public StandActionAnimation(Animation anim) {
@@ -58,16 +56,9 @@ public class StandActionAnimation implements IStandAnimator {
             seconds = anim.looping() ? (ticks / 20.0f) % anim.lengthInSeconds() : ticks / 20.0f;
         }
         
-        GeckoStandAnimator.animateSecs(model, anim, seconds, ANIM_SPEED);
+        FloatQuery.AnimContext animContext = FloatQuery.AnimContext.makeContext(entity, ticks, yRotOffsetRad, xRotRad, actionPhase, phaseCompletion);
+        GeckoStandAnimator.animateSecs(model, anim, seconds, ANIM_SPEED, animContext);
         
-        if (headRot != null) {
-            float headRotAmount = GeckoStandAnimator.lerpKeyframes(headRot, seconds, ANIM_SPEED).x();
-            model.headParts().forEach(part -> {
-                part.yRot = MathUtil.rotLerpRad(headRotAmount, part.yRot, yRotOffsetRad);
-                part.xRot = MathUtil.rotLerpRad(headRotAmount, part.xRot, xRotRad);
-                part.zRot = 0;
-            });
-        }
         return true;
     }
     

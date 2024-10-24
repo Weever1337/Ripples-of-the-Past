@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.github.standobyte.jojo.client.render.entity.model.animnew.floatquery.FloatQuery;
+import com.github.standobyte.jojo.client.render.entity.model.animnew.floatquery.KeyframeWithQuery;
 import com.github.standobyte.jojo.client.render.entity.model.animnew.mojang.Animation;
 import com.github.standobyte.jojo.client.render.entity.model.animnew.mojang.Keyframe;
 import com.github.standobyte.jojo.client.render.entity.model.animnew.mojang.Transformation;
@@ -20,6 +22,7 @@ public class AnimTimestamp {
         this.boneAnimations = boneAnimations;
     }
     
+    @Deprecated
     public static AnimTimestamp timestamp(Animation anim, float timeInSeconds) {
         if (timeInSeconds > anim.lengthInSeconds()) {
             if (anim.looping()) {
@@ -34,11 +37,12 @@ public class AnimTimestamp {
         for (Map.Entry<String, List<Transformation>> entry : anim.boneAnimations().entrySet()) {
             List<Transformation> timestampTransforms = new ArrayList<>();
             for (Transformation tf : entry.getValue()) {
-                Keyframe[] keyframes = tf.keyframes();
+                FloatQuery.AnimContext emptyCtx = FloatQuery.AnimContext.clearContext();
+                Keyframe[] keyframes = tf.keyframes(emptyCtx);
                 Vector3f vec = GeckoStandAnimator.lerpKeyframes(keyframes, timeInSeconds, 1);
                 
-                Keyframe timestampKeyframe = new Keyframe(0, vec, Interpolations.LINEAR);
-                Transformation timestampTf = new Transformation(tf.target(), new Keyframe[] { timestampKeyframe });
+                KeyframeWithQuery timestampKeyframe = KeyframeWithQuery.constant(vec).withKeyframe(0, Interpolations.LINEAR);
+                Transformation timestampTf = new Transformation(tf.target(), new KeyframeWithQuery[] { timestampKeyframe });
                 timestampTransforms.add(timestampTf);
             }
             boneAnimations.put(entry.getKey(), timestampTransforms);

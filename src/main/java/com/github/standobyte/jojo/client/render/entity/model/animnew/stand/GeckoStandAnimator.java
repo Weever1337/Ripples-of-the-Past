@@ -10,12 +10,10 @@ import java.util.Optional;
 import javax.annotation.Nullable;
 
 import com.github.standobyte.jojo.action.stand.StandEntityAction.Phase;
-import com.github.standobyte.jojo.client.render.entity.model.animnew.Interpolations;
-import com.github.standobyte.jojo.client.render.entity.model.animnew.ParseGeckoAnims;
+import com.github.standobyte.jojo.client.render.entity.model.animnew.floatquery.FloatQuery;
 import com.github.standobyte.jojo.client.render.entity.model.animnew.mojang.Animation;
 import com.github.standobyte.jojo.client.render.entity.model.animnew.mojang.Keyframe;
 import com.github.standobyte.jojo.client.render.entity.model.animnew.mojang.Transformation;
-import com.github.standobyte.jojo.client.render.entity.model.animnew.mojang.Transformation.Interpolation;
 import com.github.standobyte.jojo.client.render.entity.model.stand.StandEntityModel;
 import com.github.standobyte.jojo.entity.stand.StandEntity;
 import com.github.standobyte.jojo.entity.stand.StandPose;
@@ -113,18 +111,18 @@ public class GeckoStandAnimator implements IStandAnimator {
     }
     
     private static final Vector3f TEMP = new Vector3f();
-    public static void animate(StandEntityModel<?> model, Animation animation, float ticks, float animSpeed) {
+    public static void animate(StandEntityModel<?> model, Animation animation, float ticks, float animSpeed, FloatQuery.AnimContext animContext) {
         float seconds = animation.looping() ? (ticks / 20.0f) % animation.lengthInSeconds() : ticks / 20.0f;
-        animateSecs(model, animation, seconds, animSpeed);
+        animateSecs(model, animation, seconds, animSpeed, animContext);
     }
     
-    public static void animateSecs(StandEntityModel<?> model, Animation animation, float seconds, float animSpeed) {
+    public static void animateSecs(StandEntityModel<?> model, Animation animation, float seconds, float animSpeed, FloatQuery.AnimContext animContext) {
         for (Map.Entry<String, List<Transformation>> entry : animation.boneAnimations().entrySet()) {
             ModelRenderer modelPart = model.getModelPart(entry.getKey());
             if (modelPart != null) {
                 List<Transformation> transformations = entry.getValue();
                 for (Transformation tf : transformations) {
-                    Keyframe[] keyframes = tf.keyframes();
+                    Keyframe[] keyframes = tf.keyframes(animContext);
                     lerpKeyframes(keyframes, seconds, animSpeed);
                     tf.target().apply(modelPart, TEMP);
                 }
@@ -138,7 +136,6 @@ public class GeckoStandAnimator implements IStandAnimator {
         
         JsonObject instructionsJson = animJson.getAsJsonObject("timeline");
         if (instructionsJson != null) {
-            Float2ObjectMap<Keyframe> headRotTimeline = new Float2ObjectArrayMap<>();
             Float2ObjectMap<Phase> phasesTimeline = new Float2ObjectArrayMap<>();
             
             for (Map.Entry<String, JsonElement> keyframeEntry : instructionsJson.entrySet()) {
@@ -153,11 +150,6 @@ public class GeckoStandAnimator implements IStandAnimator {
                         if (assignment.length == 2) {
                             if (assignment[1].endsWith(";")) assignment[1] = assignment[1].substring(0, assignment[1].length() - 1);
                             switch (assignment[0]) {
-                            case "headRot":
-                                float headRotVal = Float.parseFloat(assignment[1]);
-                                Interpolation lerp = Interpolations.LINEAR;
-                                headRotTimeline.put(time, new Keyframe(time, new Vector3f(headRotVal, 0, 0), lerp));
-                                break;
                             case "phase":
                                 Phase phase = Phase.valueOf(assignment[1]);
                                 phasesTimeline.put(time, phase);
@@ -168,9 +160,6 @@ public class GeckoStandAnimator implements IStandAnimator {
                 }
             }
             
-            if (!headRotTimeline.isEmpty()) {
-                standAnim.headRot = ParseGeckoAnims.keyframesToArray(headRotTimeline, Keyframe[]::new);
-            }
             if (!phasesTimeline.isEmpty()) {
                 standAnim.phasesTimeline = phasesTimeline;
             }

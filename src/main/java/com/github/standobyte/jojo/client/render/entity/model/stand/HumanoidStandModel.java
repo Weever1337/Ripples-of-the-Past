@@ -280,6 +280,7 @@ public class HumanoidStandModel<T extends StandEntity> extends StandEntityModel<
     }
 
     @Override
+    @Deprecated
     protected void initActionPoses() {
         super.initActionPoses();
         
