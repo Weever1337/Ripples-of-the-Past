@@ -668,6 +668,17 @@ public class StandEntity extends LivingEntity implements IStandManifestation, IE
         }
         return super.isAlliedTo(entity);
     }
+    
+    
+    
+    @Override
+    public boolean isBaby() {
+        LivingEntity user = getUser();
+        if (user != null) {
+            return user.isBaby();
+        }
+        return super.isBaby();
+    }
 
 
 
