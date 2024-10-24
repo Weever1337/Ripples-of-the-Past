@@ -4,14 +4,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import com.github.standobyte.jojo.action.stand.StandEntityAction;
-import com.github.standobyte.jojo.client.render.entity.pose.IModelPose;
-import com.github.standobyte.jojo.client.render.entity.pose.ModelPose;
-import com.github.standobyte.jojo.client.render.entity.pose.ModelPoseTransition;
-import com.github.standobyte.jojo.client.render.entity.pose.ModelPoseTransitionMultiple;
-import com.github.standobyte.jojo.client.render.entity.pose.RotationAngle;
-import com.github.standobyte.jojo.client.render.entity.pose.anim.PosedActionAnimation;
-import com.github.standobyte.jojo.entity.stand.StandPose;
 import com.github.standobyte.jojo.entity.stand.stands.StarPlatinumEntity;
 
 import net.minecraft.client.renderer.model.ModelRenderer;
@@ -576,45 +568,6 @@ public class StarPlatinumModel extends HumanoidStandModel<StarPlatinumEntity> {
             hair.yRot += yRotAnim * 0.0125F;
         }
         ticksPrev = ticks;
-    }
-
-    // TODO remove allat, we're gonna parse the gecko animations now
-    @Override
-    protected void initActionPoses() {
-        actionAnim.put(StandPose.RANGED_ATTACK, new PosedActionAnimation.Builder<StarPlatinumEntity>()
-                .addPose(StandEntityAction.Phase.BUTTON_HOLD, new ModelPose<>(new RotationAngle[] {
-                        new RotationAngle(body, 0.0F, -0.48F, 0.0F),
-                        new RotationAngle(leftArm, 0.0F, 0.0F, -0.7854F),
-                        new RotationAngle(leftForeArm, 0.0F, 0.0F, 0.6109F),
-                        new RotationAngle(rightArm, -1.0908F, 0.0F, 1.5708F), 
-                        new RotationAngle(rightForeArm, 0.0F, 0.0F, 0.0F)
-                }))
-                .build(idlePose));
-        
-
-        IModelPose<StarPlatinumEntity> uppercutPose1 = new ModelPose<>(new RotationAngle[] {
-                RotationAngle.fromDegrees(upperPart, 0F, 15F, 0F), 
-                RotationAngle.fromDegrees(leftArm, 10F, 0F, -60F),
-                RotationAngle.fromDegrees(leftForeArm, -90F, 15F, 90F),
-                RotationAngle.fromDegrees(rightArm, 45F, 0F, 15F), 
-                RotationAngle.fromDegrees(rightForeArm, -90F, 0, -90F)
-        });
-        IModelPose<StarPlatinumEntity> uppercutPose2 = new ModelPose<>(new RotationAngle[] {
-                RotationAngle.fromDegrees(upperPart, 0F, -30F, 0F), 
-                RotationAngle.fromDegrees(leftArm, 0F, 0F, -90F),
-                RotationAngle.fromDegrees(leftForeArm, -105F, 0F, 0F),
-                RotationAngle.fromDegrees(rightArm, -135F, 45F, 0F), 
-                RotationAngle.fromDegrees(rightForeArm, -90F, 60F, -90F)
-        });
-        actionAnim.put(StandPose.HEAVY_ATTACK_FINISHER, new PosedActionAnimation.Builder<StarPlatinumEntity>()
-                .addPose(StandEntityAction.Phase.WINDUP, new ModelPoseTransition<>(idlePose, uppercutPose1))
-                .addPose(StandEntityAction.Phase.PERFORM, new ModelPoseTransition<>(uppercutPose1, uppercutPose2))
-                .addPose(StandEntityAction.Phase.RECOVERY, new ModelPoseTransitionMultiple.Builder<>(uppercutPose2)
-                        .addPose(0.5F, uppercutPose2)
-                        .build(idlePose))
-                .build(idlePose));
-        
-        super.initActionPoses();
     }
     
 }

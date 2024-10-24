@@ -48,7 +48,7 @@ public abstract class StandEntityAction extends StandAction implements IStandPha
     protected final int standRecoveryDuration;
     private final AutoSummonMode autoSummonMode;
     private final float userWalkSpeed;
-    private final StandPose standPose;
+    protected StandPose standPose;
     @Nullable
     protected final StandRelativeOffset userOffset;
     @Nullable

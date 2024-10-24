@@ -98,9 +98,9 @@ public class StandModelRegistry {
             this.anims = anims;
         }
         
-        @Nullable
-        public StandActionAnimation getAnim(String animName) {
-            return anims != null ? anims.getNamedAnim(animName) : null;
-        }
+//        @Nullable
+//        public StandActionAnimation getAnim(String animName) {
+//            return anims != null ? anims.getNamedAnim(animName) : null;
+//        }
     }
 }

@@ -23,7 +23,7 @@ public class ParseGeckoAnims {
     
     // "geckolib_format_version": 2
     public static Animation parseAnim(JsonObject animJson) {
-        float lengthSecs = animJson.get("animation_length").getAsFloat();
+        float lengthSecs = animJson.has("animation_length") ? animJson.get("animation_length").getAsFloat() : 0;
         Animation.Builder builder = Animation.Builder.create(lengthSecs);
 
         boolean loop = false;

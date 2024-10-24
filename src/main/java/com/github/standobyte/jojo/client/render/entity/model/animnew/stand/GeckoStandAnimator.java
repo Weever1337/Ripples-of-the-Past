@@ -32,29 +32,23 @@ import net.minecraft.util.math.vector.Vector3f;
 
 public class GeckoStandAnimator implements IStandAnimator {
     public static boolean IS_TESTING_GECKO = false; // if false, the legacy code animator is used as a fallback
-    private final Map<String, StandActionAnimation> namedAnimations = new HashMap<>();
-    private final List<StandActionAnimation> summonAnims = new ArrayList<>();
+    private final Map<String, List<StandActionAnimation>> namedAnimations = new HashMap<>();
     private StandActionAnimation idleAnim;
     
     public GeckoStandAnimator() {}
     
     
     public void putNamedAnim(String name, StandActionAnimation anim) {
-        StandActionAnimation prevAnim = namedAnimations.put(name, anim);
-        if (name.startsWith(StandPose.SUMMON.getName())) {
-            if (prevAnim != null) {
-                summonAnims.remove(prevAnim);
-            }
-            summonAnims.add(anim);
-        }
-        else if ("idle".equals(name)) {
+        name = name.replaceAll("\\d*$", ""); // removes digits at the end
+        namedAnimations.computeIfAbsent(name, __ -> new ArrayList<>()).add(anim);
+        if (StandPose.IDLE.getName().equals(name)) {
             idleAnim = anim;
         }
     }
 
-    public StandActionAnimation getNamedAnim(String name) {
-        return namedAnimations.get(name);
-    }
+//    public StandActionAnimation getNamedAnim(String name) {
+//        return namedAnimations.get(name);
+//    }
     
     public void onLoad() {
         
@@ -63,30 +57,33 @@ public class GeckoStandAnimator implements IStandAnimator {
     @Override
     public boolean poseStand(StandEntity entity, StandEntityModel<?> model, float ticks, float yRotOffsetRad, float xRotRad, 
             StandPose standPose, Optional<Phase> actionPhase, float phaseCompletion, HandSide swingingHand) {
-        if (standPose == StandPose.SUMMON && summonAnims.size() > 0) {
-            StandActionAnimation summonAnim = summonAnims.get(entity.getSummonPoseRandomByte() % summonAnims.size());
-
-            if (ticks > summonAnim.anim.lengthInSeconds() * 20) {
-                standPose = StandPose.IDLE;
-                model.setStandPose(standPose, entity);
+        if (standPose == StandPose.SUMMON) {
+            List<StandActionAnimation> summonAnims = namedAnimations.get(StandPose.SUMMON.getName());
+            if (summonAnims != null && summonAnims.size() > 0) {
+                StandActionAnimation summonAnim = StandPose.SUMMON.getAnim(summonAnims, entity);
+                
+                if (ticks > summonAnim.anim.lengthInSeconds() * 20) {
+                    standPose = StandPose.IDLE;
+                    model.setStandPose(standPose, entity);
+                }
+                
+                model.idleLoopTickStamp = ticks;
+                return summonAnim.poseStand(entity, model, ticks, yRotOffsetRad, xRotRad, 
+                        standPose, actionPhase, phaseCompletion, swingingHand);
             }
-
-            model.idleLoopTickStamp = ticks;
-            return summonAnim.poseStand(entity, model, ticks, yRotOffsetRad, xRotRad, 
-                    standPose, actionPhase, phaseCompletion, swingingHand);
         }
         
         if (standPose != null && standPose != StandPose.IDLE) {
             model.idleLoopTickStamp = ticks;
             
             if (namedAnimations.containsKey(standPose.getName())) {
-                StandActionAnimation anim = namedAnimations.get(standPose.getName());
+                List<StandActionAnimation> anims = namedAnimations.get(standPose.getName());
+                StandActionAnimation anim = standPose.getAnim(anims, entity);
                 if (anim != null) {
                     return anim.poseStand(entity, model, ticks, yRotOffsetRad, xRotRad, 
                             standPose, actionPhase, phaseCompletion, swingingHand);
                 }
             }
-            return false;
         }
         
         IStandAnimator idleAnim = getIdleAnim(entity);

@@ -110,11 +110,11 @@ public class GeckoAnimLoader extends ReloadListener<Map<ResourceLocation, JsonEl
     }
     
     
-    @Nullable
-    public StandActionAnimation getAnim(ResourceLocation modelId, String animName) {
-        GeckoStandAnimator modelAnims = loadedAnims.get(modelId);
-        return modelAnims != null ? modelAnims.getNamedAnim(animName) : null;
-    }
+//    @Nullable
+//    public StandActionAnimation getAnim(ResourceLocation modelId, String animName) {
+//        GeckoStandAnimator modelAnims = loadedAnims.get(modelId);
+//        return modelAnims != null ? modelAnims.getNamedAnim(animName) : null;
+//    }
     
 
 }

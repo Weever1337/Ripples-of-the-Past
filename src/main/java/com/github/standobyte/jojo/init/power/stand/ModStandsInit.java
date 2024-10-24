@@ -134,6 +134,7 @@ public class ModStandsInit {
     public static final RegistryObject<StandEntityHeavyAttack> STAR_PLATINUM_UPPERCUT = ACTIONS.register("star_platinum_uppercut", 
             () -> new StarPlatinumUppercut(new StandEntityHeavyAttack.Builder()
                     .resolveLevelToUnlock(1)
+                    .standPose(StarPlatinumUppercut.UPPERCUT_POSE)
                     .punchSound(ModSounds.STAR_PLATINUM_PUNCH_HEAVY)
                     .standSound(Phase.WINDUP, false, ModSounds.STAR_PLATINUM_ORA_LONG)
                     .partsRequired(StandPart.ARMS)));
@@ -149,7 +150,7 @@ public class ModStandsInit {
     public static final RegistryObject<StarPlatinumStarFinger> STAR_PLATINUM_STAR_FINGER = ACTIONS.register("star_platinum_star_finger", 
             () -> new StarPlatinumStarFinger(new StandEntityAction.Builder().staminaCost(375).standPerformDuration(20).cooldown(20, 60)
                     .ignoresPerformerStun().resolveLevelToUnlock(3)
-                    .standOffsetFront().standPose(StandPose.RANGED_ATTACK)
+                    .standOffsetFront().standPose(StarPlatinumStarFinger.STAR_FINGER_POSE)
                     .shout(ModSounds.JOTARO_STAR_FINGER).standSound(Phase.PERFORM, ModSounds.STAR_PLATINUM_STAR_FINGER)
                     .partsRequired(StandPart.ARMS)));
     
