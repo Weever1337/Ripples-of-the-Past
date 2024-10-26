@@ -249,6 +249,10 @@ public class LivingUtilCap {
         this.standEffectsTargetedBy.remove(instance);
     }
     
+    public List<StandEffectInstance> getEffectsTargetedBy() {
+        return standEffectsTargetedBy;
+    }
+    
     
     
     public void addAfterimages(int count, int lifespan) {
