@@ -186,7 +186,7 @@ public class SilverChariotModel extends HumanoidStandModel<SilverChariotEntity> 
     @Override
     public void afterInit() {
         super.afterInit();
-        namedModelParts.put("rapier", rapier);
+        putNamedModelPart("rapier", rapier);
     }
 
     @Override

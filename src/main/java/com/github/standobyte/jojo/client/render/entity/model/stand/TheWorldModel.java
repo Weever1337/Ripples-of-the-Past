@@ -478,7 +478,7 @@ public class TheWorldModel extends HumanoidStandModel<TheWorldEntity> {
     @Override
     public void afterInit() {
         super.afterInit();
-        namedModelParts.put("heartLargeAbdomen", heartLargeAbdomen);
+        putNamedModelPart("heartLargeAbdomen", heartLargeAbdomen);
     }
 
     // TODO remove allat, we're gonna parse the gecko animations now

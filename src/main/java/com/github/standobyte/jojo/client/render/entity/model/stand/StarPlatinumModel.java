@@ -542,10 +542,10 @@ public class StarPlatinumModel extends HumanoidStandModel<StarPlatinumEntity> {
     @Override
     public void afterInit() {
         super.afterInit();
-        namedModelParts.put("leftShoulder", leftShoulder);
-        namedModelParts.put("rightShoulder", rightShoulder);
-        namedModelParts.put("frontFabric", frontFabric);
-        namedModelParts.put("backFabric", backFabric);
+        putNamedModelPart("leftShoulder", leftShoulder);
+        putNamedModelPart("rightShoulder", rightShoulder);
+        putNamedModelPart("frontFabric", frontFabric);
+        putNamedModelPart("backFabric", backFabric);
     }
     
     @Override

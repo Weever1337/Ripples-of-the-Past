@@ -96,7 +96,7 @@ public class BlockbenchStandModelHelper {
                     editedParts.add(blockbenchPart);
                     inModPartField.set(inModModel, blockbenchPart);
                     if (putNamed != null) {
-                        putNamed.putMamedModelPart(name, blockbenchPart);
+                        putNamed.putNamedModelPart(name, blockbenchPart);
                     }
                     
                     it.remove();

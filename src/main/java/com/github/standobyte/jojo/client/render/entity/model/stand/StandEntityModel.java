@@ -17,6 +17,7 @@ import org.apache.commons.lang3.mutable.MutableFloat;
 import com.github.standobyte.jojo.action.stand.StandEntityAction.Phase;
 import com.github.standobyte.jojo.client.ClientUtil;
 import com.github.standobyte.jojo.client.render.entity.model.animnew.INamedModelParts;
+import com.github.standobyte.jojo.client.render.entity.model.animnew.ModelPartDefaultState;
 import com.github.standobyte.jojo.client.render.entity.model.animnew.stand.GeckoStandAnimator;
 import com.github.standobyte.jojo.client.render.entity.model.animnew.stand.IStandAnimator;
 import com.github.standobyte.jojo.client.render.entity.model.animnew.stand.LegacyStandAnimator;
@@ -52,7 +53,7 @@ public abstract class StandEntityModel<T extends StandEntity> extends AgeableMod
     ResourceLocation modelId;
     StandModelRegistryObj registryObj;
     
-    protected Map<String, ModelRenderer> namedModelParts = new HashMap<>();
+    protected Map<String, ModelPartDefaultState> namedModelParts = new HashMap<>();
     protected Supplier<IStandAnimator> getDefaultGeckoAnimator;
     private IStandAnimator legacyStandAnimHandler;
     
@@ -194,6 +195,7 @@ public abstract class StandEntityModel<T extends StandEntity> extends AgeableMod
     
     protected void poseStand(T entity, float ticks, float yRotOffsetRad, float xRotRad, 
             StandPose standPose, Optional<Phase> actionPhase, float phaseCompletion, HandSide swingingHand) {
+        resetPose(entity);
         IStandAnimator standAnimator = getAnimator();
         if (standAnimator != null && standAnimator.poseStand(entity, this, ticks, yRotOffsetRad, xRotRad, 
                 standPose, actionPhase, phaseCompletion, swingingHand)) {
@@ -208,7 +210,12 @@ public abstract class StandEntityModel<T extends StandEntity> extends AgeableMod
     
     @Override
     public ModelRenderer getModelPart(String name) {
-        return namedModelParts.get(name);
+        ModelPartDefaultState modelPart = namedModelParts.get(name);
+        return modelPart != null ? modelPart.modelPart : null;
+    }
+    
+    public void resetPose(T entity) {
+        namedModelParts.values().forEach(ModelPartDefaultState::reset);
     }
 
 
@@ -283,10 +290,6 @@ public abstract class StandEntityModel<T extends StandEntity> extends AgeableMod
     @Deprecated
     protected RotationAngle[][] initSummonPoseRotations() {
         return new RotationAngle[0][0];
-    }
-
-    @Deprecated
-    public void resetPose(T entity) {
     }
     
     
@@ -385,8 +388,11 @@ public abstract class StandEntityModel<T extends StandEntity> extends AgeableMod
     protected void initOpposites() {}
     
     @Override
-    public ModelRenderer putMamedModelPart(String name, ModelRenderer modelPart) {
-        namedModelParts.put(name, modelPart);
+    public ModelRenderer putNamedModelPart(String name, ModelRenderer modelPart) {
+        ModelPartDefaultState modelPartState = ModelPartDefaultState.fromModelPart(modelPart);
+        if (modelPartState != null) {
+            namedModelParts.put(name, modelPartState);
+        }
         return modelPart;
     }
     

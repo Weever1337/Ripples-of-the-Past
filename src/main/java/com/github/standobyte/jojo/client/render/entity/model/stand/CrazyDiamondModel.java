@@ -492,13 +492,13 @@ public class CrazyDiamondModel extends HumanoidStandModel<CrazyDiamondEntity> {
     @Override
     public void afterInit() {
         super.afterInit();
-        namedModelParts.put("tube", tube);
-        namedModelParts.put("tube2", tube2);
-        namedModelParts.put("tube3", tube3);
-        namedModelParts.put("tube4", tube4);
-        namedModelParts.put("tube5", tube5);
-        namedModelParts.put("tube6", tube6);
-        namedModelParts.put("groinPiece", groinPiece);
+        putNamedModelPart("tube", tube);
+        putNamedModelPart("tube2", tube2);
+        putNamedModelPart("tube3", tube3);
+        putNamedModelPart("tube4", tube4);
+        putNamedModelPart("tube5", tube5);
+        putNamedModelPart("tube6", tube6);
+        putNamedModelPart("groinPiece", groinPiece);
     }
 
     // TODO remove allat, we're gonna parse the gecko animations now

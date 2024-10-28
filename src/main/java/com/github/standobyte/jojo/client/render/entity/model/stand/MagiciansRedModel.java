@@ -217,10 +217,10 @@ public class MagiciansRedModel extends HumanoidStandModel<MagiciansRedEntity> {
     @Override
     public void afterInit() {
         super.afterInit();
-        namedModelParts.put("beakUpper", beakUpper);
-        namedModelParts.put("beakLower", beakLower);
-        namedModelParts.put("feather", feather);
-        namedModelParts.put("feather2", feather2);
+        putNamedModelPart("beakUpper", beakUpper);
+        putNamedModelPart("beakLower", beakLower);
+        putNamedModelPart("feather", feather);
+        putNamedModelPart("feather2", feather2);
     }
 
     // TODO remove allat, we're gonna parse the gecko animations now
