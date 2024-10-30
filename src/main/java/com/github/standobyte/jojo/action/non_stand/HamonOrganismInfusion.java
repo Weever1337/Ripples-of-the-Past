@@ -121,7 +121,8 @@ public class HamonOrganismInfusion extends HamonAction {
     protected void perform(World world, LivingEntity user, INonStandPower power, ActionTarget target) {
         if (!world.isClientSide()) {
             HamonData hamon = power.getTypeSpecificData(ModPowers.HAMON.get()).get();
-            float hamonEfficiency = hamon.getActionEfficiency(getEnergyCost(power, target), true);
+            
+            float hamonEfficiency = hamon.getActionEfficiency(getEnergyCost(power, target), true, getUnlockingSkill());
             int chargeTicks = 100 + MathHelper.floor((float) (1100 * hamon.getHamonStrengthLevel())
                     / (float) HamonData.MAX_STAT_LEVEL * hamonEfficiency * hamonEfficiency);
             switch(target.getType()) {

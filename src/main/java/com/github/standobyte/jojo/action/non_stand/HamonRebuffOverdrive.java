@@ -268,7 +268,7 @@ public class HamonRebuffOverdrive extends HamonAction implements IPlayerAction<H
                 LivingEntity dealDamageTo = (LivingEntity) dmgSource.getDirectEntity();
                 
                 float energyCost = ((NonStandAction) action).getEnergyCost(playerPower, new ActionTarget(dealDamageTo));
-                float efficiency = userHamon.getActionEfficiency(energyCost, true);
+                float efficiency = userHamon.getActionEfficiency(energyCost, true, ModHamonSkills.REBUFF_OVERDRIVE.get());
                 boolean tooMuchDamage = !(efficiency == 1 || efficiency >= dmgAmount / user.getMaxHealth());
                 
                 if (counterTiming && !tooMuchDamage) {
@@ -333,7 +333,7 @@ public class HamonRebuffOverdrive extends HamonAction implements IPlayerAction<H
             
             if (!user.level.isClientSide()) {
                 float energyCost = ((NonStandAction) action).getEnergyCost(playerPower, new ActionTarget(target));
-                float efficiency = userHamon.getActionEfficiency(energyCost, true);
+                float efficiency = userHamon.getActionEfficiency(energyCost, true, ModHamonSkills.REBUFF_OVERDRIVE.get());
                 
                 float damage = properCounter ? 10.0f : 6.0f;
                 float knockback = properCounter ? 2.0f : 1.0f;

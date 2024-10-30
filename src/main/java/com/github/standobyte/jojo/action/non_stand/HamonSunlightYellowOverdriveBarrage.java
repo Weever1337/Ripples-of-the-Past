@@ -135,7 +135,7 @@ public class HamonSunlightYellowOverdriveBarrage extends HamonAction implements 
 
                     if (!world.isClientSide()) {
                         HamonData hamon = power.getTypeSpecificData(ModPowers.HAMON.get()).get();
-                        float efficiency = hamon.getActionEfficiency(0, false);
+                        float efficiency = hamon.getActionEfficiency(0, false, ModHamonSkills.SUNLIGHT_YELLOW_OVERDRIVE_BARRAGE.get());
 
                         float damage = 15F;
                         damage *= efficiency;

@@ -53,9 +53,9 @@ import com.github.standobyte.jojo.network.packets.fromserver.TrHamonAuraColorPac
 import com.github.standobyte.jojo.network.packets.fromserver.TrHamonBreathStabilityPacket;
 import com.github.standobyte.jojo.network.packets.fromserver.TrHamonCharacterTechniquePacket;
 import com.github.standobyte.jojo.network.packets.fromserver.TrHamonEnergyTicksPacket;
-import com.github.standobyte.jojo.network.packets.fromserver.TrHamonProtectionPacket;
 import com.github.standobyte.jojo.network.packets.fromserver.TrHamonLiquidWalkingPacket;
 import com.github.standobyte.jojo.network.packets.fromserver.TrHamonMeditationPacket;
+import com.github.standobyte.jojo.network.packets.fromserver.TrHamonProtectionPacket;
 import com.github.standobyte.jojo.network.packets.fromserver.TrHamonStatsPacket;
 import com.github.standobyte.jojo.network.packets.fromserver.TrHamonSyncPlayerLearnerPacket;
 import com.github.standobyte.jojo.power.impl.nonstand.INonStandPower;
@@ -386,12 +386,21 @@ public class HamonData extends TypeSpecificData {
     
     
     public static final float ALL_EXERCISES_EFFICIENCY_MULTIPLIER = 1.05F;
+    @Deprecated
     public float getActionEfficiency(float energyCost, boolean handSwingTimer) {
+        return getActionEfficiency(energyCost, handSwingTimer, null);
+    }
+    
+    public float getActionEfficiency(float energyCost, boolean handSwingTimer, @Nullable AbstractHamonSkill hamonSkill) {
         float efficiency = getHamonEnergyUsageEfficiency(energyCost, false) * getBloodstreamEfficiency();
         
         if (efficiency > 0) {
             if (allExercisesCompleted) {
                 efficiency *= ALL_EXERCISES_EFFICIENCY_MULTIPLIER;
+            }
+            
+            if (hamonSkill != null) {
+                JojoMod.LOGGER.debug(hamonSkill.getRegistryName());
             }
             
             if (handSwingTimer && power.getUser() instanceof PlayerEntity) {
@@ -409,9 +418,15 @@ public class HamonData extends TypeSpecificData {
         return efficiency;
     }
     
+//    @Deprecated
+//    @Nullable
+//    public <T> T consumeHamonEnergyTo(Function<Float, T> actionWithHamonEfficiency, float energyCost) {
+//        return consumeHamonEnergyTo(actionWithHamonEfficiency, energyCost, null);
+//    }
+    
     @Nullable
-    public <T> T consumeHamonEnergyTo(Function<Float, T> actionWithHamonEfficiency, float energyCost) {
-        float efficiency = getActionEfficiency(energyCost, false);
+    public <T> T consumeHamonEnergyTo(Function<Float, T> actionWithHamonEfficiency, float energyCost, @Nullable AbstractHamonSkill usedSkill) {
+        float efficiency = getActionEfficiency(energyCost, false, usedSkill);
         if (efficiency > 0) {
             T result = actionWithHamonEfficiency.apply(efficiency);
             getHamonEnergyUsageEfficiency(energyCost, true);

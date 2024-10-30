@@ -108,9 +108,10 @@ public class HamonUtil {
     
     public static boolean ropeTrap(LivingEntity user, BlockPos pos, BlockState blockState, World world, INonStandPower power, HamonData hamon) {
         if (hamon.isSkillLearned(ModHamonSkills.ROPE_TRAP.get())) {
+            float efficiency = hamon.getActionEfficiency(STRING_CHARGE_COST, false, ModHamonSkills.ROPE_TRAP.get());
             createChargedCobweb(user, pos, blockState, world, 64, null, power, 
-                    40 + (int) ((float) (160 * hamon.getHamonStrengthLevel()) / (float) HamonData.MAX_STAT_LEVEL * hamon.getActionEfficiency(STRING_CHARGE_COST, false)), 
-                    0.02F * hamon.getHamonDamageMultiplier() * hamon.getActionEfficiency(STRING_CHARGE_COST, false), hamon);
+                    40 + (int) ((float) (160 * hamon.getHamonStrengthLevel()) / (float) HamonData.MAX_STAT_LEVEL * efficiency), 
+                    0.02F * hamon.getHamonDamageMultiplier() * efficiency, hamon);
             return true;
         }
         return false;
@@ -163,7 +164,7 @@ public class HamonUtil {
                         if (power.getTypeSpecificData(ModPowers.HAMON.get()).map(hamon -> {
                             if (hamon.isSkillLearned(ModHamonSkills.SNAKE_MUFFLER.get())) {
                                 playerTarget.getCooldowns().addCooldown(ModItems.SATIPOROJA_SCARF.get(), 80);
-                                float efficiency = hamon.getActionEfficiency(energyCost, false);
+                                float efficiency = hamon.getActionEfficiency(energyCost, false, ModHamonSkills.SNAKE_MUFFLER.get());
                                 if (efficiency == 1 || efficiency >= dmgAmount / target.getMaxHealth()) {
                                     JojoModUtil.sayVoiceLine(target, ModSounds.LISA_LISA_SNAKE_MUFFLER.get());
                                     power.consumeEnergy(energyCost);
@@ -546,7 +547,7 @@ public class HamonUtil {
                                                 hamonChargeProperties.applyCharge(projCharge, efficiency, power);
                                                 projCharge.setMultiplyWithUserStrength(true);
                                                 return null;
-                                            }, hamonChargeProperties.energyRequired);
+                                            }, hamonChargeProperties.energyRequired, skillRequired);
                                         }
                                     });
                                 }
@@ -688,7 +689,7 @@ public class HamonUtil {
                                 cap.setHamonCharge(hamon.getHamonDamageMultiplier() * hamonEfficiency, chargeTicks, throwerPlayer, 200));
                                 
                                 return null;
-                            }, 200);
+                            }, 200, ModHamonSkills.PLANT_ITEM_INFUSION.get());
                         }
                     });
                 }

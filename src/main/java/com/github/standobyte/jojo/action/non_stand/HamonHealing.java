@@ -72,7 +72,7 @@ public class HamonHealing extends HamonAction {
         HamonData hamon = power.getTypeSpecificData(ModPowers.HAMON.get()).get();
         float tickEnergyCost = getHeldTickEnergyCost(power);
         float hamonControl = hamon.getHamonControlLevelRatio();
-        float hamonEfficiency = hamon.getActionEfficiency(tickEnergyCost, false);
+        float hamonEfficiency = hamon.getActionEfficiency(tickEnergyCost, false, getUnlockingSkill());
         
         LivingEntity entityToHeal = user;
         if (JojoModUtil.useShiftVar(user)) {

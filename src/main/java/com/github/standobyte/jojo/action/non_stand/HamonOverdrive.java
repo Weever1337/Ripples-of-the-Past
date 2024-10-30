@@ -59,7 +59,7 @@ public class HamonOverdrive extends HamonAction {
                 LivingEntity targetEntity = (LivingEntity) entity;
                 HamonData hamon = power.getTypeSpecificData(ModPowers.HAMON.get()).get();
                 float cost = getEnergyCost(power, target);
-                float efficiency = hamon.getActionEfficiency(cost, true);
+                float efficiency = hamon.getActionEfficiency(cost, true, getUnlockingSkill());
                 
 //                int attackStrengthTicker = CommonReflection.getAttackStrengthTicker(user);
                 if (dealDamage(target, targetEntity, getDamage() * efficiency, user, power, hamon)) {

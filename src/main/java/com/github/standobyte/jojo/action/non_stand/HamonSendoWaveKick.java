@@ -80,7 +80,7 @@ public class HamonSendoWaveKick extends HamonAction implements IPlayerAction<Ham
         Instance sendoWaveKick = new Instance(user, userCap, power, this);
         
         float energyCost = Math.min(getEnergyCost(power, ActionTarget.EMPTY), power.getEnergy());
-        float efficiency = power.getTypeSpecificData(ModPowers.HAMON.get()).get().getActionEfficiency(energyCost, true);
+        float efficiency = power.getTypeSpecificData(ModPowers.HAMON.get()).get().getActionEfficiency(energyCost, true, getUnlockingSkill());
         sendoWaveKick.setEnergySpent(energyCost * efficiency);
         
         return sendoWaveKick;

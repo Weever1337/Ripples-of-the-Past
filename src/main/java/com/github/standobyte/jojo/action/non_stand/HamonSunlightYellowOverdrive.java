@@ -112,7 +112,7 @@ public class HamonSunlightYellowOverdrive extends HamonAction {
         int ticksHeld = Math.min(power.getHeldActionTicks(), maxTicks);
         float holdRatio = (float) ticksHeld / (float) maxTicks;
         
-        float efficiency = hamon.getActionEfficiency(0, true);
+        float efficiency = hamon.getActionEfficiency(0, true, getUnlockingSkill());
         
         float damage = 2.5F + 7.5F * holdRatio;
         damage *= efficiency;
