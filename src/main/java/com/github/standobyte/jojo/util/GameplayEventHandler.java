@@ -28,7 +28,6 @@ import com.github.standobyte.jojo.capability.entity.LivingUtilCapProvider;
 import com.github.standobyte.jojo.capability.entity.PlayerUtilCapProvider;
 import com.github.standobyte.jojo.capability.entity.hamonutil.EntityHamonChargeCapProvider;
 import com.github.standobyte.jojo.capability.entity.hamonutil.ProjectileHamonChargeCapProvider;
-import com.github.standobyte.jojo.client.ClientUtil;
 import com.github.standobyte.jojo.enchantment.GlovesSpeedEnchantment;
 import com.github.standobyte.jojo.entity.stand.StandEntity;
 import com.github.standobyte.jojo.entity.stand.stands.MagiciansRedEntity;
@@ -661,12 +660,21 @@ public class GameplayEventHandler {
                 if (stand.isInvulnerableTo(dmgSource)) {
                     double standDurability = stand.getDurability();
                     if (standDurability > 0) {
-                        event.setAmount(Math.max(event.getAmount() - (float) standDurability / 2F, 0));
-                        NoKnockbackOnBlocking.setOneTickKbRes(stand);
                         stand.playAttackBlockSound();
+                        float reducedDamage = Math.max(event.getAmount() - (float) standDurability / 2F, 0);
+                        if (reducedDamage == 0) {
+                            event.setCanceled(true);
+                        }
+                        else {
+                            event.setAmount(reducedDamage);
+                        }
+                        NoKnockbackOnBlocking.setOneTickKbRes(stand);
                     }
                 }
             });
+        }
+        if (event.isCanceled()) {
+            return;
         }
         
         // block physical damage with hamon
@@ -760,14 +768,6 @@ public class GameplayEventHandler {
         for (PowerClassification powerClassification : PowerClassification.values()) {
             IPower.getPowerOptional(target, powerClassification).ifPresent(power -> 
             power.onUserGettingAttacked(dmgSource, dmgAmount));
-        }
-    }
-    
-    @SubscribeEvent
-    public static void clNoBobOnHurt(LivingAttackEvent event) {
-        LivingEntity target = event.getEntityLiving();
-        if (target.level.isClientSide() && target == ClientUtil.getClientPlayer()) {
-            NoKnockbackOnBlocking.onClientPlayerDamage(target);
         }
     }
 
