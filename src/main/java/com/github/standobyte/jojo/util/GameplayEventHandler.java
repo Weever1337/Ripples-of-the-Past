@@ -13,7 +13,10 @@ import javax.annotation.Nullable;
 import com.github.standobyte.jojo.JojoMod;
 import com.github.standobyte.jojo.JojoModConfig;
 import com.github.standobyte.jojo.JojoModConfig.Common;
+import com.github.standobyte.jojo.action.non_stand.HamonPlantItemInfusion;
 import com.github.standobyte.jojo.action.non_stand.HamonRebuffOverdrive;
+import com.github.standobyte.jojo.action.non_stand.HamonRopeTrap;
+import com.github.standobyte.jojo.action.non_stand.HamonSnakeMuffler;
 import com.github.standobyte.jojo.action.non_stand.PillarmanUnnaturalAgility;
 import com.github.standobyte.jojo.action.non_stand.VampirismFreeze;
 import com.github.standobyte.jojo.action.player.ContinuousActionInstance;
@@ -223,17 +226,6 @@ public class GameplayEventHandler {
                     }
                 }
             }
-            
-//            LazyOptional<PlayerUtilCap> liquidWalkingCap = player.getCapability(PlayerUtilCapProvider.CAPABILITY);
-//            if (!player.level.isClientSide() || player.isLocalPlayer()) {
-//                boolean liquidWalking = HamonUtil.liquidWalking(player);
-//                liquidWalkingCap.ifPresent(cap -> {
-//                    cap.setWaterWalking(liquidWalking);
-//                });
-//            }
-//            liquidWalkingCap.ifPresent(cap -> {
-//                cap.tickWaterWalking();
-//            });
             
             INonStandPower.getNonStandPowerOptional(player).ifPresent(power -> {
                 power.tick();
@@ -565,7 +557,7 @@ public class GameplayEventHandler {
         float dmgAmount = event.getAmount();
         if (GeneralUtil.orElseFalse(ContinuousActionInstance.getCurrentAction(entity), 
                 action -> action.cancelIncomingDamage(dmgSource, dmgAmount))
-                || HamonUtil.snakeMuffler(entity, dmgSource, dmgAmount)) {
+                || HamonSnakeMuffler.snakeMuffler(entity, dmgSource, dmgAmount)) {
             event.setCanceled(true);
         }
     }
@@ -984,7 +976,7 @@ public class GameplayEventHandler {
                                 event.setCanceled(true);
                                 event.setCancellationResult(ActionResultType.SUCCESS);
                                 if (!world.isClientSide()) {
-                                    HamonUtil.ropeTrap(player, pos, blockState, world, power, hamon);
+                                    HamonRopeTrap.ropeTrap(player, pos, blockState, world, power, hamon);
                                 }
                             }
                         });
@@ -1165,7 +1157,7 @@ public class GameplayEventHandler {
     
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void onProjectileShot(EntityJoinWorldEvent event) {
-        HamonUtil.chargeShotProjectile(event.getEntity(), event.getWorld());
+        HamonUtil.chargeNewEntity(event.getEntity(), event.getWorld());
     }
     
     @SubscribeEvent(priority = EventPriority.LOWEST)
@@ -1190,7 +1182,7 @@ public class GameplayEventHandler {
     
     @SubscribeEvent(priority = EventPriority.LOW)
     public static void onItemThrown(ItemTossEvent event) {
-        HamonUtil.chargeItemEntity(event.getPlayer(), event.getEntityItem());
+        HamonPlantItemInfusion.chargeItemEntity(event.getPlayer(), event.getEntityItem());
     }
     
     @SubscribeEvent(priority = EventPriority.HIGHEST)
