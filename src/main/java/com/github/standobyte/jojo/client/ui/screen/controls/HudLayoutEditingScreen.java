@@ -350,15 +350,11 @@ public class HudLayoutEditingScreen extends Screen implements IJojoScreen {
                 action = action.getShiftVariationIfPresent();
             }
             
-            ResourceLocation icon = action.getIconTexture(power);
-            minecraft.getTextureManager().bind(icon);
-            
             boolean isUnlocked = action.isUnlocked(power);
             float alpha = isEnabled ? isUnlocked ? 1.0F : 0.6F : 0.2F;
             float color = isEnabled && isUnlocked ? 1.0F : 0.0F;
-            
             RenderSystem.color4f(color, color, color, alpha);
-            blit(matrixStack, x, y, 0, 0, 16, 16, 16, 16);
+            action.renderActionIcon(matrixStack, power, x, y);
             RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
         }
     }
