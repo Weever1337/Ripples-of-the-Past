@@ -124,6 +124,7 @@ import net.minecraft.world.GameRules;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ChunkManager;
 import net.minecraft.world.server.ServerWorld;
+import net.minecraftforge.common.ForgeMod;
 import net.minecraftforge.event.ForgeEventFactory;
 import net.minecraftforge.event.entity.PlaySoundAtEntityEvent;
 import net.minecraftforge.registries.IForgeRegistry;
@@ -524,6 +525,15 @@ public class MCUtil {
         default:
             throw new IllegalArgumentException("Unknown RayTraceResult type (it's an enum wtf)");
         }
+    }
+    
+    public static double getPickRange(LivingEntity entity) {
+        ModifiableAttributeInstance reachDist = entity.getAttribute(ForgeMod.REACH_DISTANCE.get());
+        double value = reachDist != null ? reachDist.getValue() : 5;
+        if (entity instanceof PlayerEntity && !((PlayerEntity) entity).isCreative()) {
+            value -= 0.5;
+        }
+        return value;
     }
     
     
