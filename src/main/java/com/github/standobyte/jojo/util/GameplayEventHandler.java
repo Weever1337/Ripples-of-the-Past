@@ -860,10 +860,10 @@ public class GameplayEventHandler {
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void onPotionAdded(PotionAddedEvent event) {
-        EntityStandType.giveEffectSharedWithStand(event.getEntityLiving(), event.getPotionEffect());
-        
-        Entity entity = event.getEntity();
+        LivingEntity entity = event.getEntityLiving();
         EffectInstance effectInstance = event.getPotionEffect();
+        EntityStandType.giveEffectSharedWithStand(entity, effectInstance);
+        
         if (!entity.level.isClientSide()) {
             if (ModStatusEffects.isEffectTracked(effectInstance.getEffect())) {
                 ((ServerChunkProvider) entity.getCommandSenderWorld().getChunkSource()).broadcast(entity, 
@@ -871,6 +871,13 @@ public class GameplayEventHandler {
             }
             if (effectInstance.getEffect() == ModStatusEffects.RESOLVE.get() && entity instanceof ServerPlayerEntity) {
                 PacketManager.sendToClient(new ResolveEffectStartPacket(effectInstance.getAmplifier()), (ServerPlayerEntity) entity);
+            }
+            if (effectInstance.getEffect() == ModStatusEffects.BLEEDING.get()) {
+                int effectLvl = effectInstance.getAmplifier();
+                EffectInstance prevEffect = entity.getEffect(effectInstance.getEffect());
+                if (prevEffect == null || prevEffect.getAmplifier() < effectLvl) {
+                    BleedingEffect.onAddedBleeding(entity, effectLvl);
+                }
             }
         }
     }
