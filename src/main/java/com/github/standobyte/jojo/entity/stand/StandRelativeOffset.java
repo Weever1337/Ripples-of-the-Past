@@ -2,7 +2,6 @@ package com.github.standobyte.jojo.entity.stand;
 
 import java.util.Optional;
 
-import com.github.standobyte.jojo.JojoMod;
 import com.github.standobyte.jojo.capability.entity.player.PlayerClientBroadcastedSettings;
 import com.github.standobyte.jojo.util.general.MathUtil;
 
@@ -65,9 +64,6 @@ public class StandRelativeOffset {
         if (userSettings.map(settings -> settings.standSide == HandSide.LEFT).orElse(false)) {
             left = -left;
         }
-        
-        userSettings.ifPresent(settings -> JojoMod.LOGGER.debug(settings.standSide));
-        if (!userSettings.isPresent()) JojoMod.LOGGER.debug("null");
         
         if (useXRot) {
             vec = new Vector3d(left, 0, forward).xRot(-xRot * MathUtil.DEG_TO_RAD).yRot(-yRot * MathUtil.DEG_TO_RAD);

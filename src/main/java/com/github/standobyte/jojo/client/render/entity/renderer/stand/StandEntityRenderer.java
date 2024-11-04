@@ -217,7 +217,7 @@ public class StandEntityRenderer<T extends StandEntity, M extends StandEntityMod
 
     public boolean firstPersonRender = false;
     private float alpha;
-    private ViewObstructionPrevention viewObstructionPrevention;
+    private ViewObstructionPrevention viewObstructionPrevention = ViewObstructionPrevention.NONE;
     private boolean isVisibilityInverted = false;
     @Override
     public void render(T entity, float yRotation, float partialTick, MatrixStack matrixStack, IRenderTypeBuffer buffer, int packedLight) {
