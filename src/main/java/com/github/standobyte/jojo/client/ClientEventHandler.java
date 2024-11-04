@@ -1293,6 +1293,7 @@ public class ClientEventHandler {
     @SubscribeEvent
     public void clientLoggedIn(ClientPlayerNetworkEvent.LoggedInEvent event) {
         isLoggedIn = true;
+        ClientModSettings.getSettingsReadOnly().broadcasted.broadcastToServer();
     }
     
     @SubscribeEvent

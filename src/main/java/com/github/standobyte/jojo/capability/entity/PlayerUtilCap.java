@@ -15,6 +15,7 @@ import javax.annotation.Nullable;
 import com.github.standobyte.jojo.action.player.ContinuousActionInstance;
 import com.github.standobyte.jojo.action.player.IPlayerAction;
 import com.github.standobyte.jojo.block.WoodenCoffinBlock;
+import com.github.standobyte.jojo.capability.entity.player.PlayerClientBroadcastedSettings;
 import com.github.standobyte.jojo.entity.mob.rps.RockPaperScissorsGame;
 import com.github.standobyte.jojo.network.PacketManager;
 import com.github.standobyte.jojo.network.packets.fromserver.NotificationSyncPacket;
@@ -51,6 +52,8 @@ import net.minecraft.util.text.TranslationTextComponent;
 
 public class PlayerUtilCap {
     private final PlayerEntity player;
+    
+    private PlayerClientBroadcastedSettings broadcastedSettings = new PlayerClientBroadcastedSettings();
     
     public int knivesThrewTicks = 0;
     
@@ -119,6 +122,7 @@ public class PlayerUtilCap {
     
     public void onClone(PlayerUtilCap old, boolean wasDeath) {
         this.notificationsSent = old.notificationsSent;
+        this.broadcastedSettings = old.broadcastedSettings;
         
         this.lastBedType = old.lastBedType;
         this.ticksNoSleep = old.ticksNoSleep;
@@ -164,6 +168,7 @@ public class PlayerUtilCap {
     }
     
     public void onTracking(ServerPlayerEntity tracking) {
+        broadcastedSettings.syncToTracking(player, tracking);
         PacketManager.sendToClient(new TrKnivesCountPacket(player.getId(), knives), tracking);
         PacketManager.sendToClient(new TrWalkmanEarbudsPacket(player.getId(), walkmanEarbuds), tracking);
         PacketManager.sendToClient(new TrPlayerVisualDetailPacket(player.getId(), ateInkPastaTicks), tracking);
@@ -230,6 +235,10 @@ public class PlayerUtilCap {
         }
     }
     
+    
+    public PlayerClientBroadcastedSettings getBroadcastedSettings() {
+        return broadcastedSettings;
+    }
     
     
     public void addDataForTSUnfreeze(Entity entity, Iterable<EntityDataManager.DataEntry<?>> newData) {
