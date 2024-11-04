@@ -445,6 +445,9 @@ public class ClientModSettingsScreen extends SettingsScreen {
             renderScrollingString(matrixStack, font, getMessage(), 
                     x + 2, y, x + width - 2, y + height, 
                     textColor, isHovered(), alignment);
+            if (isHovered()) {
+                renderToolTip(matrixStack, mouseX, mouseY);
+            }
         }
         
         
