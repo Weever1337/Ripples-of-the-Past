@@ -399,10 +399,6 @@ public class HamonData extends TypeSpecificData {
                 efficiency *= ALL_EXERCISES_EFFICIENCY_MULTIPLIER;
             }
             
-            if (hamonSkill != null) {
-                JojoMod.LOGGER.debug(hamonSkill.getRegistryName());
-            }
-            
             if (handSwingTimer && power.getUser() instanceof PlayerEntity) {
                 float swingStrengthScale = ((PlayerEntity) power.getUser()).getAttackStrengthScale(0.5F);
                 efficiency *= (0.2F + swingStrengthScale * swingStrengthScale * 0.8F);

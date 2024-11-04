@@ -697,7 +697,8 @@ public class HudLayoutEditingScreen extends Screen implements IJojoScreen {
                     return true;
                 }
             }
-            else if (key != GLFW.GLFW_KEY_ESCAPE && hoveredAction.isPresent()) {
+            else if (key != GLFW.GLFW_KEY_ESCAPE && hoveredAction.isPresent()
+                    && !KeyModifier.isKeyCodeModifier(InputMappings.Type.KEYSYM.getOrCreate(key))) {
                 setCustomKeybind(hoveredAction.get().actionSwitch.getAction(), InputMappings.Type.KEYSYM, key);
             }
         }

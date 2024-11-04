@@ -237,7 +237,7 @@ public class ClientUtil {
                 return renderer;
             }
             catch (Exception e) {
-                JojoMod.LOGGER.error("Error creating a renderer class for an entity", e);
+                JojoMod.getLogger().error("Error creating a renderer class for an entity", e);
                 throw e;
             }
         };

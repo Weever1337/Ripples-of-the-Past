@@ -424,7 +424,7 @@ public class InputHandler {
             }
             
             if (hamonMeditation.consumeClick()) {
-                PacketManager.sendToServer(new ClHamonMeditationPacket(true));
+                PacketManager.sendToServer(new ClHamonMeditationPacket());
             }
             
             if (jojoStuffMenu.consumeClick()) {
