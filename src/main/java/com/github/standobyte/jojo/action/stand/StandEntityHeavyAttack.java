@@ -11,6 +11,7 @@ import java.util.function.Supplier;
 
 import javax.annotation.Nullable;
 
+import com.github.standobyte.jojo.JojoMod;
 import com.github.standobyte.jojo.action.Action;
 import com.github.standobyte.jojo.action.ActionConditionResult;
 import com.github.standobyte.jojo.action.ActionTarget;
@@ -35,6 +36,7 @@ import com.github.standobyte.jojo.util.mc.damage.KnockbackCollisionImpact;
 import com.github.standobyte.jojo.util.mc.damage.StandEntityDamageSource;
 import com.github.standobyte.jojo.util.mc.damage.explosion.CustomExplosion;
 import com.github.standobyte.jojo.util.mod.JojoModUtil;
+import com.google.common.collect.Sets;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -386,7 +388,7 @@ public class StandEntityHeavyAttack extends StandEntityAction implements IHasSta
                 Entity _knockedBack = knockedBack;
                 KnockbackCollisionImpact.getHandler(_knockedBack).ifPresent(cap -> cap
                         .onPunchSetKnockbackImpact(_knockedBack.getDeltaMovement(), stand)
-                        .withImpactExplosion(calcExplosionRadius(stand), explosionDmgSource(stand), calcExplosionDamage(stand)));
+                        .withImpactExplosion(Math.max(calcExplosionRadius(stand) - 0.5f, 0), explosionDmgSource(stand), 0));
             }
             super.afterAttack(stand, target, dmgSource, task, hurt, killed);
         }
@@ -581,10 +583,60 @@ public class StandEntityHeavyAttack extends StandEntityAction implements IHasSta
                 }
             }
             
-            // FIXME (!) only explode the blocks in the hit direction
+            // same function, but adjusted to only break blocks in the direction of the punch
             @Override
             public Set<BlockPos> calculateBlocksToBlow() {
-                return super.calculateBlocksToBlow();
+                Set<BlockPos> blocksToBlow = Sets.newHashSet();
+                Direction punchDir = hitBlock.getFace();
+                JojoMod.LOGGER.debug(punchDir);
+                
+                for (int xStep = 0; xStep < 16; ++xStep) {
+                    for (int yStep = 0; yStep < 16; ++yStep) {
+                        for (int zStep = 0; zStep < 16; ++zStep) {
+                            if ((xStep == 0 || xStep == 15 || yStep == 0 || yStep == 15 || zStep == 0 || zStep == 15)
+                                    && !(
+                                            punchDir == Direction.WEST  && xStep <= 7 ||
+                                            punchDir == Direction.EAST  && xStep >  7 ||
+                                            punchDir == Direction.DOWN  && yStep <= 7 ||
+                                            punchDir == Direction.UP    && yStep >  7 ||
+                                            punchDir == Direction.NORTH && zStep <= 7 ||
+                                            punchDir == Direction.SOUTH && zStep >  7)) {
+                                double xd = (xStep / 15.0F * 2.0F - 1.0F);
+                                double yd = (yStep / 15.0F * 2.0F - 1.0F);
+                                double zd = (zStep / 15.0F * 2.0F - 1.0F);
+                                double len = Math.sqrt(xd * xd + yd * yd + zd * zd);
+                                xd = xd / len;
+                                yd = yd / len;
+                                zd = zd / len;
+                                float power = radius * (0.7F + level.random.nextFloat() * 0.6F);
+                                Vector3d pos = getPosition();
+                                double x = pos.x;
+                                double y = pos.y;
+                                double z = pos.z;
+                                
+                                for (; power > 0.0F; power -= 0.225F) {
+                                    BlockPos blockPos = new BlockPos(x, y, z);
+                                    BlockState blockState = level.getBlockState(blockPos);
+                                    FluidState fluidState = level.getFluidState(blockPos);
+                                    Optional<Float> resistance = damageCalculator.getBlockExplosionResistance(this, level, blockPos, blockState, fluidState);
+                                    if (resistance.isPresent()) {
+                                        power -= (resistance.get() + 0.3F) * 0.3F;
+                                    }
+                                    
+                                    if (power > 0.0F && damageCalculator.shouldBlockExplode(this, level, blockPos, blockState, power)) {
+                                        blocksToBlow.add(blockPos);
+                                    }
+                                    
+                                    x += xd * 0.3;
+                                    y += yd * 0.3;
+                                    z += zd * 0.3;
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                return blocksToBlow;
             }
             
             @Override

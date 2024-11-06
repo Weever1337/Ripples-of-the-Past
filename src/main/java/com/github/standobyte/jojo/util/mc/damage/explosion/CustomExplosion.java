@@ -102,17 +102,17 @@ public abstract class CustomExplosion extends Explosion {
     protected Set<BlockPos> calculateBlocksToBlow() {
         Set<BlockPos> blocksToBlow = Sets.newHashSet();
         
-        for (int j = 0; j < 16; ++j) {
-            for (int k = 0; k < 16; ++k) {
-                for (int l = 0; l < 16; ++l) {
-                    if (j == 0 || j == 15 || k == 0 || k == 15 || l == 0 || l == 15) {
-                        double d0 = (j / 15.0F * 2.0F - 1.0F);
-                        double d1 = (k / 15.0F * 2.0F - 1.0F);
-                        double d2 = (l / 15.0F * 2.0F - 1.0F);
-                        double d3 = Math.sqrt(d0 * d0 + d1 * d1 + d2 * d2);
-                        d0 = d0 / d3;
-                        d1 = d1 / d3;
-                        d2 = d2 / d3;
+        for (int xStep = 0; xStep < 16; ++xStep) {
+            for (int yStep = 0; yStep < 16; ++yStep) {
+                for (int zStep = 0; zStep < 16; ++zStep) {
+                    if (xStep == 0 || xStep == 15 || yStep == 0 || yStep == 15 || zStep == 0 || zStep == 15) {
+                        double xd = (xStep / 15.0F * 2.0F - 1.0F);
+                        double yd = (yStep / 15.0F * 2.0F - 1.0F);
+                        double zd = (zStep / 15.0F * 2.0F - 1.0F);
+                        double len = Math.sqrt(xd * xd + yd * yd + zd * zd);
+                        xd = xd / len;
+                        yd = yd / len;
+                        zd = zd / len;
                         float power = radius * (0.7F + level.random.nextFloat() * 0.6F);
                         Vector3d pos = getPosition();
                         double x = pos.x;
@@ -132,9 +132,9 @@ public abstract class CustomExplosion extends Explosion {
                                 blocksToBlow.add(blockPos);
                             }
                             
-                            x += d0 * 0.3;
-                            y += d1 * 0.3;
-                            z += d2 * 0.3;
+                            x += xd * 0.3;
+                            y += yd * 0.3;
+                            z += zd * 0.3;
                         }
                     }
                 }
@@ -190,7 +190,9 @@ public abstract class CustomExplosion extends Explosion {
                         if (entity instanceof LivingEntity) {
                             knockback = ProtectionEnchantment.getExplosionKnockbackAfterDampener((LivingEntity) entity, knockback);
                         }
-                        hurtEntity(entity, damage, impact, diff.normalize());
+                        if (damage > 0) {
+                            hurtEntity(entity, damage, impact, diff.normalize());
+                        }
                     }
                 }
             }
