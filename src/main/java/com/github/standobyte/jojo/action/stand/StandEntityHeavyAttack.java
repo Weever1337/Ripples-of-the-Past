@@ -11,7 +11,6 @@ import java.util.function.Supplier;
 
 import javax.annotation.Nullable;
 
-import com.github.standobyte.jojo.JojoMod;
 import com.github.standobyte.jojo.action.Action;
 import com.github.standobyte.jojo.action.ActionConditionResult;
 import com.github.standobyte.jojo.action.ActionTarget;
@@ -388,7 +387,7 @@ public class StandEntityHeavyAttack extends StandEntityAction implements IHasSta
                 Entity _knockedBack = knockedBack;
                 KnockbackCollisionImpact.getHandler(_knockedBack).ifPresent(cap -> cap
                         .onPunchSetKnockbackImpact(_knockedBack.getDeltaMovement(), stand)
-                        .withImpactExplosion(Math.max(calcExplosionRadius(stand) - 0.5f, 0), explosionDmgSource(stand), 0));
+                        .withImpactExplosion(Math.max(calcExplosionRadius(stand) - 0.5f, 0), null, 0));
             }
             super.afterAttack(stand, target, dmgSource, task, hurt, killed);
         }
@@ -588,7 +587,6 @@ public class StandEntityHeavyAttack extends StandEntityAction implements IHasSta
             public Set<BlockPos> calculateBlocksToBlow() {
                 Set<BlockPos> blocksToBlow = Sets.newHashSet();
                 Direction punchDir = hitBlock.getFace();
-                JojoMod.LOGGER.debug(punchDir);
                 
                 for (int xStep = 0; xStep < 16; ++xStep) {
                     for (int yStep = 0; yStep < 16; ++yStep) {

@@ -96,7 +96,6 @@ public class KnockbackCollisionImpact implements INBTSerializable<CompoundNBT> {
         return this;
     }
     
-    // FIXME this shit needs to be saved in NBT now
     public KnockbackCollisionImpact withImpactExplosion(float radius, DamageSource aoeDamageSource, float aoeDamage) {
         this.explosionRadius = radius;
         this.explosionDmgSource = aoeDamageSource;
@@ -159,6 +158,8 @@ public class KnockbackCollisionImpact implements INBTSerializable<CompoundNBT> {
             nbt.putDouble("Power", knockbackImpactStrength);
             nbt.putDouble("MinCos", minCos);
             nbt.putBoolean("HadBlockImpact", hadImpactWithBlock);
+            nbt.putFloat("ExplosionRadius", explosionRadius);
+            nbt.putFloat("ExplosionDamage", explosionDamage);
         }
         return nbt;
     }
@@ -169,6 +170,8 @@ public class KnockbackCollisionImpact implements INBTSerializable<CompoundNBT> {
             knockbackImpactStrength = nbt.getDouble("Power");
             minCos = nbt.getDouble("MinCos");
             hadImpactWithBlock = nbt.getBoolean("HadBlockImpact");
+            explosionRadius = nbt.getFloat("ExplosionRadius");
+            explosionDamage = nbt.getFloat("ExplosionDamage");
         }
     }
     
