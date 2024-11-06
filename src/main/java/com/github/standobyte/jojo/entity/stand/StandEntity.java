@@ -1985,7 +1985,7 @@ public class StandEntity extends LivingEntity implements IStandManifestation, IE
     public boolean canBreakBlock(float blockHardness, int blockHarvestLevel) {
         return StandStatFormulas.isBlockBreakable(getAttackDamage(), blockHardness, blockHarvestLevel);
     }
-
+    
     public double getMaxRange() {
         return rangeMax;
     }

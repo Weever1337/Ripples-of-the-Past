@@ -50,11 +50,11 @@ import net.minecraftforge.event.ForgeEventFactory;
 
 public abstract class CustomExplosion extends Explosion {
     protected final World level;
-    protected final float radius;
-    protected final Explosion.Mode blockInteraction;
-    protected final boolean fire;
-    protected final Random random = new Random();
-    protected final ExplosionContext damageCalculator;
+    protected float radius;
+    protected Explosion.Mode blockInteraction;
+    protected boolean fire;
+    protected Random random = new Random();
+    protected ExplosionContext damageCalculator;
     
     protected CustomExplosion(World pLevel, @Nullable Entity pSource, 
             @Nullable DamageSource pDamageSource, @Nullable ExplosionContext pDamageCalculator, 

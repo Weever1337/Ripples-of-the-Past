@@ -4,13 +4,13 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.function.Supplier;
 
 import javax.annotation.Nullable;
 
-import com.github.standobyte.jojo.JojoMod;
 import com.github.standobyte.jojo.action.Action;
 import com.github.standobyte.jojo.action.ActionConditionResult;
 import com.github.standobyte.jojo.action.ActionTarget;
@@ -37,10 +37,11 @@ import com.github.standobyte.jojo.util.mc.damage.explosion.CustomExplosion;
 import com.github.standobyte.jojo.util.mod.JojoModUtil;
 
 import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.fluid.FluidState;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.Direction;
 import net.minecraft.util.SoundEvent;
@@ -48,6 +49,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.Explosion;
 import net.minecraft.world.ExplosionContext;
+import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.event.ForgeEventFactory;
@@ -382,12 +384,27 @@ public class StandEntityHeavyAttack extends StandEntityAction implements IHasSta
                 }
                 
                 Entity _knockedBack = knockedBack;
-                KnockbackCollisionImpact.getHandler(_knockedBack).ifPresent(
-                        cap -> cap.onPunchSetKnockbackImpact(_knockedBack.getDeltaMovement(), stand));
+                KnockbackCollisionImpact.getHandler(_knockedBack).ifPresent(cap -> cap
+                        .onPunchSetKnockbackImpact(_knockedBack.getDeltaMovement(), stand)
+                        .withImpactExplosion(calcExplosionRadius(stand), explosionDmgSource(stand), calcExplosionDamage(stand)));
             }
             super.afterAttack(stand, target, dmgSource, task, hurt, killed);
         }
     }
+    
+    
+    public static DamageSource explosionDmgSource(StandEntity stand) {
+        return stand.getDamageSource().setExplosion();
+    }
+    
+    public static float calcExplosionRadius(StandEntity stand) {
+        return Math.min((float) stand.getAttackDamage() * 0.2f, 10);
+    }
+    
+    public static float calcExplosionDamage(StandEntity stand) {
+        return (float) stand.getAttackDamage() * 0.4f;
+    }
+    
     
     public static class HeavyPunchBlockInstance extends StandBlockPunch {
 
@@ -400,12 +417,14 @@ public class StandEntityHeavyAttack extends StandEntityAction implements IHasSta
             if (stand.level.isClientSide()) return false;
             super.doHit(task);
             
+            Vector3d pos = Vector3d.atCenterOf(blockPos).add(Vector3d.atLowerCornerOf(face.getNormal()).scale(0.6));
             HeavyPunchExplosion explosion = new HeavyPunchExplosion(stand.level, stand, new ActionTarget(blockPos, face), 
-                    stand.getDamageSource().setExplosion(), null, 
-                    blockPos.getX() + 0.5, blockPos.getY() + 0.5, blockPos.getZ() + 0.5, 
-                    Math.min((float) stand.getAttackDamage() * 0.2f, 10), false, 
-                    JojoModUtil.breakingBlocksEnabled(stand.level) ? Explosion.Mode.BREAK : Explosion.Mode.NONE,
-                    stand.getAttackDamage(), stand.getPrecision());
+                    explosionDmgSource(stand), null, 
+                    pos.x, pos.y, pos.z, 
+                    calcExplosionRadius(stand), false, 
+                    JojoModUtil.breakingBlocksEnabled(stand.level) ? Explosion.Mode.BREAK : Explosion.Mode.NONE)
+                    .aoeDamage(calcExplosionDamage(stand))
+                    .createBlockShards(stand.getAttackDamage(), stand.getPrecision());
             if (!ForgeEventFactory.onExplosionStart(stand.level, explosion)) {
                 explosion.explode();
                 explosion.finalizeExplosion(true);
@@ -420,61 +439,103 @@ public class StandEntityHeavyAttack extends StandEntityAction implements IHasSta
         }
         
         
-        
         public static class HeavyPunchExplosion extends CustomExplosion {
             private final LivingEntity attacker;
             @Nullable private final StandEntity attackerAsStand;
             private final ActionTarget hitBlock;
+            private float aoeDamage;
+            
+            private boolean createBlockShards = false;
             private double strength;
             private double precision;
-
-            // FIXME (!) limit the radius
-            // FIXME (!) wth is explosion context
-            public HeavyPunchExplosion(World pLevel, LivingEntity pSource, ActionTarget hitBlock, 
+            private List<Entity> noDamage = new ArrayList<>();
+            
+            
+            public HeavyPunchExplosion(World pLevel, LivingEntity attacker, ActionTarget hitBlock, 
                     @Nullable DamageSource pDamageSource, @Nullable ExplosionContext pDamageCalculator, 
                     double pToBlowX, double pToBlowY, double pToBlowZ, 
-                    float pRadius, boolean pFire, Explosion.Mode pBlockInteraction, 
-                    double strength, double precision) {
-                super(pLevel, pSource, 
+                    float pRadius, boolean pFire, Explosion.Mode pBlockInteraction) {
+                super(pLevel, attacker, 
                         pDamageSource, pDamageCalculator, 
                         pToBlowX, pToBlowY, pToBlowZ, 
                         pRadius, pFire, pBlockInteraction);
-                this.attacker = pSource;
+                this.attacker = attacker;
                 this.hitBlock = hitBlock;
-                this.attackerAsStand = pSource instanceof StandEntity ? (StandEntity) pSource : null;
-                this.strength = strength;
-                this.precision = precision;
+                this.attackerAsStand = attacker instanceof StandEntity ? (StandEntity) attacker : null;
             }
             
-            // FIXME (!) reduce the amount of blocks destroyed on y axis
+            public HeavyPunchExplosion createBlockShards(double strength, double precision) {
+                this.createBlockShards = true;
+                this.strength = strength;
+                this.precision = precision;
+                return this;
+            }
+            
+            public HeavyPunchExplosion aoeDamage(float damage) {
+                this.aoeDamage = damage;
+                return this;
+            }
+            
+            public HeavyPunchExplosion entityNoDamage(Entity entityNoDamage) {
+                this.noDamage.add(entityNoDamage);
+                return this;
+            }
+            
+            
+            @Override
+            protected ExplosionContext makeDamageCalculator(@Nullable Entity pEntity) {
+                return new ExplContext();
+            }
+            
+            protected static class ExplContext extends ExplosionContext {
+                
+                @Override
+                public Optional<Float> getBlockExplosionResistance(Explosion pExplosion, IBlockReader pLevel, 
+                        BlockPos pPos, BlockState pBlockState, FluidState pFluidState) {
+                    return super.getBlockExplosionResistance(pExplosion, pLevel, pPos, pBlockState, pFluidState).map(res -> {
+                        return res;
+                    });
+                }
+                
+                @Override
+                public boolean shouldBlockExplode(Explosion pExplosion, IBlockReader pLevel, 
+                        BlockPos pPos, BlockState pBlockState, float pExplosionPower) {
+                    return pBlockState.getBlock() != Blocks.SPAWNER;
+                }
+            }
+            
+            @Override
+            protected float calcDamage(double impact, double diameter) {
+                return aoeDamage;
+            }
+            
             @Override
             protected void explodeBlocks() {
                 if (JojoModUtil.breakingBlocksEnabled(level) && level instanceof ServerWorld) {
                     ServerWorld world = (ServerWorld) level;
                     List<BlockPos> toBlow = getToBlow();
-                    
-                    List<Entity> blockShardEntities = new ArrayList<>();
-                    
-                    Random random = attacker.getRandom();
                     LivingEntity standUser = StandUtil.getStandUser(attacker);
                     
-                    
-                    Vector3d entityLook = attacker.getLookAngle();
-                    float shardsVelocity = 0.5f + (float) strength * 0.05f;
-                    float shardsInaccuracy = Math.max(100 - (float) precision * 4.5f, 0);
-                    
-                    for (BlockPos blockPos : toBlow) {
-                        BlockState blockState = level.getBlockState(blockPos);
-                        if (CrazyDiamondBlockBullet.hardMaterial(blockState)) {
-                            for (int i = 0; i < 3; i++) {
-                                BlockShardEntity blockShard = new BlockShardEntity(attacker, level, blockState);
-                                blockShard.setPos(
-                                        blockPos.getX() + random.nextDouble(),
-                                        blockPos.getY() + random.nextDouble(),
-                                        blockPos.getZ() + random.nextDouble());
-                                
-                                blockShard.shoot(entityLook.x, entityLook.y, entityLook.z, shardsVelocity, shardsInaccuracy);
-                                blockShardEntities.add(blockShard);
+                    List<Entity> blockShardEntities = new ArrayList<>();
+                    if (createBlockShards) {
+                        Random random = attacker.getRandom();
+                        Vector3d entityLook = attacker.getLookAngle();
+                        float shardsVelocity = 0.5f + (float) strength * 0.05f;
+                        float shardsInaccuracy = Math.max(100 - (float) precision * 4.5f, 0);
+                        
+                        for (BlockPos blockPos : toBlow) {
+                            BlockState blockState = level.getBlockState(blockPos);
+                            if (CrazyDiamondBlockBullet.hardMaterial(blockState)) {
+                                for (int i = 0; i < 3; i++) {
+                                    BlockShardEntity blockShard = new BlockShardEntity(attacker, level, blockState);
+                                    blockShard.setPos(
+                                            blockPos.getX() + random.nextDouble(),
+                                            blockPos.getY() + random.nextDouble(),
+                                            blockPos.getZ() + random.nextDouble());
+                                    
+                                    blockShard.shoot(entityLook.x, entityLook.y, entityLook.z, shardsVelocity, shardsInaccuracy);
+                                    blockShardEntities.add(blockShard);
+                                }
                             }
                         }
                     }
@@ -496,7 +557,7 @@ public class StandEntityHeavyAttack extends StandEntityAction implements IHasSta
                 Iterator<Entity> iter = entities.iterator();
                 while (iter.hasNext()) {
                     Entity entity = iter.next();
-                    if (!(entity instanceof LivingEntity && MCUtil.canHarm(attacker, entity))) {
+                    if (!(entity instanceof LivingEntity && MCUtil.canHarm(attacker, entity)) || noDamage.contains(entity)) {
                         iter.remove();
                     }
                 }
@@ -520,22 +581,9 @@ public class StandEntityHeavyAttack extends StandEntityAction implements IHasSta
                 }
             }
             
+            // FIXME (!) only explode the blocks in the hit direction
             @Override
-            protected float calcDamage(double impact, double diameter) {
-                float strength;
-                if (attackerAsStand != null) {
-                    strength = (float) attackerAsStand.getAttackDamage() * 0.4f;
-                }
-                else {
-                    strength = (float) attacker.getAttributeValue(Attributes.ATTACK_DAMAGE) * 0.4f;
-                }
-                return strength;
-//                return (float) ((impact * impact + impact) / 2.0D * 7.0D * diameter + 1.0D); // fuck this
-            }
-            
-            // FIXME (!) explosion is barely exploding if punching smth like a stone
-            @Override
-            protected Set<BlockPos> calculateBlocksToBlow() {
+            public Set<BlockPos> calculateBlocksToBlow() {
                 return super.calculateBlocksToBlow();
             }
             
