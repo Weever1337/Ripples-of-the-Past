@@ -12,6 +12,7 @@
     "ServerPlayerEntityMixin",
     "EntityLiquidWalkingMixin",
     "ServerChunkProviderMixin",
+	"LootTableMixin",
     "FireBlockMixin",
     "MerchantResultSlotMixin",
     "MapDataMixin",
