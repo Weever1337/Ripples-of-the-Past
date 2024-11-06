@@ -98,6 +98,7 @@ public class KnockbackCollisionImpact implements INBTSerializable<CompoundNBT> {
     
     public KnockbackCollisionImpact withImpactExplosion(float radius, DamageSource aoeDamageSource, float aoeDamage) {
         this.explosionRadius = radius;
+        if (aoeDamageSource != null) aoeDamageSource.setExplosion();
         this.explosionDmgSource = aoeDamageSource;
         this.explosionDamage = aoeDamage;
         return this;
@@ -286,7 +287,7 @@ public class KnockbackCollisionImpact implements INBTSerializable<CompoundNBT> {
                             BlockPos hitBlockPos = new BlockPos(hitPos.add(Vector3d.atBottomCenterOf(faceHit.getNormal()).scale(-0.5)));
                             
                             HeavyPunchExplosion explosion = new HeavyPunchExplosion(world, attacker, new ActionTarget(hitBlockPos, faceHit), 
-                                    explosionDmgSource.setExplosion(), null, 
+                                    movementVec, explosionDmgSource, null, 
                                     hitPos.x, hitPos.y, hitPos.z, 
                                     explosionRadius, false, Explosion.Mode.BREAK)
                                     .aoeDamage(explosionDamage)

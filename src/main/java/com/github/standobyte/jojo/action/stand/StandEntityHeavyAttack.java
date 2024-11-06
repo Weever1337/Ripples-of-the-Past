@@ -420,7 +420,7 @@ public class StandEntityHeavyAttack extends StandEntityAction implements IHasSta
             
             Vector3d pos = Vector3d.atCenterOf(blockPos).add(Vector3d.atLowerCornerOf(face.getNormal()).scale(0.6));
             HeavyPunchExplosion explosion = new HeavyPunchExplosion(stand.level, stand, new ActionTarget(blockPos, face), 
-                    explosionDmgSource(stand), null, 
+                    stand.getLookAngle(), explosionDmgSource(stand), null, 
                     pos.x, pos.y, pos.z, 
                     calcExplosionRadius(stand), false, 
                     JojoModUtil.breakingBlocksEnabled(stand.level) ? Explosion.Mode.BREAK : Explosion.Mode.NONE)
@@ -444,6 +444,7 @@ public class StandEntityHeavyAttack extends StandEntityAction implements IHasSta
             private final LivingEntity attacker;
             @Nullable private final StandEntity attackerAsStand;
             private final ActionTarget hitBlock;
+            private final Vector3d explosionDirection;
             private float aoeDamage;
             
             private boolean createBlockShards = false;
@@ -453,7 +454,7 @@ public class StandEntityHeavyAttack extends StandEntityAction implements IHasSta
             
             
             public HeavyPunchExplosion(World pLevel, LivingEntity attacker, ActionTarget hitBlock, 
-                    @Nullable DamageSource pDamageSource, @Nullable ExplosionContext pDamageCalculator, 
+                    Vector3d direction, @Nullable DamageSource pDamageSource, @Nullable ExplosionContext pDamageCalculator, 
                     double pToBlowX, double pToBlowY, double pToBlowZ, 
                     float pRadius, boolean pFire, Explosion.Mode pBlockInteraction) {
                 super(pLevel, attacker, 
@@ -461,8 +462,9 @@ public class StandEntityHeavyAttack extends StandEntityAction implements IHasSta
                         pToBlowX, pToBlowY, pToBlowZ, 
                         pRadius, pFire, pBlockInteraction);
                 this.attacker = attacker;
-                this.hitBlock = hitBlock;
                 this.attackerAsStand = attacker instanceof StandEntity ? (StandEntity) attacker : null;
+                this.hitBlock = hitBlock;
+                this.explosionDirection = direction.normalize();
             }
             
             public HeavyPunchExplosion createBlockShards(double strength, double precision) {
@@ -493,9 +495,7 @@ public class StandEntityHeavyAttack extends StandEntityAction implements IHasSta
                 @Override
                 public Optional<Float> getBlockExplosionResistance(Explosion pExplosion, IBlockReader pLevel, 
                         BlockPos pPos, BlockState pBlockState, FluidState pFluidState) {
-                    return super.getBlockExplosionResistance(pExplosion, pLevel, pPos, pBlockState, pFluidState).map(res -> {
-                        return res;
-                    });
+                    return super.getBlockExplosionResistance(pExplosion, pLevel, pPos, pBlockState, pFluidState);
                 }
                 
                 @Override
@@ -586,19 +586,11 @@ public class StandEntityHeavyAttack extends StandEntityAction implements IHasSta
             @Override
             public Set<BlockPos> calculateBlocksToBlow() {
                 Set<BlockPos> blocksToBlow = Sets.newHashSet();
-                Direction punchDir = hitBlock.getFace();
                 
                 for (int xStep = 0; xStep < 16; ++xStep) {
                     for (int yStep = 0; yStep < 16; ++yStep) {
                         for (int zStep = 0; zStep < 16; ++zStep) {
-                            if ((xStep == 0 || xStep == 15 || yStep == 0 || yStep == 15 || zStep == 0 || zStep == 15)
-                                    && !(
-                                            punchDir == Direction.WEST  && xStep <= 7 ||
-                                            punchDir == Direction.EAST  && xStep >  7 ||
-                                            punchDir == Direction.DOWN  && yStep <= 7 ||
-                                            punchDir == Direction.UP    && yStep >  7 ||
-                                            punchDir == Direction.NORTH && zStep <= 7 ||
-                                            punchDir == Direction.SOUTH && zStep >  7)) {
+                            if (xStep == 0 || xStep == 15 || yStep == 0 || yStep == 15 || zStep == 0 || zStep == 15) {
                                 double xd = (xStep / 15.0F * 2.0F - 1.0F);
                                 double yd = (yStep / 15.0F * 2.0F - 1.0F);
                                 double zd = (zStep / 15.0F * 2.0F - 1.0F);
@@ -606,6 +598,10 @@ public class StandEntityHeavyAttack extends StandEntityAction implements IHasSta
                                 xd = xd / len;
                                 yd = yd / len;
                                 zd = zd / len;
+                                if (xd * explosionDirection.x + yd * explosionDirection.y + zd * explosionDirection.z < 0) {
+                                    continue;
+                                }
+                                
                                 float power = radius * (0.7F + level.random.nextFloat() * 0.6F);
                                 Vector3d pos = getPosition();
                                 double x = pos.x;
