@@ -2,8 +2,10 @@ package com.github.standobyte.jojo.action.stand;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
@@ -18,6 +20,8 @@ import com.github.standobyte.jojo.action.ActionTarget.TargetType;
 import com.github.standobyte.jojo.action.stand.punch.StandBlockPunch;
 import com.github.standobyte.jojo.action.stand.punch.StandEntityPunch;
 import com.github.standobyte.jojo.action.stand.punch.StandMissedPunch;
+import com.github.standobyte.jojo.capability.chunk.ChunkCap.PrevBlockInfo;
+import com.github.standobyte.jojo.capability.chunk.ChunkCapProvider;
 import com.github.standobyte.jojo.client.ClientUtil;
 import com.github.standobyte.jojo.entity.damaging.projectile.BlockShardEntity;
 import com.github.standobyte.jojo.entity.stand.StandEntity;
@@ -52,6 +56,8 @@ import net.minecraft.world.Explosion;
 import net.minecraft.world.ExplosionContext;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
+import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.IChunk;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.event.ForgeEventFactory;
 
@@ -517,7 +523,7 @@ public class StandEntityHeavyAttack extends StandEntityAction implements IHasSta
                     List<BlockPos> toBlow = getToBlow();
                     LivingEntity standUser = StandUtil.getStandUser(attacker);
                     
-                    List<Entity> blockShardEntities = new ArrayList<>();
+                    Map<BlockPos, BlockShardEntity[]> blockShardEntities = new HashMap<>();
                     if (createBlockShards) {
                         Random random = attacker.getRandom();
                         Vector3d entityLook = attacker.getLookAngle();
@@ -527,16 +533,18 @@ public class StandEntityHeavyAttack extends StandEntityAction implements IHasSta
                         for (BlockPos blockPos : toBlow) {
                             BlockState blockState = level.getBlockState(blockPos);
                             if (CrazyDiamondBlockBullet.hardMaterial(blockState)) {
-                                for (int i = 0; i < 3; i++) {
-                                    BlockShardEntity blockShard = new BlockShardEntity(attacker, level, blockState);
+                                BlockShardEntity[] shards = new BlockShardEntity[3];
+                                for (int i = 0; i < shards.length; i++) {
+                                    BlockShardEntity blockShard = new BlockShardEntity(attacker, level, blockState, blockPos);
                                     blockShard.setPos(
                                             blockPos.getX() + random.nextDouble(),
                                             blockPos.getY() + random.nextDouble(),
                                             blockPos.getZ() + random.nextDouble());
                                     
                                     blockShard.shoot(entityLook.x, entityLook.y, entityLook.z, shardsVelocity, shardsInaccuracy);
-                                    blockShardEntities.add(blockShard);
+                                    shards[i] = blockShard;
                                 }
+                                blockShardEntities.put(blockPos, shards);
                             }
                         }
                     }
@@ -546,8 +554,23 @@ public class StandEntityHeavyAttack extends StandEntityAction implements IHasSta
                     
                     if (!blockShardEntities.isEmpty()) {
                         // TODO stone crumble sound
-                        for (Entity blockShard : blockShardEntities) {
-                            level.addFreshEntity(blockShard);
+                        for (Map.Entry<BlockPos, BlockShardEntity[]> blockShards : blockShardEntities.entrySet()) {
+                            BlockPos pos = blockShards.getKey();
+                            BlockShardEntity[] shards = blockShards.getValue();
+                            
+                            for (Entity blockShard : shards) {
+                                level.addFreshEntity(blockShard);
+                            }
+                            
+                            IChunk chunk = world.getChunk(pos);
+                            if (chunk instanceof Chunk) {
+                                ((Chunk) chunk).getCapability(ChunkCapProvider.CAPABILITY).ifPresent(cap -> {
+                                    PrevBlockInfo brokenBlock = cap.getBrokenBlockAt(pos);
+                                    if (brokenBlock != null) {
+                                        brokenBlock.withBlockShards(shards);
+                                    }
+                                });
+                            }
                         }
                     }
                 }
