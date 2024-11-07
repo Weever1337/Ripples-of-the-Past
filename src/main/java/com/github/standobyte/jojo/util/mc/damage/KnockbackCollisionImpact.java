@@ -24,6 +24,7 @@ import com.github.standobyte.jojo.power.impl.stand.StandUtil;
 import com.github.standobyte.jojo.util.mc.CollideBlocks;
 import com.github.standobyte.jojo.util.mc.CollideBlocks.BlockCollisionResult;
 import com.github.standobyte.jojo.util.mc.MCUtil;
+import com.github.standobyte.jojo.util.mc.damage.explosion.CustomExplosion;
 import com.github.standobyte.jojo.util.mod.JojoModUtil;
 
 import net.minecraft.block.BlockState;
@@ -49,7 +50,6 @@ import net.minecraft.world.Explosion;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.util.INBTSerializable;
-import net.minecraftforge.event.ForgeEventFactory;
 
 public class KnockbackCollisionImpact implements INBTSerializable<CompoundNBT> {
     private final Entity entity;
@@ -292,10 +292,7 @@ public class KnockbackCollisionImpact implements INBTSerializable<CompoundNBT> {
                                     explosionRadius, false, Explosion.Mode.BREAK)
                                     .aoeDamage(explosionDamage)
                                     .entityNoDamage(entity);
-                            if (!ForgeEventFactory.onExplosionStart(world, explosion)) {
-                                explosion.explode();
-                                explosion.finalizeExplosion(true);
-
+                            if (CustomExplosion.explode(explosion)) {
                                 if (doGlassBleeding.booleanValue()) {
                                     BlockShardEntity.glassShardBleeding(asLiving);
                                 }

@@ -2,15 +2,17 @@ package com.github.standobyte.jojo.util.mc.damage.explosion;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import com.github.standobyte.jojo.JojoMod;
 import com.github.standobyte.jojo.action.non_stand.PillarmanSelfDetonation;
+import com.github.standobyte.jojo.action.stand.StandEntityHeavyAttack;
 import com.github.standobyte.jojo.entity.damaging.projectile.MRCrossfireHurricaneEntity;
 import com.github.standobyte.jojo.network.PacketManager;
 import com.github.standobyte.jojo.network.packets.fromserver.CustomExplosionPacket;
@@ -32,11 +34,14 @@ import net.minecraft.fluid.FluidState;
 import net.minecraft.item.ItemStack;
 import net.minecraft.loot.LootContext;
 import net.minecraft.loot.LootParameters;
+import net.minecraft.network.PacketBuffer;
 import net.minecraft.particles.ParticleTypes;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvents;
+import net.minecraft.util.Util;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
@@ -67,6 +72,14 @@ public abstract class CustomExplosion extends Explosion {
         this.fire = pFire;
         this.damageCalculator = pDamageCalculator == null ? makeDamageCalculator(pSource) : pDamageCalculator;
     }
+    
+    protected CustomExplosion(World pLevel, double pToBlowX, double pToBlowY, double pToBlowZ, float pRadius) {
+        this(pLevel, null, null, null, pToBlowX, pToBlowY, pToBlowZ, pRadius, false, Explosion.Mode.NONE);
+    }
+    
+    public void toBuf(PacketBuffer buf) {}
+    
+    public void fromBuf(PacketBuffer buf) {}
     
     protected ExplosionContext makeDamageCalculator(@Nullable Entity pEntity) {
         return (ExplosionContext)(pEntity == null ? new ExplosionContext() : new EntityExplosionContext(pEntity));
@@ -296,103 +309,52 @@ public abstract class CustomExplosion extends Explosion {
     
     
     
-    public static Explosion explode(World pLevel, @Nullable Entity pEntity, 
-            double pX, double pY, double pZ, float pExplosionRadius, Explosion.Mode pMode, CustomExplosionType explosionType) {
-        return explode(pLevel, pEntity, (DamageSource)null, (ExplosionContext)null, pX, pY, pZ, pExplosionRadius, false, pMode, explosionType);
-    }
-
-    public static Explosion explode(World pLevel, @Nullable Entity pEntity, 
-            double pX, double pY, double pZ, float pExplosionRadius, boolean pCausesFire, Explosion.Mode pMode, CustomExplosionType explosionType) {
-        return explode(pLevel, pEntity, (DamageSource)null, (ExplosionContext)null, pX, pY, pZ, pExplosionRadius, pCausesFire, pMode, explosionType);
-    }
-
-    public static CustomExplosion explode(World pLevel, @Nullable Entity pExploder, 
-            @Nullable DamageSource pDamageSource, @Nullable ExplosionContext pContext, 
-            double pX, double pY, double pZ, float pSize, boolean pCausesFire, Explosion.Mode pMode, CustomExplosionType explosionType) {
-        CustomExplosion explosion = explosionType.createExplosion(pLevel, pExploder, 
-                pDamageSource, pContext, 
-                pX, pY, pZ, 
-                pSize, pCausesFire, pMode);
-        return explodePreCreated(explosion, pLevel, explosionType);
-    }
-    
-    public static CustomExplosion explodePreCreated(CustomExplosion explosion, World pLevel, CustomExplosionType explosionType) {
-        if (ForgeEventFactory.onExplosionStart(pLevel, explosion)) return explosion;
+    public static boolean explode(CustomExplosion explosion) {
+        World world = explosion.level;
+        if (ForgeEventFactory.onExplosionStart(world, explosion)) {
+            return false;
+        }
         explosion.explode();
         explosion.finalizeExplosion(true);
         
-        if (!pLevel.isClientSide()) {
+        if (!world.isClientSide()) {
             if (explosion.blockInteraction == Explosion.Mode.NONE) {
                 explosion.clearToBlow();
             }
             
-            Vector3d pos = explosion.getPosition();
-            for (ServerPlayerEntity player : ((ServerWorld) pLevel).players()) {
-                if (player.distanceToSqr(pos.x, pos.y, pos.z) < 4096.0D) {
-                    PacketManager.sendToClient(new CustomExplosionPacket(pos.x, pos.y, pos.z, 
-                            explosion.radius, explosion.getToBlow(), explosion.getHitPlayers().get(player), explosionType), player);
+            ResourceLocation explosionType = explosion.getExplosionType();
+            if (explosionType != null) {
+                Vector3d pos = explosion.getPosition();
+                for (ServerPlayerEntity player : ((ServerWorld) world).players()) {
+                    if (player.distanceToSqr(pos.x, pos.y, pos.z) < 4096) {
+                        PacketManager.sendToClient(new CustomExplosionPacket(explosion, pos.x, pos.y, pos.z, 
+                                explosion.radius, explosion.getToBlow(), explosion.getHitPlayers().get(player), explosionType), player);
+                    }
                 }
             }
         }
         
-        return explosion;
+        return true;
     }
     
+    public abstract ResourceLocation getExplosionType();
     
-    public static enum CustomExplosionType {
-        CROSSFIRE_HURRICANE {
-            @Override public CustomExplosionSupplier explosionSupplier() {
-                return MRCrossfireHurricaneEntity.CrossfireHurricaneExplosion::new;
-            }
-        },
+    public static class Register {
+        public static final ResourceLocation CROSSFIRE_HURRICANE = new ResourceLocation(JojoMod.MOD_ID, "cfh");
+        public static final ResourceLocation PILLAR_MAN_DETONATION = new ResourceLocation(JojoMod.MOD_ID, "acdc");
+        public static final ResourceLocation HAMON = new ResourceLocation(JojoMod.MOD_ID, "hamon");
+        public static final ResourceLocation STAND_HEAVY_PUNCH = new ResourceLocation(JojoMod.MOD_ID, "heavy_punch");
         
-        PILLAR_MAN_DETONATION {
-            @Override public CustomExplosionSupplier explosionSupplier() {
-                return PillarmanSelfDetonation.PillarmanExplosion::new;
-            }
-        },
-        
-        HAMON {
-            @Deprecated @Override public CustomExplosionSupplier explosionSupplier() { return null; }
-            
-            @Override
-            public CustomExplosion createExplosion(World pLevel, @Nullable Entity pSource, 
-                    @Nullable DamageSource pDamageSource, @Nullable ExplosionContext pDamageCalculator, 
-                    double pToBlowX, double pToBlowY, double pToBlowZ, 
-                    float pRadius, boolean pFire, Explosion.Mode pBlockInteraction) {
-                return new HamonBlastExplosion(pLevel, pSource, pDamageCalculator, pToBlowX, pToBlowY, pToBlowZ, pRadius);
-            }
-        };
-        
-        @Nonnull public CustomExplosion createExplosion(World pLevel, @Nullable Entity pSource, 
-                @Nullable DamageSource pDamageSource, @Nullable ExplosionContext pDamageCalculator, 
-                double pToBlowX, double pToBlowY, double pToBlowZ, 
-                float pRadius, boolean pFire, Explosion.Mode pBlockInteraction) {
-            return explosionSupplier().createExplosion(pLevel, pSource, 
-                    pDamageSource, pDamageCalculator, 
-                    pToBlowX, pToBlowY, pToBlowZ, 
-                    pRadius, pFire, pBlockInteraction);
-        }
-        
-        protected abstract CustomExplosionSupplier explosionSupplier();
-        
-        @Nonnull public Explosion createExplosionOnClient(World pLevel, @Nullable Entity pSource, 
-                double pToBlowX, double pToBlowY, double pToBlowZ, 
-                float pRadius, List<BlockPos> pPositions) {
-            CustomExplosion explosion = createExplosion(pLevel, pSource, 
-                    null, null, 
-                    pToBlowX, pToBlowY, pToBlowZ, 
-                    pRadius, false, Explosion.Mode.DESTROY);
-            explosion.getToBlow().addAll(pPositions);
-            return explosion;
-        }
-        
-        
-        @FunctionalInterface
-        protected static interface CustomExplosionSupplier {
-            CustomExplosion createExplosion(World pLevel, Entity pSource, DamageSource pDamageSource,
-                    ExplosionContext pDamageCalculator, double pToBlowX, double pToBlowY, double pToBlowZ,
-                    float pRadius, boolean pFire, Mode pBlockInteraction);
-        }
+        public static final HashMap<ResourceLocation, CustomExplosionSupplier> REGISTER = Util.make(new HashMap<>(), map -> {
+            map.put(CROSSFIRE_HURRICANE, MRCrossfireHurricaneEntity.CrossfireHurricaneExplosion::new);
+            map.put(PILLAR_MAN_DETONATION, PillarmanSelfDetonation.PillarmanExplosion::new);
+            map.put(HAMON, HamonBlastExplosion::new);
+            map.put(STAND_HEAVY_PUNCH, StandEntityHeavyAttack.HeavyPunchBlockInstance.HeavyPunchExplosion::new);
+        });
+    }
+    
+    @FunctionalInterface
+    public static interface CustomExplosionSupplier {
+        CustomExplosion createExplosion(World pLevel, double pToBlowX, double pToBlowY, double pToBlowZ, float pRadius);
     }
 }

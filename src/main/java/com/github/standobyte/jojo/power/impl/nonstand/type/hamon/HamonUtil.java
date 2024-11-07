@@ -44,7 +44,6 @@ import com.github.standobyte.jojo.util.general.GeneralUtil;
 import com.github.standobyte.jojo.util.mc.MCUtil;
 import com.github.standobyte.jojo.util.mc.damage.DamageUtil;
 import com.github.standobyte.jojo.util.mc.damage.explosion.CustomExplosion;
-import com.github.standobyte.jojo.util.mc.damage.explosion.CustomExplosion.CustomExplosionType;
 import com.github.standobyte.jojo.util.mc.damage.explosion.HamonBlastExplosion;
 import com.github.standobyte.jojo.util.mc.reflection.CommonReflection;
 import com.github.standobyte.jojo.util.mod.JojoModUtil;
@@ -403,7 +402,7 @@ public class HamonUtil {
         HamonBlastExplosion hamonBlast = new HamonBlastExplosion(world, source, null, 
                 position.x, position.y, position.z, radius);
         hamonBlast.setHamonDamage(damage);
-        CustomExplosion.explodePreCreated(hamonBlast, world, CustomExplosionType.HAMON);
+        CustomExplosion.explode(hamonBlast);
     }
     
 

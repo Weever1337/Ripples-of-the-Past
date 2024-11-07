@@ -47,8 +47,10 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.fluid.FluidState;
+import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.Direction;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.vector.Vector3d;
@@ -59,7 +61,6 @@ import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.IChunk;
 import net.minecraft.world.server.ServerWorld;
-import net.minecraftforge.event.ForgeEventFactory;
 
 public class StandEntityHeavyAttack extends StandEntityAction implements IHasStandPunch {
     private final Supplier<? extends StandEntityHeavyAttack> finisherVariation;
@@ -432,10 +433,7 @@ public class StandEntityHeavyAttack extends StandEntityAction implements IHasSta
                     JojoModUtil.breakingBlocksEnabled(stand.level) ? Explosion.Mode.BREAK : Explosion.Mode.NONE)
                     .aoeDamage(calcExplosionDamage(stand))
                     .createBlockShards(stand.getAttackDamage(), stand.getPrecision());
-            if (!ForgeEventFactory.onExplosionStart(stand.level, explosion)) {
-                explosion.explode();
-                explosion.finalizeExplosion(true);
-            }
+            CustomExplosion.explode(explosion);
             
             return targetHit;
         }
@@ -447,10 +445,10 @@ public class StandEntityHeavyAttack extends StandEntityAction implements IHasSta
         
         
         public static class HeavyPunchExplosion extends CustomExplosion {
-            private final LivingEntity attacker;
-            @Nullable private final StandEntity attackerAsStand;
-            private final ActionTarget hitBlock;
-            private final Vector3d explosionDirection;
+            private LivingEntity attacker;
+            @Nullable private StandEntity attackerAsStand;
+            private ActionTarget hitBlock;
+            private Vector3d explosionDirection;
             private float aoeDamage;
             
             private boolean createBlockShards = false;
@@ -488,6 +486,21 @@ public class StandEntityHeavyAttack extends StandEntityAction implements IHasSta
             public HeavyPunchExplosion entityNoDamage(Entity entityNoDamage) {
                 this.noDamage.add(entityNoDamage);
                 return this;
+            }
+            
+            
+            public HeavyPunchExplosion(World pLevel, double pToBlowX, double pToBlowY, double pToBlowZ, float pRadius) {
+                super(pLevel, pToBlowX, pToBlowY, pToBlowZ, pRadius);
+            }
+            
+            @Override
+            public void toBuf(PacketBuffer buf) {
+                
+            }
+            
+            @Override
+            public void fromBuf(PacketBuffer buf) {
+                
             }
             
             
@@ -661,6 +674,11 @@ public class StandEntityHeavyAttack extends StandEntityAction implements IHasSta
             
             @Override
             protected void spawnParticles() {}
+            
+            @Override
+            public ResourceLocation getExplosionType() {
+                return CustomExplosion.Register.STAND_HEAVY_PUNCH;
+            }
         }
         
     }
