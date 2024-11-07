@@ -161,10 +161,12 @@ public class ChunkCap {
     public static class PrevBlockInfo {
         public final BlockPos pos;
         public final BlockState state;
+        
         public final List<ItemStack> drops;
+        private int xp = 0;
+        
         public final boolean keep;
         private int tickCount = 0;
-        private int xp = 0;
         
         private PrevBlockInfo(BlockPos pos, BlockState state, List<ItemStack> drops, boolean keep) {
             this.pos = pos;
@@ -200,8 +202,8 @@ public class ChunkCap {
             for (ItemStack stack : drops) {
                 itemsNBT.add(stack.save(new CompoundNBT()));
             }
-            nbt.putInt("Xp", xp);
             nbt.put("Drops", itemsNBT);
+            nbt.putInt("Xp", xp);
             
             return nbt;
         }

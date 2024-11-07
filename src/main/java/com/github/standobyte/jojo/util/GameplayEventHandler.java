@@ -142,6 +142,7 @@ import net.minecraft.world.GameRules;
 import net.minecraft.world.GameType;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.IChunk;
 import net.minecraft.world.server.ServerChunkProvider;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.ForgeHooks;
@@ -1304,10 +1305,25 @@ public class GameplayEventHandler {
     
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void onBlockBreak(BlockEvent.BreakEvent event) {
-        if (!event.getWorld().isClientSide() && event.getPlayer().abilities.instabuild) {
-            CrazyDiamondRestoreTerrain.rememberBrokenBlock((World) event.getWorld(), 
-                    event.getPos(), event.getState(), Optional.ofNullable(event.getWorld().getBlockEntity(event.getPos())), 
-                    Collections.emptyList());
+        if (!event.getWorld().isClientSide()) {
+            World world = (World) event.getWorld();
+            BlockPos pos = event.getPos();
+            
+            int xp = event.getExpToDrop();
+            if (xp > 0) {
+                IChunk chunk = world.getChunk(pos);
+                if (chunk instanceof Chunk) {
+                    ((Chunk) chunk).getCapability(ChunkCapProvider.CAPABILITY).ifPresent(cap -> {
+                        cap.setDroppedXp(pos, xp);
+                    });
+                }
+            }
+            
+            if (event.getPlayer().abilities.instabuild) {
+                CrazyDiamondRestoreTerrain.rememberBrokenBlock(world, 
+                        pos, event.getState(), Optional.ofNullable(world.getBlockEntity(pos)), 
+                        Collections.emptyList());
+            }
         }
     }
     
