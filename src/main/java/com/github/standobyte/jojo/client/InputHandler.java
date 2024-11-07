@@ -72,6 +72,7 @@ import com.github.standobyte.jojo.power.impl.stand.IStandPower;
 import com.github.standobyte.jojo.util.general.GeneralUtil;
 import com.github.standobyte.jojo.util.general.MathUtil;
 import com.github.standobyte.jojo.util.mc.MCUtil;
+import com.github.standobyte.jojo.util.mod.IPlayerLeap;
 import com.github.standobyte.jojo.util.mod.JojoModUtil.Direction2D;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
@@ -1111,6 +1112,7 @@ public class InputHandler {
                                 
                                 Entity entity = playerVehicle != null ? playerVehicle : mc.player;
                                 PacketManager.sendToServer(new ClOnLeapPacket(power.getPowerClassification()));
+                                IPlayerLeap.onLeapFixWrongMovement(mc.player);
                                 if (groundLeap) {
                                     MCUtil.leap(entity, leapStrength);
                                 }
