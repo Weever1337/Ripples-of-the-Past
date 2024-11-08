@@ -53,6 +53,7 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.Explosion;
 import net.minecraft.world.ExplosionContext;
@@ -539,9 +540,11 @@ public class StandEntityHeavyAttack extends StandEntityAction implements IHasSta
                     Map<BlockPos, BlockShardEntity[]> blockShardEntities = new HashMap<>();
                     if (createBlockShards) {
                         Random random = attacker.getRandom();
-                        Vector3d entityLook = attacker.getLookAngle();
                         float shardsVelocity = 0.5f + (float) strength * 0.05f;
-                        float shardsInaccuracy = Math.max(100 - (float) precision * 4.5f, 0);
+                        double shardsInaccuracy = Math.max(100 - precision * 4.5, 0);
+                        
+                        shardsInaccuracy = Math.min(shardsInaccuracy * 0.0075, 1);
+                        Vector3d vecMaxAccuracy = explosionDirection.normalize();
                         
                         for (BlockPos blockPos : toBlow) {
                             BlockState blockState = level.getBlockState(blockPos);
@@ -554,7 +557,13 @@ public class StandEntityHeavyAttack extends StandEntityAction implements IHasSta
                                             blockPos.getY() + random.nextDouble(),
                                             blockPos.getZ() + random.nextDouble());
                                     
-                                    blockShard.shoot(entityLook.x, entityLook.y, entityLook.z, shardsVelocity, shardsInaccuracy);
+                                    Vector3d vecMinAccuracy = blockShard.position().subtract(this.getPosition()).normalize();
+                                    Vector3d shootVec = new Vector3d(
+                                            MathHelper.lerp(shardsInaccuracy, vecMaxAccuracy.x, vecMinAccuracy.x),
+                                            MathHelper.lerp(shardsInaccuracy, vecMaxAccuracy.y, vecMinAccuracy.y),
+                                            MathHelper.lerp(shardsInaccuracy, vecMaxAccuracy.z, vecMinAccuracy.z));
+                                    
+                                    blockShard.shoot(shootVec.x, shootVec.y, shootVec.z, shardsVelocity, 4);
                                     shards[i] = blockShard;
                                 }
                                 blockShardEntities.put(blockPos, shards);

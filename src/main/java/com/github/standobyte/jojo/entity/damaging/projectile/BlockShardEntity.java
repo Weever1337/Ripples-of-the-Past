@@ -4,8 +4,10 @@ import java.util.Optional;
 
 import javax.annotation.Nullable;
 
+import com.github.standobyte.jojo.action.ActionTarget.TargetType;
 import com.github.standobyte.jojo.action.stand.CrazyDiamondHeal;
 import com.github.standobyte.jojo.client.ClientUtil;
+import com.github.standobyte.jojo.client.particle.custom.CustomParticlesHelper;
 import com.github.standobyte.jojo.init.ModEntityTypes;
 import com.github.standobyte.jojo.init.ModStatusEffects;
 import com.github.standobyte.jojo.init.power.stand.ModStandsInit;
@@ -15,6 +17,7 @@ import com.github.standobyte.jojo.util.mc.MCUtil;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
@@ -26,7 +29,10 @@ import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.potion.EffectInstance;
+import net.minecraft.util.SoundCategory;
+import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.World;
 
@@ -144,6 +150,23 @@ public class BlockShardEntity extends ModdedProjectileEntity {
             });
         }
         super.moveProjectile();
+    }
+    
+    @Override
+    protected void breakProjectile(TargetType targetType, RayTraceResult hitTarget) {
+        if (level.isClientSide() && blockState != null) {
+            Vector3d position = position();
+            SoundType soundType = blockState.getSoundType();
+            SoundEvent sound = soundType.getBreakSound();
+            if (sound != null) {
+                level.playLocalSound(position.x, position.y, position.z, 
+                        sound, SoundCategory.BLOCKS, 
+                        (soundType.getVolume() + 1.0F) / 2.0F, soundType.getPitch() * 0.8F, false);
+            }
+            
+            CustomParticlesHelper.addBlockShardBreakParticles(position, blockState);
+        }
+        super.breakProjectile(targetType, hitTarget);
     }
     
     @Override
