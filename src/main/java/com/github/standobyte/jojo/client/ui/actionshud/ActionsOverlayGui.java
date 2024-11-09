@@ -1458,8 +1458,9 @@ public class ActionsOverlayGui extends AbstractGui {
                 RenderSystem.color4f(1.0F, 1.0F, 1.0F, alpha);
             }
             mc.getTextureManager().bind(RADIAL_INDICATOR);
-            int deg = (int) (ratio * 360F);
-            blitFloat(matrixStack, x, y, deg % 19 * 13, deg / 19 * 13, 13, 13);
+//            int deg = (int) (ratio * 360F);
+//            blitFloat(matrixStack, x, y, deg % 19 * 13, deg / 19 * 13, 13, 13);
+            RadialBar.render(matrixStack, x, y, 0, ratio, 0, 0, 234, 234, 13, 13, 256, 256, getBlitOffset());
             RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
         }
     }
