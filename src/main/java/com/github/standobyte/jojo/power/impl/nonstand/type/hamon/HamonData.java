@@ -385,7 +385,7 @@ public class HamonData extends TypeSpecificData {
     
     
     
-    public static final float ALL_EXERCISES_EFFICIENCY_MULTIPLIER = 1.05F;
+    public static final float ALL_EXERCISES_EFFICIENCY_ADD_MULTIPLIER = 0.05F;
     @Deprecated
     public float getActionEfficiency(float energyCost, boolean handSwingTimer) {
         return getActionEfficiency(energyCost, handSwingTimer, null);
@@ -395,9 +395,17 @@ public class HamonData extends TypeSpecificData {
         float efficiency = getHamonEnergyUsageEfficiency(energyCost, false) * getBloodstreamEfficiency();
         
         if (efficiency > 0) {
+            float multiplier = 1;
             if (allExercisesCompleted) {
-                efficiency *= ALL_EXERCISES_EFFICIENCY_MULTIPLIER;
+                multiplier += ALL_EXERCISES_EFFICIENCY_ADD_MULTIPLIER;
             }
+            if (hamonSkill != null) {
+                CharacterHamonTechnique technique = getCharacterTechnique();
+                if (technique != null) {
+                    multiplier += technique.getAddSkillEfficiency(hamonSkill);
+                }
+            }
+            efficiency *= multiplier;
             
             if (handSwingTimer && power.getUser() instanceof PlayerEntity) {
                 float swingStrengthScale = ((PlayerEntity) power.getUser()).getAttackStrengthScale(0.5F);
@@ -1183,9 +1191,7 @@ public class HamonData extends TypeSpecificData {
     }
     
     public static boolean canResetTab(PlayerEntity user, HamonSkillsTab type) {
-        return user.abilities.instabuild
-                // FIXME tmp
-                || type == HamonSkillsTab.TECHNIQUE;
+        return user.abilities.instabuild;
     }
 
     public void resetHamonSkills(LivingEntity user, HamonSkillsTab type) {

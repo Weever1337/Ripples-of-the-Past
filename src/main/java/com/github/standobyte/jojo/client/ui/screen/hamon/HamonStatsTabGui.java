@@ -490,7 +490,7 @@ public class HamonStatsTabGui extends HamonTabGui {
             tooltip1Key = "hamon.exercise.full_completion_hint";
             hasBuff = screen.hamon.allExercisesCompleted();
             tooltip2.add(new TranslationTextComponent("hamon.exercise.full_completion_buff", 
-                    PERCENTAGE_FORMAT.format((HamonData.ALL_EXERCISES_EFFICIENCY_MULTIPLIER - 1F) * 100F), 
+                    PERCENTAGE_FORMAT.format(HamonData.ALL_EXERCISES_EFFICIENCY_ADD_MULTIPLIER * 100F), 
                     new TranslationTextComponent("hamon.exercise.completion_buff_hint2")));
             Collections.addAll(tooltip2,
                     new StringTextComponent(" "),

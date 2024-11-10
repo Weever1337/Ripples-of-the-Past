@@ -235,6 +235,7 @@ public class ModHamonSkills {
                 list.add(ModHamonSkills.OVERDRIVE_BARRAGE);
             }))
             .perkOnPick(ModHamonSkills.NATURAL_TALENT)
+            .baseSkillBranchEfficiency(SkillBranch.OVERDRIVE, 0.2f)
             .musicOnPick(ModSounds.HAMON_PICK_JONATHAN).build());
     
     
@@ -266,6 +267,7 @@ public class ModHamonSkills {
                 list.add(ModHamonSkills.TORNADO_OVERDRIVE);
             }))
             .perkOnPick(ModHamonSkills.DEEP_PASS)
+            .baseSkillBranchEfficiency(SkillBranch.FLEXIBILITY, 0.2f)
             .musicOnPick(ModSounds.HAMON_PICK_ZEPPELI).build());
     
     
@@ -295,6 +297,9 @@ public class ModHamonSkills {
                 list.add(ModHamonSkills.CLACKER_VOLLEY);
                 list.add(ModHamonSkills.REBUFF_OVERDRIVE);
             }))
+            .baseSkillBranchEfficiency(SkillBranch.OVERDRIVE, 0.1f)
+            .baseSkillBranchEfficiency(SkillBranch.INFUSION, 0.1f)
+            .baseSkillBranchEfficiency(SkillBranch.ATTRACTANT_REPELLENT, 0.1f)
             .musicOnPick(ModSounds.HAMON_PICK_JOSEPH).build());
     
     
@@ -326,6 +331,7 @@ public class ModHamonSkills {
                 list.add(ModHamonSkills.BUBBLE_BARRIER);
             }))
             .perkOnPick(ModHamonSkills.CRIMSON_BUBBLE)
+            .baseSkillBranchEfficiency(SkillBranch.INFUSION, 0.2f)
             .musicOnPick(ModSounds.HAMON_PICK_CAESAR).build());
     
     
@@ -349,6 +355,9 @@ public class ModHamonSkills {
                 list.add(ModHamonSkills.SATIPOROJA_SCARF);
                 list.add(ModHamonSkills.SNAKE_MUFFLER);
             }))
+            .baseSkillBranchEfficiency(SkillBranch.INFUSION, 0.1f)
+            .baseSkillBranchEfficiency(SkillBranch.FLEXIBILITY, 0.1f)
+            .baseSkillBranchEfficiency(SkillBranch.BODY_MANIPULATION, 0.1f)
             .musicOnPick(ModSounds.HAMON_PICK_LISA_LISA).build());
     
 }
