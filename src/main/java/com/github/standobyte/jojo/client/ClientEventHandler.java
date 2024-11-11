@@ -4,6 +4,8 @@ import static net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType
 import static net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType.EXPERIENCE;
 import static net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType.FOOD;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Optional;
@@ -133,6 +135,7 @@ import net.minecraftforge.client.event.GuiScreenEvent.DrawScreenEvent;
 import net.minecraftforge.client.event.GuiScreenEvent.InitGuiEvent;
 import net.minecraftforge.client.event.RenderArmEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
+import net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType;
 import net.minecraftforge.client.event.RenderHandEvent;
 import net.minecraftforge.client.event.RenderLivingEvent;
 import net.minecraftforge.client.event.RenderNameplateEvent;
@@ -156,6 +159,10 @@ public class ClientEventHandler {
     private static ClientEventHandler instance = null;
 
     private final Minecraft mc;
+
+    private List<ITextComponent> multiLineOverlayMessage = new ArrayList<>();
+    private int overlayMessageTime;
+    private boolean animateOverlayMessageColor;
     
     private float pausePartialTick;
     private boolean prevPause = false;
@@ -369,6 +376,10 @@ public class ClientEventHandler {
             ++tickCount;
             deathScreenTick = mc.screen instanceof DeathScreen ? deathScreenTick + 1 : 0;
             standStatsTick = mc.screen instanceof IngameMenuScreen && doStandStatsRender(mc.screen) ? standStatsTick + 1 : 0;
+            
+            if (!mc.isPaused()) {
+                if (overlayMessageTime > 0) overlayMessageTime--;
+            }
         }
     }
     
@@ -782,6 +793,58 @@ public class ClientEventHandler {
         
         RenderSystem.enableBlend();
         RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+    }
+    
+    @SubscribeEvent(priority = EventPriority.LOW)
+    public void renderOverlayMessage(RenderGameOverlayEvent.Pre event) {
+        if (event.getType() == ElementType.SUBTITLES) {
+            MainWindow window = mc.getWindow();
+            renderMultiLineMessage(event.getMatrixStack(), event.getPartialTicks(), 
+                    window.getGuiScaledWidth(), window.getGuiScaledHeight());
+        }
+    }
+    
+    public void setMultiLineOverlayMessage(Collection<ITextComponent> message, boolean animateColor) {
+        multiLineOverlayMessage.clear();
+        multiLineOverlayMessage.addAll(message);
+        overlayMessageTime = 60;
+        animateOverlayMessageColor = animateColor;
+    }
+    
+    // FIXME call this
+    @SuppressWarnings("deprecation")
+    private void renderMultiLineMessage(MatrixStack matrixStack, float partialTick, int width, int height) {
+        if (!mc.options.hideGui) {
+            IngameGui vanillaGui = mc.gui;
+            if (vanillaGui.overlayMessageTime > 0 || multiLineOverlayMessage.isEmpty()) {
+                this.overlayMessageTime = 0;
+                return;
+            }
+            mc.getProfiler().push("overlayMessage");
+            float hue = (float)overlayMessageTime - partialTick;
+            int opacity = (int)(hue * 255.0F / 20.0F);
+            if (opacity > 255) opacity = 255;
+
+            if (opacity > 8) {
+                RenderSystem.pushMatrix();
+                RenderSystem.translatef((float)(width / 2), (float)(height - 68), 0.0F);
+                RenderSystem.enableBlend();
+                RenderSystem.defaultBlendFunc();
+                FontRenderer font = vanillaGui.getFont();
+                int color = (animateOverlayMessageColor ? MathHelper.hsvToRgb(hue / 50.0F, 0.7F, 0.6F) & 0xFFFFFF : 0xFFFFFF);
+                for (int i = multiLineOverlayMessage.size() - 1; i >= 0; i--) {
+                    ITextComponent line = multiLineOverlayMessage.get(i);
+                    int lineWidth = font.width(line);
+                    ClientUtil.drawBackdrop(matrixStack, -font.width(line) / 2, -4, lineWidth, 1 - opacity);
+                    font.draw(matrixStack, line.getVisualOrderText(), -font.width(line) / 2, -4, color | (opacity << 24));
+                    RenderSystem.translatef(0, -13, 0);
+                }
+                RenderSystem.disableBlend();
+                RenderSystem.popMatrix();
+            }
+
+            mc.getProfiler().pop();
+        }
     }
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)

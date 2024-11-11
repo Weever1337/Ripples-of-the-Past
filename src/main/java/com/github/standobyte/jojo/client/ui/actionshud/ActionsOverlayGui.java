@@ -36,6 +36,7 @@ import com.github.standobyte.jojo.client.standskin.StandSkinsManager;
 import com.github.standobyte.jojo.client.ui.BlitFloat;
 import com.github.standobyte.jojo.client.ui.ShortKeybindTextComponent;
 import com.github.standobyte.jojo.client.ui.actionshud.ActionsModeConfig.SelectedTargetIcon;
+import com.github.standobyte.jojo.client.ui.actionshud.BarsRenderer.BarType;
 import com.github.standobyte.jojo.client.ui.actionshud.hotbar.HotbarFold;
 import com.github.standobyte.jojo.client.ui.actionshud.hotbar.HotbarRenderer;
 import com.github.standobyte.jojo.client.ui.screen.hamon.HamonScreen;
@@ -2041,6 +2042,8 @@ public class ActionsOverlayGui extends AbstractGui {
         outOfBreathSpriteTicks = 15;
         vignetteBeforeFadeAway = -1;
         prevAir = 0;
+        BarsRenderer.getBarEffects(BarType.ENERGY_HAMON).resetRedHighlight();
+        mc.gui.setOverlayMessage(new TranslationTextComponent("hamon.out_of_breath"), false);
     }
     
     public boolean isPlayerOutOfBreath() {
@@ -2048,7 +2051,7 @@ public class ActionsOverlayGui extends AbstractGui {
     }
     
     protected void tickOutOfBreathEffect() {
-        if (outOfBreath) {
+        if (outOfBreath && outOfBreathSpriteTicks == 0) {
             prevAir = mc.player.getAirSupply();
             if (prevAir >= mc.player.getMaxAirSupply()) {
                 outOfBreath = false;

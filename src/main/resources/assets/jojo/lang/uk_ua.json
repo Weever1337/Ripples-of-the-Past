@@ -423,7 +423,7 @@
   "hamon.mining_exercise" : "Гірництво",
   "hamon.running_exercise" : "Бігання",
   "hamon.swimming_exercise" : "Плавання",
-  "hamon.meditation" : "Медитація",
+  "hamon.meditation_exercise" : "Медитація",
   "hamon.next_point.strength" : "Наступне очко навичок на рівні %s Сила Хамона",
   "hamon.next_point.control" : "Наступне очко навичок на рівні %s контролю Хамона",
   "hamon.unspent_points" : "У вас є невитрачені очки навичок, використовуйте їх, щоб вивчити нові навички Хамона!",
