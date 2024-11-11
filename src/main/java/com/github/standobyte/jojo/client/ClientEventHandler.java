@@ -811,7 +811,6 @@ public class ClientEventHandler {
         animateOverlayMessageColor = animateColor;
     }
     
-    // FIXME call this
     @SuppressWarnings("deprecation")
     private void renderMultiLineMessage(MatrixStack matrixStack, float partialTick, int width, int height) {
         if (!mc.options.hideGui) {

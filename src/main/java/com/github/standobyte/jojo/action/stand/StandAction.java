@@ -14,6 +14,7 @@ import javax.annotation.Nullable;
 import com.github.standobyte.jojo.action.Action;
 import com.github.standobyte.jojo.action.ActionConditionResult;
 import com.github.standobyte.jojo.action.ActionTarget;
+import com.github.standobyte.jojo.action.player.ContinuousActionInstance;
 import com.github.standobyte.jojo.client.ClientUtil;
 import com.github.standobyte.jojo.client.standskin.StandSkinsManager;
 import com.github.standobyte.jojo.init.ModStatusEffects;
@@ -60,6 +61,11 @@ public abstract class StandAction extends Action<IStandPower> {
     @Override
     public boolean isUnlocked(IStandPower power) {
         return power.getLearningProgressPoints(this) >= 0;
+    }
+    
+    @Override
+    protected boolean canBeUsedDuringPlayerAction(ContinuousActionInstance<?, ?> curPlayerAction) {
+        return true;
     }
     
     @Override

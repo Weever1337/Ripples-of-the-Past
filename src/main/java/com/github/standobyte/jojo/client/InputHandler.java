@@ -735,7 +735,7 @@ public class InputHandler {
     public void modActionClick(ClickInputEvent event) {
         doubleShift.reset();
         
-        if (mc.player.isSpectator() || event.getHand() == Hand.OFF_HAND || areHotbarsDisabled()) {
+        if (mc.player.isSpectator() || event.getHand() == Hand.OFF_HAND) {
             return;
         }
 
@@ -826,7 +826,7 @@ public class InputHandler {
     
     private <P extends IPower<P, ?>> HudClickResult handleMouseClickPowerHud(ActionKey key, KeyBinding keyBinding) {
         HudClickResult result = new HudClickResult();
-        if (!actionsOverlay.areHotbarsEnabled() || mc.player.isSpectator()) {
+        if (mc.player.isSpectator()) {
             return result;
         }
 
@@ -834,13 +834,13 @@ public class InputHandler {
 
         ControlScheme.Hotbar hotbar = key.getHotbar();
         boolean actionClick = false;
-        if (power != null) {
+        if (power != null && actionsOverlay.areHotbarsEnabled()) {
             actionClick = !actionsOverlay.noActionSelected(hotbar);
         }
         
         if (!actionClick) {
             // cancel vanilla click
-            if (shouldVanillaInputStun()) {
+            if (shouldVanillaInputStun() || ContinuousActionInstance.getCurrentAction(mc.player).isPresent()) {
                 result.cancelVanillaInput();
             }
             return result;

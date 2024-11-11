@@ -93,6 +93,11 @@ public class HamonRebuffOverdrive extends HamonAction implements IPlayerAction<H
     
     
     @Override
+    protected boolean canBeUsedDuringPlayerAction(ContinuousActionInstance<?, ?> curPlayerAction) {
+        return curPlayerAction.getAction() == this;
+    }
+    
+    @Override
     public String getTranslationKey(INonStandPower power, ActionTarget target) {
         String key = super.getTranslationKey(power, target);
         if (getCurRebuff(power.getUser()).map(rebuff -> rebuff.canCancel()).orElse(false)) {
