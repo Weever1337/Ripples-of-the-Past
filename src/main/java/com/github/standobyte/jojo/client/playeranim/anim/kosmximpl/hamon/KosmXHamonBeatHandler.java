@@ -3,16 +3,15 @@ package com.github.standobyte.jojo.client.playeranim.anim.kosmximpl.hamon;
 import com.github.standobyte.jojo.JojoMod;
 import com.github.standobyte.jojo.client.playeranim.anim.interfaces.BasicToggleAnim;
 import com.github.standobyte.jojo.client.playeranim.kosmx.KosmXPlayerAnimatorInstalled.AnimLayerHandler;
-import com.github.standobyte.jojo.client.playeranim.kosmx.anim.modifier.KosmXFixedMirrorModifier;
+import com.github.standobyte.jojo.client.playeranim.kosmx.anim.modifier.KosmXFixedFadeModifier;
+import com.github.standobyte.jojo.client.playeranim.kosmx.anim.modifier.KosmXHandsideMirrorModifier;
 
 import dev.kosmx.playerAnim.api.layered.IAnimation;
 import dev.kosmx.playerAnim.api.layered.ModifierLayer;
-import dev.kosmx.playerAnim.api.layered.modifier.AbstractFadeModifier;
 import dev.kosmx.playerAnim.api.layered.modifier.SpeedModifier;
 import dev.kosmx.playerAnim.core.util.Ease;
 import net.minecraft.client.entity.player.AbstractClientPlayerEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.HandSide;
 import net.minecraft.util.ResourceLocation;
 
 public class KosmXHamonBeatHandler extends AnimLayerHandler<ModifierLayer<IAnimation>> implements BasicToggleAnim {
@@ -24,11 +23,7 @@ public class KosmXHamonBeatHandler extends AnimLayerHandler<ModifierLayer<IAnima
 
     @Override
     protected ModifierLayer<IAnimation> createAnimLayer(AbstractClientPlayerEntity player) {
-        ModifierLayer<IAnimation> anim = new ModifierLayer<>(null, new SpeedModifier(SPEED));
-        if (player.getMainArm() == HandSide.LEFT) {
-            anim.addModifierBefore(new KosmXFixedMirrorModifier());
-        }
-        return anim;
+        return new ModifierLayer<>(null, new KosmXHandsideMirrorModifier(player), new SpeedModifier(SPEED));
     }
     
 
@@ -39,7 +34,7 @@ public class KosmXHamonBeatHandler extends AnimLayerHandler<ModifierLayer<IAnima
             return setAnimFromName((AbstractClientPlayerEntity) player, ANIM);
         }
         else {
-            return fadeOutAnim((AbstractClientPlayerEntity) player, AbstractFadeModifier.standardFadeIn((int) (10 * SPEED), Ease.OUTCUBIC), null);
+            return fadeOutAnim((AbstractClientPlayerEntity) player, KosmXFixedFadeModifier.standardFadeIn((int) (10 * SPEED), Ease.OUTCUBIC), null);
         }
     }
 

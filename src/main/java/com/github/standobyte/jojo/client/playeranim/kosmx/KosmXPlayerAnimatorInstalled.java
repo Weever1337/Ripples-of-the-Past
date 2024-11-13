@@ -9,6 +9,7 @@ import javax.annotation.Nullable;
 import com.github.standobyte.jojo.client.playeranim.PlayerAnimationHandler;
 import com.github.standobyte.jojo.client.playeranim.PlayerAnimationHandler.BendablePart;
 import com.github.standobyte.jojo.client.playeranim.kosmx.anim.KosmXKeyframeAnimPlayer;
+import com.github.standobyte.jojo.client.playeranim.kosmx.anim.modifier.KosmXFixedFadeModifier;
 import com.mojang.blaze3d.matrix.MatrixStack;
 
 import dev.kosmx.playerAnim.api.AnimUtils;
@@ -268,7 +269,13 @@ public class KosmXPlayerAnimatorInstalled extends PlayerAnimationHandler.PlayerA
             return createAnimPlayer.apply(keyframes);
         }
         
+        @Deprecated
         protected boolean fadeOutAnim(PlayerEntity player, @Nullable AbstractFadeModifier fadeModifier, 
+                @Nullable IAnimation newAnimation) {
+            return fadeOutAnim(player, null, newAnimation);
+        }
+        
+        protected boolean fadeOutAnim(PlayerEntity player, @Nullable KosmXFixedFadeModifier fadeModifier, 
                 @Nullable IAnimation newAnimation) {
             if (player == null) return false;
             ModifierLayer<IAnimation> animLayer = getAnimLayer((AbstractClientPlayerEntity) player);
