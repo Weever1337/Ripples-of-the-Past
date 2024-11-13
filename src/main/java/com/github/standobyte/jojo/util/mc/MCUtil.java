@@ -929,13 +929,22 @@ public class MCUtil {
         }
     }
     
-    
+
     
     public static boolean isHandFree(LivingEntity entity, Hand hand) {
+        return areHandsFree(entity, hand);
+    }
+    
+    public static boolean areHandsFree(LivingEntity entity, Hand... hands) {
         if (entity.level.isClientSide() && entity.is(ClientUtil.getClientPlayer()) && ClientUtil.arePlayerHandsBusy()) {
             return false;
         }
-        return itemHandFree(entity.getItemInHand(hand));
+        for (Hand hand : hands) {
+            if (!itemHandFree(entity.getItemInHand(hand))) {
+                return false;
+            }
+        }
+        return true;
     }
     
     public static boolean itemHandFree(ItemStack item) {

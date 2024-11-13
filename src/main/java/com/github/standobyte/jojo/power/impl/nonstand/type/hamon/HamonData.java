@@ -421,7 +421,7 @@ public class HamonData extends TypeSpecificData {
             efficiency *= multiplier;
             
             if (handSwingTimer && power.getUser() instanceof PlayerEntity) {
-                float swingStrengthScale = ((PlayerEntity) power.getUser()).getAttackStrengthScale(0.5F);
+                float swingStrengthScale = ((PlayerEntity) power.getUser()).getAttackStrengthScale(1);
                 efficiency *= (0.2F + swingStrengthScale * swingStrengthScale * 0.8F);
             }
             

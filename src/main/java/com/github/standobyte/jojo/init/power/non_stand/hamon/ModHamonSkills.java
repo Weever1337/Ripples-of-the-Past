@@ -27,7 +27,7 @@ public class ModHamonSkills {
     
     public static final RegistryObject<BaseHamonSkill> OVERDRIVE = HAMON_SKILLS.register("overdrive", 
             () -> new BaseHamonSkill.Builder(HamonStat.STRENGTH, RewardType.ATTACK)
-            .unlocks(ModHamonActions.HAMON_OVERDRIVE)
+            .unlocks(ModHamonActions.HAMON_OVERDRIVE).unlocks(ModHamonActions.HAMON_BEAT)
             .skillBranch(SkillBranch.OVERDRIVE)
             .unlockedByDefault()
             .build());

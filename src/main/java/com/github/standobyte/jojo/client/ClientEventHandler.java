@@ -18,6 +18,7 @@ import java.util.stream.IntStream;
 import javax.annotation.Nullable;
 
 import com.github.standobyte.jojo.JojoMod;
+import com.github.standobyte.jojo.action.player.ContinuousActionInstance;
 import com.github.standobyte.jojo.action.stand.CrazyDiamondBlockCheckpointMake;
 import com.github.standobyte.jojo.action.stand.CrazyDiamondRestoreTerrain;
 import com.github.standobyte.jojo.capability.entity.ClientPlayerUtilCapProvider;
@@ -878,25 +879,33 @@ public class ClientEventHandler {
         ClientPlayerEntity player = Minecraft.getInstance().player;
         Hand hand = event.getHand();
         ItemStack item = player.getItemInHand(hand);
+        boolean renderOtherHand = false;
         if (!event.isCanceled() && !modPostedEvent) {
-            if (hand == Hand.MAIN_HAND && !player.isInvisible() && MCUtil.isHandFree(player, Hand.MAIN_HAND) && MCUtil.isHandFree(player, Hand.OFF_HAND)) {
-                INonStandPower.getNonStandPowerOptional(player).ifPresent(power -> {
-                    ActionsOverlayGui hud = ActionsOverlayGui.getInstance();
-                    if (hud.isActionSelectedAndEnabled(
-                            ModHamonActions.JONATHAN_OVERDRIVE_BARRAGE.get(), 
-                            ModHamonActions.JONATHAN_SUNLIGHT_YELLOW_OVERDRIVE_BARRAGE.get(),
-                            ModHamonActions.HAMON_WALL_CLIMBING.get())
-                            || LivingWallClimbing.getHandler(player).map(cap -> cap.isWallClimbing()).orElse(false)) {
-                        renderHand(Hand.OFF_HAND, event.getMatrixStack(), event.getBuffers(), event.getLight(), 
+            if (hand == Hand.MAIN_HAND && !player.isInvisible()) {
+                ActionsOverlayGui hud = ActionsOverlayGui.getInstance();
+                
+                if (hud.isActionSelectedAndEnabled(ModHamonActions.HAMON_BEAT.get()) || ContinuousActionInstance.getCurrentAction(player).map(
+                        action -> action.getAction() == ModHamonActions.HAMON_BEAT.get()).orElse(false)) {
+                    renderOtherHand = true;
+                }
+                
+                if (MCUtil.areHandsFree(player, Hand.MAIN_HAND, Hand.OFF_HAND) && hud.isActionSelectedAndEnabled(
+                        ModHamonActions.JONATHAN_OVERDRIVE_BARRAGE.get(), 
+                        ModHamonActions.JONATHAN_SUNLIGHT_YELLOW_OVERDRIVE_BARRAGE.get(),
+                        ModHamonActions.HAMON_WALL_CLIMBING.get())
+                        || LivingWallClimbing.getHandler(player).map(cap -> cap.isWallClimbing()).orElse(false)) {
+                    renderHand(Hand.OFF_HAND, event.getMatrixStack(), event.getBuffers(), event.getLight(), 
+                            event.getPartialTicks(), event.getInterpolatedPitch(), player);
+                    renderOtherHand = false;
+                }
+                
+                if (renderOtherHand || GlovesLayer.areGloves(player.getItemInHand(Hand.MAIN_HAND)) || GlovesLayer.areGloves(player.getItemInHand(Hand.OFF_HAND))) {
+                    Hand handToRender = renderOtherHand ? Hand.OFF_HAND : Hand.MAIN_HAND;
+                    if (MCUtil.isHandFree(player, handToRender)) {
+                        event.setCanceled(true);
+                        renderHand(handToRender, event.getMatrixStack(), event.getBuffers(), event.getLight(), 
                                 event.getPartialTicks(), event.getInterpolatedPitch(), player);
                     }
-                });
-                
-                boolean hasGloves = GlovesLayer.areGloves(player.getItemInHand(Hand.MAIN_HAND)) || GlovesLayer.areGloves(player.getItemInHand(Hand.OFF_HAND));
-                if (hasGloves && (GlovesLayer.areGloves(item) || item.isEmpty())) {
-                    event.setCanceled(true);
-                    renderHand(Hand.MAIN_HAND, event.getMatrixStack(), event.getBuffers(), event.getLight(), 
-                            event.getPartialTicks(), event.getInterpolatedPitch(), player);
                 }
             }
             

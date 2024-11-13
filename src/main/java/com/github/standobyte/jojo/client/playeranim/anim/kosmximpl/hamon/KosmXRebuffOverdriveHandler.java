@@ -5,9 +5,9 @@ import java.util.Optional;
 import com.github.standobyte.jojo.JojoMod;
 import com.github.standobyte.jojo.client.playeranim.anim.interfaces.RebuffOverdriveAnim;
 import com.github.standobyte.jojo.client.playeranim.kosmx.KosmXPlayerAnimatorInstalled.AnimLayerHandler;
+import com.github.standobyte.jojo.client.playeranim.kosmx.anim.KosmXKeyframeAnimPlayer;
 
 import dev.kosmx.playerAnim.api.layered.IAnimation;
-import dev.kosmx.playerAnim.api.layered.KeyframeAnimationPlayer;
 import dev.kosmx.playerAnim.api.layered.ModifierLayer;
 import dev.kosmx.playerAnim.api.layered.modifier.AbstractFadeModifier;
 import dev.kosmx.playerAnim.core.data.KeyframeAnimation;
@@ -42,13 +42,13 @@ public class KosmXRebuffOverdriveHandler extends AnimLayerHandler<ModifierLayer<
     
     private boolean setToSwingTick(PlayerEntity player, int minusTicks) {
         ModifierLayer<IAnimation> animLayer = getAnimLayer((AbstractClientPlayerEntity) player);
-        Optional<KeyframeAnimationPlayer> rebuffAnim = playingAnim(animLayer, REBUFF_OVERDRIVE);
+        Optional<KosmXKeyframeAnimPlayer> rebuffAnim = playingAnim(animLayer, REBUFF_OVERDRIVE);
         if (rebuffAnim.isPresent()) {
-            KeyframeAnimationPlayer anim = rebuffAnim.get();
-            int tick = anim.getData().returnToTick - minusTicks;
+            KosmXKeyframeAnimPlayer anim = rebuffAnim.get();
+            int tick = anim.getKeyframes().returnToTick - minusTicks;
             if (anim.isActive() && anim.getTick() < tick) {
                 setAnimFromName(player, REBUFF_OVERDRIVE, 
-                        a -> new KeyframeAnimationPlayer(a, tick, false));
+                        a -> new KosmXKeyframeAnimPlayer(a, tick, false));
                 return true;
             }
         }
@@ -57,12 +57,12 @@ public class KosmXRebuffOverdriveHandler extends AnimLayerHandler<ModifierLayer<
     }
     
     
-    protected static Optional<KeyframeAnimationPlayer> playingAnim(ModifierLayer<IAnimation> animLayer, ResourceLocation animId) {
+    protected static Optional<KosmXKeyframeAnimPlayer> playingAnim(ModifierLayer<IAnimation> animLayer, ResourceLocation animId) {
         if (animLayer == null) return Optional.empty();
         IAnimation playingAnim = animLayer.getAnimation();
-        if (playingAnim instanceof KeyframeAnimationPlayer) {
-            KeyframeAnimationPlayer animPlayer = (KeyframeAnimationPlayer) playingAnim;
-            KeyframeAnimation jsonAnim = animPlayer.getData();
+        if (playingAnim instanceof KosmXKeyframeAnimPlayer) {
+            KosmXKeyframeAnimPlayer animPlayer = (KosmXKeyframeAnimPlayer) playingAnim;
+            KeyframeAnimation jsonAnim = animPlayer.getKeyframes();
             Object jsonAnimName = jsonAnim.extraData.get("name");
             if (jsonAnimName instanceof String) {
                 String name = (String) jsonAnimName;

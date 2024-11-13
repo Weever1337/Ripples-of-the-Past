@@ -15,6 +15,7 @@ public class ModPlayerAnimations {
     public static HamonMeditationPoseAnim meditationPoseAnim;
     public static PlayerBarrageAnim playerBarrageAnim;
     public static BasicToggleAnim hamonBreath;
+    public static BasicToggleAnim hamonBeat;
     public static WallClimbAnim wallClimbing;
     public static HamonSYOBAnim syoBarrage;
     public static BasicToggleAnim sendoWaveKick;
@@ -52,6 +53,10 @@ public class ModPlayerAnimations {
         hamonBreath = PlayerAnimationHandler.getPlayerAnimator().registerBasicAnimLayer(
                 "com.github.standobyte.jojo.client.playeranim.anim.kosmximpl.hamon.KosmXHamonBreathHandler",
                 new ResourceLocation(JojoMod.MOD_ID, "hamon_breath"), 1);
+        
+        hamonBeat = PlayerAnimationHandler.getPlayerAnimator().registerBasicAnimLayer(
+                "com.github.standobyte.jojo.client.playeranim.anim.kosmximpl.hamon.KosmXHamonBeatHandler",
+                new ResourceLocation(JojoMod.MOD_ID, "hamon_beat"), 1);
         
         syoBarrage = PlayerAnimationHandler.getPlayerAnimator().registerAnimLayer(
                 "com.github.standobyte.jojo.client.playeranim.anim.kosmximpl.hamon.KosmXSYOBHandler",

@@ -6,8 +6,12 @@ import java.util.Objects;
 
 import org.jetbrains.annotations.Nullable;
 
+import com.github.standobyte.jojo.client.playeranim.kosmx.KosmXPlayerAnimatorInstalled;
+
 import dev.kosmx.playerAnim.api.TransformType;
 import dev.kosmx.playerAnim.api.layered.IAnimation;
+import dev.kosmx.playerAnim.api.layered.ModifierLayer;
+import dev.kosmx.playerAnim.api.layered.modifier.AbstractFadeModifier;
 import dev.kosmx.playerAnim.core.data.KeyframeAnimation;
 import dev.kosmx.playerAnim.core.data.KeyframeAnimation.StateCollection.State;
 import dev.kosmx.playerAnim.core.util.Easing;
@@ -22,6 +26,10 @@ public class KosmXKeyframeAnimPlayer implements IAnimation {
     protected int currentTick = 0;
     protected boolean isLoopStarted = false;
     protected float tickDelta;
+    
+    protected ModifierLayer<IAnimation> playerAnim;
+    protected AbstractFadeModifier fadeOut;
+    protected boolean startedFadeOut = false;
     
     public KosmXKeyframeAnimPlayer(KeyframeAnimation emote, int t, boolean mutable) {
         Objects.requireNonNull(emote);
@@ -51,6 +59,12 @@ public class KosmXKeyframeAnimPlayer implements IAnimation {
     public KosmXKeyframeAnimPlayer(KeyframeAnimation animation) {
         this(animation, 0);
     }
+    
+    public KosmXKeyframeAnimPlayer withFadeOut(AbstractFadeModifier fadeOut, ModifierLayer<IAnimation> playerAnim) {
+        this.fadeOut = fadeOut;
+        this.playerAnim = playerAnim;
+        return this;
+    }
 
 
     @Override
@@ -63,23 +77,32 @@ public class KosmXKeyframeAnimPlayer implements IAnimation {
         BodyPartTransform part = bodyParts.get(modelName);
         if (part == null) return value0;
         
+        if (startedFadeOut) {
+            return part.get3DTransform(type, getStopTick() - 1, 0, value0, data, false);
+        }
         return part.get3DTransform(type, currentTick, tickDelta, value0, data, isLoopStarted);
     }
     
     @Override
     public void setupAnim(float tickDelta) {
         this.tickDelta = tickDelta;
+        KosmXPlayerAnimatorInstalled.eventHandler.removeAttackAnim();
     }
     
     @Override
     public void tick() {
-        if (isActive()) {
+        if (isActive() && !startedFadeOut) {
             currentTick++;
             if (isInfinite() && getTick() > getEndTick()) {
                 currentTick = getReturnToTick();
                 isLoopStarted = true;
             }
-            if (currentTick >= getStopTick()) {
+            if (hasFadeOut()) { 
+                if (currentTick >= getStopTick() - 1) {
+                    startFadeOut();
+                }
+            }
+            else if (currentTick >= getStopTick()) {
                 stop();
             }
         }
@@ -89,6 +112,24 @@ public class KosmXKeyframeAnimPlayer implements IAnimation {
         isRunning = false;
     }
     
+    public boolean hasFadeOut() {
+        return fadeOut != null && playerAnim != null;
+    }
+    
+    public void startFadeOut() {
+        if (hasFadeOut()) {
+            startedFadeOut = true;
+            currentTick = getStopTick();
+
+            fadeOut.setBeginAnimation(this);
+            playerAnim.addModifierLast(fadeOut);
+            playerAnim.setAnimation(null);
+        }
+    }
+    
+    public KeyframeAnimation getKeyframes() {
+        return data;
+    }
     
     public int getTick() {
         return currentTick;
