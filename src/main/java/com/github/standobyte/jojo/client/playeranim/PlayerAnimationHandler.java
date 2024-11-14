@@ -31,6 +31,10 @@ public class PlayerAnimationHandler {
         
         boolean kosmXAnimatorInstalled();
         
+        public void onRenderFrameStart(float partialTick);
+        
+        public void onRenderFrameEnd(float partialTick);
+        
         BasicToggleAnim registerBasicAnimLayer(String classNameWithKosmXMod, ResourceLocation id, int priority);
         
         <I> I registerAnimLayer(String classNameWithKosmXMod, ResourceLocation id, int priority, Supplier<? extends I> fallbackEmptyConstructor);
@@ -66,6 +70,12 @@ public class PlayerAnimationHandler {
         
         @Override
         public boolean kosmXAnimatorInstalled() { return false; }
+        
+        @Override
+        public void onRenderFrameStart(float partialTick) {}
+        
+        @Override
+        public void onRenderFrameEnd(float partialTick) {}
 
         @Override
         public BasicToggleAnim registerBasicAnimLayer(String classNameWithKosmXMod, ResourceLocation id, int priority) {

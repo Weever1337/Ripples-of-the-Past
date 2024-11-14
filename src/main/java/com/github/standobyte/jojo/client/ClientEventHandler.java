@@ -30,6 +30,7 @@ import com.github.standobyte.jojo.capability.entity.living.LivingWallClimbing;
 import com.github.standobyte.jojo.capability.world.WorldUtilCapProvider;
 import com.github.standobyte.jojo.client.controls.ControlScheme;
 import com.github.standobyte.jojo.client.particle.custom.FirstPersonHamonAura;
+import com.github.standobyte.jojo.client.playeranim.PlayerAnimationHandler;
 import com.github.standobyte.jojo.client.polaroid.PhotosCache;
 import com.github.standobyte.jojo.client.polaroid.PolaroidHelper;
 import com.github.standobyte.jojo.client.render.block.overlay.TranslucentBlockRenderHelper;
@@ -313,20 +314,29 @@ public class ClientEventHandler {
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void onRenderTick(RenderTickEvent event) {
-        if (mc.level != null && event.phase == TickEvent.Phase.START) {
-            ClientUtil.canSeeStands = StandUtil.playerCanSeeStands(mc.player);
-            ClientUtil.canHearStands = /*StandUtil.playerCanHearStands(mc.player)*/ ClientUtil.canSeeStands;
-            
-            ClientTimeStopHandler timeStopHandler = ClientTimeStopHandler.getInstance();
-            if (mc.player.isAlive()) {
-                timeStopHandler.setConstantPartialTick(clientTimer);
+        if (mc.level != null) {
+            switch (event.phase) {
+            case START:
+                ClientUtil.canSeeStands = StandUtil.playerCanSeeStands(mc.player);
+                ClientUtil.canHearStands = /*StandUtil.playerCanHearStands(mc.player)*/ ClientUtil.canSeeStands;
                 
-                mc.player.getCapability(LivingUtilCapProvider.CAPABILITY).ifPresent(cap -> {
-                    cap.limitPlayerHeadRot();
-                });
-                mc.player.getCapability(ClientPlayerUtilCapProvider.CAPABILITY).ifPresent(cap -> {
-                    cap.applyLockedRotation();
-                });
+                ClientTimeStopHandler timeStopHandler = ClientTimeStopHandler.getInstance();
+                if (mc.player.isAlive()) {
+                    timeStopHandler.setConstantPartialTick(clientTimer);
+                    
+                    mc.player.getCapability(LivingUtilCapProvider.CAPABILITY).ifPresent(cap -> {
+                        cap.limitPlayerHeadRot();
+                    });
+                    mc.player.getCapability(ClientPlayerUtilCapProvider.CAPABILITY).ifPresent(cap -> {
+                        cap.applyLockedRotation();
+                    });
+                }
+                
+                PlayerAnimationHandler.getPlayerAnimator().onRenderFrameStart(ClientUtil.getPartialTick());
+                break;
+            case END:
+                PlayerAnimationHandler.getPlayerAnimator().onRenderFrameEnd(ClientUtil.getPartialTick());
+                break;
             }
         }
     }
