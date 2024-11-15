@@ -1,11 +1,11 @@
 package com.github.standobyte.jojo.action.non_stand;
 
-import com.github.standobyte.jojo.action.Action;
 import com.github.standobyte.jojo.action.ActionConditionResult;
 import com.github.standobyte.jojo.action.ActionTarget;
 import com.github.standobyte.jojo.action.player.ContinuousActionInstance;
 import com.github.standobyte.jojo.action.player.IPlayerAction;
 import com.github.standobyte.jojo.capability.entity.PlayerUtilCap;
+import com.github.standobyte.jojo.client.ClientUtil;
 import com.github.standobyte.jojo.client.playeranim.anim.ModPlayerAnimations;
 import com.github.standobyte.jojo.init.ModSounds;
 import com.github.standobyte.jojo.init.power.non_stand.ModPowers;
@@ -67,8 +67,7 @@ public class HamonOverdriveBeat extends HamonAction implements IPlayerAction<Ham
                 IPlayerAction<Instance, INonStandPower> action) {
             super(user, userCap, playerPower, action);
             
-            userHamon = INonStandPower.getNonStandPowerOptional(user)
-                    .resolve().flatMap(power -> power.getTypeSpecificData(ModPowers.HAMON.get())).get();
+            userHamon = playerPower.getTypeSpecificData(ModPowers.HAMON.get()).get();
             hamonAction = (HamonOverdriveBeat) action;
         }
         
@@ -76,8 +75,8 @@ public class HamonOverdriveBeat extends HamonAction implements IPlayerAction<Ham
         public void playerTick() {
             switch (getTick()) {
             case 1:
-                if (!user.level.isClientSide()) {
-                    user.level.playSound(null, user.getX(), user.getEyeY(), user.getZ(), 
+                if (user.level.isClientSide()) {
+                    user.level.playSound(ClientUtil.getClientPlayer(), user.getX(), user.getEyeY(), user.getZ(), 
                             ModSounds.HAMON_SYO_SWING.get(), user.getSoundSource(), 1.0f, 1.5f);
                     user.swing(Hand.OFF_HAND, true);
                 }
@@ -132,21 +131,11 @@ public class HamonOverdriveBeat extends HamonAction implements IPlayerAction<Ham
         }
         
         @Override
-        public boolean stopAction() {
-            if (super.stopAction()) {
-                if (!user.level.isClientSide()) {
-                    int actionCooldown = ((Action<INonStandPower>) action).getCooldown(playerPower, -1);
-                    if (actionCooldown > 0) {
-                        playerPower.setCooldownTimer((Action<INonStandPower>) action, actionCooldown);
-                    }
-                }
-                else if (user instanceof PlayerEntity) {
-                    ModPlayerAnimations.hamonBeat.setAnimEnabled((PlayerEntity) user, false);
-                }
-                return true;
+        public void onStop() {
+            super.onStop();
+            if (user.level.isClientSide() && user instanceof PlayerEntity) {
+                ModPlayerAnimations.hamonBeat.setAnimEnabled((PlayerEntity) user, false);
             }
-            
-            return false;
         }
         
         @Override

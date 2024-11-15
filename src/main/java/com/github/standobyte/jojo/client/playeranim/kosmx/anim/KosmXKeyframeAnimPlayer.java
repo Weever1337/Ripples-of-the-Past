@@ -15,8 +15,8 @@ import dev.kosmx.playerAnim.api.layered.modifier.AbstractFadeModifier;
 import dev.kosmx.playerAnim.core.data.KeyframeAnimation;
 import dev.kosmx.playerAnim.core.data.KeyframeAnimation.StateCollection.State;
 import dev.kosmx.playerAnim.core.util.Easing;
-import dev.kosmx.playerAnim.core.util.MathHelper;
 import dev.kosmx.playerAnim.core.util.Vec3f;
+import net.minecraft.util.math.MathHelper;
 
 public class KosmXKeyframeAnimPlayer implements IAnimation {
     protected KeyframeAnimation data;
@@ -77,10 +77,16 @@ public class KosmXKeyframeAnimPlayer implements IAnimation {
         BodyPartTransform part = bodyParts.get(modelName);
         if (part == null) return value0;
         
+        float tick = overrideTick(tickDelta);
+        int tickInt = MathHelper.floor(tick);
+        return part.get3DTransform(type, tickInt, tick - tickInt, value0, data, isLoopStarted);
+    }
+    
+    protected float overrideTick(float partialTick) {
         if (startedFadeOut) {
-            return part.get3DTransform(type, getStopTick() - 1, 0, value0, data, false);
+            return getStopTick() - 1;
         }
-        return part.get3DTransform(type, currentTick, tickDelta, value0, data, isLoopStarted);
+        return currentTick + partialTick;
     }
     
     @Override
@@ -368,7 +374,7 @@ public class KosmXKeyframeAnimPlayer implements IAnimation {
         public float getValueAtCurrentTick(float currentValue, 
                 int currentTick, float tickDelta, int beginTick, int returnToTick, int endTick, 
                 int stopTick, boolean isLoopStarted, boolean isInfinite, boolean isEasingBefore) {
-            return MathHelper.clampToRadian(super.getValueAtCurrentTick(MathHelper.clampToRadian(currentValue), 
+            return dev.kosmx.playerAnim.core.util.MathHelper.clampToRadian(super.getValueAtCurrentTick(dev.kosmx.playerAnim.core.util.MathHelper.clampToRadian(currentValue), 
                     currentTick, tickDelta, beginTick, returnToTick, endTick, 
                     stopTick, isLoopStarted, isInfinite, isEasingBefore));
         }

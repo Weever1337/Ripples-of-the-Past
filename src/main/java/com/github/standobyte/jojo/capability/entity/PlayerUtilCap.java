@@ -268,7 +268,7 @@ public class PlayerUtilCap {
     
     
     public void setContinuousAction(@Nullable ContinuousActionInstance<?, ?> action) {
-        continuousAction.ifPresent(ContinuousActionInstance::onStop);
+        continuousAction.ifPresent(ContinuousActionInstance::stopAction);
         if (action != null) {
             action.onStart();
         }

@@ -6,6 +6,7 @@ import dev.kosmx.playerAnim.api.layered.IAnimation;
 import dev.kosmx.playerAnim.api.layered.ModifierLayer;
 import dev.kosmx.playerAnim.api.layered.modifier.AbstractModifier;
 
+@Deprecated
 public class KosmXPlayerMotionModifiersLayer<T extends IAnimation> extends ModifierLayer<T> {
     private KosmXFrontMotionModifier playerMotionModifier;
     

@@ -12,6 +12,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.vector.Vector3d;
 
+@Deprecated
 public class KosmXFrontMotionModifier extends AbstractModifier {
     private PlayerEntity player;
     private float maxFrontOffset = 0;

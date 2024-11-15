@@ -103,8 +103,7 @@ public class PlayerAnimationHandler {
                     registerWithAnimatorMod(animationHandler, id, priority);
                 } catch (InstantiationException | IllegalAccessException | IllegalArgumentException
                         | InvocationTargetException | ClassNotFoundException | NoSuchMethodException | SecurityException e) {
-                    JojoMod.getLogger().error("Failed to create player animation layer of class {}", classNameWithKosmXMod);
-                    e.printStackTrace();
+                    JojoMod.getLogger().error("Failed to create player animation layer of class " + classNameWithKosmXMod, e);
                 }
             }
             if (animationHandler == null) {

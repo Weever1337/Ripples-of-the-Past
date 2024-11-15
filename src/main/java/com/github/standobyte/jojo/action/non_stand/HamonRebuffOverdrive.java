@@ -5,7 +5,7 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
-import com.github.standobyte.jojo.action.Action;
+import com.github.standobyte.jojo.JojoMod;
 import com.github.standobyte.jojo.action.ActionConditionResult;
 import com.github.standobyte.jojo.action.ActionTarget;
 import com.github.standobyte.jojo.action.player.ContinuousActionInstance;
@@ -94,7 +94,7 @@ public class HamonRebuffOverdrive extends HamonAction implements IPlayerAction<H
     
     @Override
     protected boolean canBeUsedDuringPlayerAction(ContinuousActionInstance<?, ?> curPlayerAction) {
-        return curPlayerAction.getAction() == this;
+        return curPlayerAction.getAction() == this && ((HamonRebuffOverdrive.Instance) curPlayerAction).canCancel();
     }
     
     @Override
@@ -146,15 +146,12 @@ public class HamonRebuffOverdrive extends HamonAction implements IPlayerAction<H
         private boolean canAttack = true;
         private boolean didAttack = false;
         private HamonData userHamon;
-        private int actionCooldown;
         
         public Instance(LivingEntity user, PlayerUtilCap userCap, INonStandPower playerPower,
                 IPlayerAction<Instance, INonStandPower> action) {
             super(user, userCap, playerPower, action);
             
-            userHamon = INonStandPower.getNonStandPowerOptional(user)
-                    .resolve().flatMap(power -> power.getTypeSpecificData(ModPowers.HAMON.get())).get();
-            actionCooldown = ((Action<INonStandPower>) action).getCooldown(playerPower, -1);
+            userHamon = playerPower.getTypeSpecificData(ModPowers.HAMON.get()).get();
             hamonAction = (HamonRebuffOverdrive) action;
         }
         
@@ -176,8 +173,12 @@ public class HamonRebuffOverdrive extends HamonAction implements IPlayerAction<H
         
         @Override
         public void onStop() {
+            super.onStop();
             if (!user.level.isClientSide()) {
                 MCUtil.removeAttributeModifier(user, Attributes.KNOCKBACK_RESISTANCE, NO_KNOCKBACK);
+            }
+            else if (user instanceof PlayerEntity) {
+                ModPlayerAnimations.rebuffOverdrive.stopAnim((PlayerEntity) user);
             }
         }
         
@@ -405,23 +406,6 @@ public class HamonRebuffOverdrive extends HamonAction implements IPlayerAction<H
         @Override
         public float getWalkSpeed() {
             return 0;
-        }
-        
-        @Override
-        public boolean stopAction() {
-            if (super.stopAction()) {
-                if (!user.level.isClientSide()) {
-                    if (actionCooldown > 0) {
-                        playerPower.setCooldownTimer((Action<INonStandPower>) action, actionCooldown);
-                    }
-                }
-                else if (user instanceof PlayerEntity) {
-                    ModPlayerAnimations.rebuffOverdrive.stopAnim((PlayerEntity) user);
-                }
-                return true;
-            }
-            
-            return false;
         }
         
         private void setAnim(PlayerEntity abstrClientPlayer, Phase phase) {

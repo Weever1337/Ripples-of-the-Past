@@ -24,12 +24,16 @@ public abstract class ContinuousActionInstance<T extends ContinuousActionInstanc
     private Phase phase;
     protected int tick = 0;
     private boolean stop = false;
+    protected int actionCooldown;
     
     public ContinuousActionInstance(LivingEntity user, PlayerUtilCap userCap, P playerPower, IPlayerAction<T, P> action) {
         this.user = user;
         this.userCap = userCap;
         this.action = action;
         this.playerPower = playerPower;
+        if (action instanceof Action) {
+            actionCooldown = ((Action<P>) action).getCooldown(playerPower, -1);
+        }
     }
     
     public void onStart() {}
@@ -92,15 +96,20 @@ public abstract class ContinuousActionInstance<T extends ContinuousActionInstanc
     
     protected void onPhaseSet(@Nullable Phase oldPhase, Phase nextPhase) {}
     
-    public boolean stopAction() {
+    public final boolean stopAction() {
         if (!stop) {
             stop = true;
+            onStop();
             return true;
         }
         return false;
     }
     
-    public void onStop() {}
+    public void onStop() {
+        if (!user.level.isClientSide() && actionCooldown > 0) {
+            playerPower.setCooldownTimer((Action<P>) action, actionCooldown);
+        }
+    }
     
     public boolean isStopped() {
         return stop;

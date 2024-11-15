@@ -132,15 +132,11 @@ public class PillarmanBladeDashAttack extends PillarmanAction implements IPlayer
         }
         
         @Override
-        public boolean stopAction() {
-            if (super.stopAction()) {
-                if (user.level.isClientSide() && user instanceof PlayerEntity) {
-                    ModPlayerAnimations.bladeDash.setAnimEnabled((PlayerEntity) user, false);
-                }
-                return true;
+        public void onStop() {
+            super.onStop();
+            if (user.level.isClientSide() && user instanceof PlayerEntity) {
+                ModPlayerAnimations.bladeDash.setAnimEnabled((PlayerEntity) user, false);
             }
-
-            return false;
         }
     }
 }

@@ -22,6 +22,7 @@ import com.github.standobyte.jojo.JojoModConfig;
 import com.github.standobyte.jojo.action.Action;
 import com.github.standobyte.jojo.action.ActionConditionResult;
 import com.github.standobyte.jojo.action.ActionTarget;
+import com.github.standobyte.jojo.action.non_stand.HamonSunlightYellowOverdrive;
 import com.github.standobyte.jojo.action.non_stand.HamonWallClimbing2;
 import com.github.standobyte.jojo.action.player.ContinuousActionInstance;
 import com.github.standobyte.jojo.advancements.ModCriteriaTriggers;
@@ -1377,15 +1378,12 @@ public class HamonData extends TypeSpecificData {
             }
         }
         if (user.level.isClientSide()) {
-            float energyRatio;
-            if (power.getHeldAction() == ModHamonActions.HAMON_SUNLIGHT_YELLOW_OVERDRIVE.get()
-                    || power.getHeldAction() == ModHamonActions.JONATHAN_SCARLET_OVERDRIVE.get()) {
-                energyRatio = 1;
+            float energy = power.getEnergy();;
+            Action<?> heldAction = power.getHeldAction();
+            if (heldAction instanceof HamonSunlightYellowOverdrive) {
+                energy += ((HamonSunlightYellowOverdrive) heldAction).getSpentEnergy(power);
             }
-            else {
-                energyRatio = power.getEnergy() / getMaxBreathStability();
-            }
-            float particlesPerTick = energyRatio * getHamonDamageMultiplier();
+            float particlesPerTick = energy / getMaxBreathStability() * getHamonDamageMultiplier();
             boolean isUserTheCameraEntity = user == ClientUtil.getCameraEntity();
             IParticleData particleType = PARTICLE_TYPE.get(auraColor).get();
             
