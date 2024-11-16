@@ -424,19 +424,18 @@ public class HamonStatsTabGui extends HamonTabGui {
             
             ITextComponent totalExercises2 = null;
             if (breathingIncrease > 0) {
-                ITextComponent incWord = new TranslationTextComponent("hamon.exercise.all.tooltip_green").withStyle(TextFormatting.GREEN);
                 if (breathingBonus > 0) {
                     totalExercises2 = new TranslationTextComponent("hamon.exercise.all.day_end_increase.bonus", 
-                            incWord, decimalFormat.format(breathingIncrease - breathingBonus), decimalFormat.format(breathingBonus));
+                            decimalFormat.format(breathingIncrease - breathingBonus), decimalFormat.format(breathingBonus));
                 }
                 else {
                     totalExercises2 = new TranslationTextComponent("hamon.exercise.all.day_end_increase", 
-                            incWord, decimalFormat.format(breathingIncrease));
+                            decimalFormat.format(breathingIncrease));
                 }
             }
             else if (breathingIncrease < 0) {
                 totalExercises2 = new TranslationTextComponent("hamon.exercise.all.day_end_decrease", 
-                        new TranslationTextComponent("hamon.exercise.all.tooltip_red").withStyle(TextFormatting.RED), decimalFormat.format(-breathingIncrease));
+                        decimalFormat.format(-breathingIncrease));
             }
             else {
                 if (screen.hamon.getCanSkipTrainingDays() > 0 && screen.hamon.breathingCanGoDown(minecraft.player)) {
