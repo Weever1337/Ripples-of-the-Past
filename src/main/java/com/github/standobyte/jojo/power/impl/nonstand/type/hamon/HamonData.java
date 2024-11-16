@@ -872,7 +872,7 @@ public class HamonData extends TypeSpecificData {
     }
     
     public int getExerciseTicks(Exercise exercise) {
-        return exerciseTicks.get(exercise);
+        return Math.min(exerciseTicks.get(exercise), exercise.getMaxTicks(this));
     }
     
     public boolean isExerciseComplete(Exercise exercise) {
@@ -954,7 +954,7 @@ public class HamonData extends TypeSpecificData {
                 PacketManager.sendToClient(HamonExercisesPacket.exercisesOnly(this), player);
             });
         }
-        if (exerciseCompleted && exercisesCompleted <= MAX_EXERCISES_NEEDED) {
+        if (breathingTrainingLevel < MAX_BREATHING_LEVEL && exerciseCompleted && exercisesCompleted <= MAX_EXERCISES_NEEDED) {
             updateExerciseAttributes(user);
             serverPlayer.ifPresent(player -> {
                 IFormattableTextComponent message1 = new TranslationTextComponent("hamon.exercise.all.count.message" + (exercisesCompleted >= 4 ? ".4" : ""), 
