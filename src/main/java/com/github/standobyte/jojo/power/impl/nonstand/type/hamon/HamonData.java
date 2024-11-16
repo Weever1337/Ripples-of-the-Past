@@ -1378,10 +1378,13 @@ public class HamonData extends TypeSpecificData {
             }
         }
         if (user.level.isClientSide()) {
-            float energy = power.getEnergy();;
+            float energy = power.getEnergy();
             Action<?> heldAction = power.getHeldAction();
             if (heldAction instanceof HamonSunlightYellowOverdrive) {
-                energy += ((HamonSunlightYellowOverdrive) heldAction).getSpentEnergy(power);
+                if (!power.isUserCreative()) {
+                    energy += ((HamonSunlightYellowOverdrive) heldAction).getSpentEnergy(power);
+                }
+                energy *= 2;
             }
             float particlesPerTick = energy / getMaxBreathStability() * getHamonDamageMultiplier();
             boolean isUserTheCameraEntity = user == ClientUtil.getCameraEntity();
