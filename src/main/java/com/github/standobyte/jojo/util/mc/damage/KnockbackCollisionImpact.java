@@ -14,6 +14,7 @@ import org.apache.commons.lang3.mutable.MutableDouble;
 import org.apache.commons.lang3.mutable.MutableFloat;
 import org.apache.commons.lang3.tuple.Pair;
 
+import com.github.standobyte.jojo.JojoMod;
 import com.github.standobyte.jojo.action.ActionTarget;
 import com.github.standobyte.jojo.action.stand.StandEntityHeavyAttack.HeavyPunchBlockInstance.HeavyPunchExplosion;
 import com.github.standobyte.jojo.capability.entity.EntityUtilCap;
@@ -320,18 +321,19 @@ public class KnockbackCollisionImpact implements INBTSerializable<CompoundNBT> {
                 setKnockbackImpactStrength(0);
                 
                 Vector3d collisionDir = new Vector3d(collision.movementX - collision.x, collision.movementY - collision.y, collision.movementZ - collision.z);
-                Direction faceHit = Direction.getNearest(collisionDir.x, collisionDir.y, collisionDir.z).getOpposite();
-                if (faceHit.getAxis() != Direction.Axis.Y) {
+                Direction faceHit = Direction.getNearest(collisionDir.x, collisionDir.y, collisionDir.z);
+                JojoMod.LOGGER.debug(faceHit);
+                if (faceHit != Direction.DOWN) {
                     if (breakBlocks) {
                         if (explosionRadius > 0) {
                             AxisAlignedBB entityBB = entity.getBoundingBox();
                             Vector3d hitPos = new Vector3d(
-                                    MathHelper.lerp(-faceHit.getStepX() * 0.5 + 0.5, entityBB.minX, entityBB.maxX), 
-                                    MathHelper.lerp(-faceHit.getStepY() * 0.5 + 0.5, entityBB.minY, entityBB.maxY), 
-                                    MathHelper.lerp(-faceHit.getStepZ() * 0.5 + 0.5, entityBB.minZ, entityBB.maxZ));
-                            BlockPos hitBlockPos = new BlockPos(hitPos.add(Vector3d.atBottomCenterOf(faceHit.getNormal()).scale(-0.5)));
+                                    MathHelper.lerp(faceHit.getStepX() * 0.5 + 0.5, entityBB.minX, entityBB.maxX), 
+                                    MathHelper.lerp(faceHit.getStepY() * 0.5 + 0.5, entityBB.minY, entityBB.maxY), 
+                                    MathHelper.lerp(faceHit.getStepZ() * 0.5 + 0.5, entityBB.minZ, entityBB.maxZ));
+                            BlockPos hitBlockPos = new BlockPos(hitPos.add(Vector3d.atBottomCenterOf(faceHit.getNormal()).scale(0.5)));
                             
-                            HeavyPunchExplosion explosion = new HeavyPunchExplosion(world, attacker, new ActionTarget(hitBlockPos, faceHit), 
+                            HeavyPunchExplosion explosion = new HeavyPunchExplosion(world, attacker, new ActionTarget(hitBlockPos, faceHit.getOpposite()), 
                                     movementVec, explosionDmgSource, null, 
                                     hitPos.x, hitPos.y, hitPos.z, 
                                     explosionRadius, false, Explosion.Mode.BREAK)
