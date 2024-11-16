@@ -47,7 +47,6 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.fluid.FluidState;
-import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
@@ -272,23 +271,6 @@ public class StandEntityHeavyAttack extends StandEntityAction implements IHasSta
         return true;
     }
     
-//    @Override
-//    public StandAction[] getExtraUnlockable() {
-//        StandAction[] actions = new StandAction[2];
-//        int i = 0;
-//        if (finisherVariation.get() != null) {
-//            actions[i++] = finisherVariation.get();
-//        }
-//        if (recoveryAction.get() != null) {
-//            actions[i++] = recoveryAction.get();
-//        }
-//        actions = Arrays.copyOfRange(actions, 0, i);
-//        for (int j = 0; j < i; j++) {
-//            actions = ArrayUtils.addAll(actions, actions[j].getExtraUnlockable());
-//        }
-//        return actions;
-//    }
-    
     
     
     public static final float DEFAULT_STAMINA_COST = 50;
@@ -492,16 +474,6 @@ public class StandEntityHeavyAttack extends StandEntityAction implements IHasSta
             
             public HeavyPunchExplosion(World pLevel, double pToBlowX, double pToBlowY, double pToBlowZ, float pRadius) {
                 super(pLevel, pToBlowX, pToBlowY, pToBlowZ, pRadius);
-            }
-            
-            @Override
-            public void toBuf(PacketBuffer buf) {
-                
-            }
-            
-            @Override
-            public void fromBuf(PacketBuffer buf) {
-                
             }
             
             

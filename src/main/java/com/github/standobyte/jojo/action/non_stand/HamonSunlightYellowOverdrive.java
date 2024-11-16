@@ -13,10 +13,12 @@ import com.github.standobyte.jojo.client.sound.ClientTickingSoundsHelper;
 import com.github.standobyte.jojo.init.ModParticles;
 import com.github.standobyte.jojo.init.ModSounds;
 import com.github.standobyte.jojo.init.power.non_stand.ModPowers;
+import com.github.standobyte.jojo.init.power.non_stand.hamon.ModHamonSkills;
 import com.github.standobyte.jojo.power.impl.nonstand.INonStandPower;
 import com.github.standobyte.jojo.power.impl.nonstand.type.hamon.HamonData;
 import com.github.standobyte.jojo.power.impl.nonstand.type.hamon.skill.BaseHamonSkill.HamonStat;
 import com.github.standobyte.jojo.util.mc.damage.DamageUtil;
+import com.github.standobyte.jojo.util.mc.damage.KnockbackCollisionImpact;
 
 import it.unimi.dsi.fastutil.objects.Object2FloatArrayMap;
 import it.unimi.dsi.fastutil.objects.Object2FloatMap;
@@ -59,7 +61,11 @@ public class HamonSunlightYellowOverdrive extends HamonAction implements IPlayer
     private Object2FloatMap<UUID> playerSpentEnergy = new Object2FloatArrayMap<>();
     @Override
     public float getHeldTickEnergyCost(INonStandPower power) {
-        return Math.min(power.getMaxEnergy() / Math.max(getMaxPowerTicks(power), 1), power.getEnergy());
+        return Math.min(getActualMaxEnergy(power) / Math.max(getMaxPowerTicks(power), 1), power.getEnergy());
+    }
+    
+    protected static float getActualMaxEnergy(INonStandPower power) {
+        return power.getTypeSpecificData(ModPowers.HAMON.get()).map(HamonData::getMaxBreathStability).orElse(power.getMaxEnergy());
     }
     
     @Override
@@ -141,7 +147,7 @@ public class HamonSunlightYellowOverdrive extends HamonAction implements IPlayer
         public Instance(LivingEntity user, PlayerUtilCap userCap, INonStandPower playerPower,
                 IPlayerAction<Instance, INonStandPower> action, float spentEnergy) {
             super(user, userCap, playerPower, action);
-            energySpentRatio = playerPower == null ? 0 : Math.min(spentEnergy / playerPower.getEnergy(), 1);
+            energySpentRatio = playerPower == null ? 0 : Math.min(spentEnergy / getActualMaxEnergy(playerPower), 1);
             
             userHamon = playerPower.getTypeSpecificData(ModPowers.HAMON.get()).get();
             hamonAction = (HamonSunlightYellowOverdrive) action;
@@ -150,7 +156,7 @@ public class HamonSunlightYellowOverdrive extends HamonAction implements IPlayer
         @Override
         public void playerTick() {
             switch (getTick()) {
-            case 0:
+            case 1:
                 if (user.level.isClientSide()) {
                     user.level.playSound(ClientUtil.getClientPlayer(), user.getX(), user.getEyeY(), user.getZ(), 
                             ModSounds.HAMON_SYO_SWING.get(), user.getSoundSource(), 1.0f, 1.0f);
@@ -182,7 +188,16 @@ public class HamonSunlightYellowOverdrive extends HamonAction implements IPlayer
                     
                     if (DamageUtil.dealHamonDamage(target, damage, user, null, attack -> attack.hamonParticle(ModParticles.HAMON_SPARK_YELLOW.get()))) {
                         world.playSound(null, target.getX(), target.getEyeY(), target.getZ(), ModSounds.HAMON_SYO_PUNCH.get(), target.getSoundSource(), energySpentRatio, 1.0F);
-                        userHamon.hamonPointsFromAction(HamonStat.STRENGTH, playerPower.getMaxEnergy() * energySpentRatio * efficiency);
+                        userHamon.hamonPointsFromAction(HamonStat.STRENGTH, getActualMaxEnergy(playerPower) * energySpentRatio * efficiency);
+                        target.knockback(2.5F, user.getX() - target.getX(), user.getZ() - target.getZ());
+                        boolean hamonSpread = userHamon.isSkillLearned(ModHamonSkills.HAMON_SPREAD.get());
+                        float punchDamage = damage;
+                        KnockbackCollisionImpact.getHandler(target).ifPresent(cap -> {
+                            cap.onPunchSetKnockbackImpact(target.getDeltaMovement(), user);
+                            if (hamonSpread) {
+                                cap.hamonDamage(punchDamage, 0, ModParticles.HAMON_SPARK_YELLOW.get());
+                            }
+                        });
                     }
                 }
                 

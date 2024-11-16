@@ -74,7 +74,7 @@ public class HamonOverdriveBeat extends HamonAction implements IPlayerAction<Ham
         @Override
         public void playerTick() {
             switch (getTick()) {
-            case 1:
+            case 2:
                 if (user.level.isClientSide()) {
                     user.level.playSound(ClientUtil.getClientPlayer(), user.getX(), user.getEyeY(), user.getZ(), 
                             ModSounds.HAMON_SYO_SWING.get(), user.getSoundSource(), 1.0f, 1.5f);
