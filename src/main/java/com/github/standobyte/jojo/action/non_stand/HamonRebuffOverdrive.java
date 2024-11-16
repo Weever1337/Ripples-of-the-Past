@@ -5,7 +5,6 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
-import com.github.standobyte.jojo.JojoMod;
 import com.github.standobyte.jojo.action.ActionConditionResult;
 import com.github.standobyte.jojo.action.ActionTarget;
 import com.github.standobyte.jojo.action.player.ContinuousActionInstance;
@@ -136,22 +135,20 @@ public class HamonRebuffOverdrive extends HamonAction implements IPlayerAction<H
     protected void consumeEnergy(World world, LivingEntity user, INonStandPower power, ActionTarget target) {}
     
     
-    public static class Instance extends ContinuousActionInstance<Instance, INonStandPower> {
+    public static class Instance extends ContinuousActionInstance<HamonRebuffOverdrive, INonStandPower> {
         private static final AttributeModifier NO_KNOCKBACK = new AttributeModifier(UUID.fromString("c10b7337-504f-4c92-af39-232626b9818d"), 
                 "Rebuff overdrive full knockback resistance", 1, AttributeModifier.Operation.ADDITION);
-        private final HamonRebuffOverdrive hamonAction;
         private LivingEntity counterTarget;
         private DamageSource reduceDamage;
         private boolean canAttack = true;
         private boolean didAttack = false;
         private HamonData userHamon;
         
-        public Instance(LivingEntity user, PlayerUtilCap userCap, INonStandPower playerPower,
-                IPlayerAction<Instance, INonStandPower> action) {
+        public Instance(LivingEntity user, PlayerUtilCap userCap, 
+                INonStandPower playerPower, HamonRebuffOverdrive action) {
             super(user, userCap, playerPower, action);
             
             userHamon = playerPower.getTypeSpecificData(ModPowers.HAMON.get()).get();
-            hamonAction = (HamonRebuffOverdrive) action;
         }
         
         @Override
@@ -188,7 +185,7 @@ public class HamonRebuffOverdrive extends HamonAction implements IPlayerAction<H
         
         @Override
         public void playerTick() {
-            if (!hamonAction.checkHeldItems(user, playerPower).isPositive()) {
+            if (!getAction().checkHeldItems(user, playerPower).isPositive()) {
                 canAttack = false;
             }
             
@@ -273,6 +270,7 @@ public class HamonRebuffOverdrive extends HamonAction implements IPlayerAction<H
                     && (canCounterStand || !(dmgSource instanceof IStandDamageSource))) {
                 boolean counterTiming = isCounterTiming();
                 LivingEntity dealDamageTo = (LivingEntity) dmgSource.getDirectEntity();
+                HamonRebuffOverdrive hamonAction = getAction();
                 
                 float energyCost = hamonAction.getEnergyCost(playerPower, new ActionTarget(dealDamageTo));
                 float efficiency = userHamon.getActionEfficiency(energyCost, true, hamonAction.getUnlockingSkill());
@@ -339,6 +337,7 @@ public class HamonRebuffOverdrive extends HamonAction implements IPlayerAction<H
             if (!canAttack) return;
             
             if (!user.level.isClientSide()) {
+                HamonRebuffOverdrive hamonAction = getAction();
                 if (hamonAction.checkHeldItems(user, playerPower).isPositive()) {
                     float energyCost = ((NonStandAction) action).getEnergyCost(playerPower, new ActionTarget(target));
                     float efficiency = userHamon.getActionEfficiency(energyCost, true, hamonAction.getUnlockingSkill());
@@ -418,11 +417,6 @@ public class HamonRebuffOverdrive extends HamonAction implements IPlayerAction<H
             default:
                 break;
             }
-        }
-        
-        @Override
-        protected Instance getThis() {
-            return this;
         }
         
     }

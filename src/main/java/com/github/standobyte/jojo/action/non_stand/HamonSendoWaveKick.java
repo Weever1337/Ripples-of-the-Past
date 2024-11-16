@@ -88,7 +88,7 @@ public class HamonSendoWaveKick extends HamonAction implements IPlayerAction<Ham
     
     
     
-    public static class Instance extends ContinuousActionInstance<Instance, INonStandPower> {
+    public static class Instance extends ContinuousActionInstance<HamonSendoWaveKick, INonStandPower> {
         private int positionWaitingTimer = 0;
         private boolean gavePoints = false;
         private float energySpent;
@@ -103,11 +103,6 @@ public class HamonSendoWaveKick extends HamonAction implements IPlayerAction<Ham
         
         public void setEnergySpent(float energy) {
             this.energySpent = energy;
-        }
-
-        @Override
-        protected Instance getThis() {
-            return this;
         }
         
         public float getInitialYRot() {

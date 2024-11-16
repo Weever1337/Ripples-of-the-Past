@@ -137,18 +137,15 @@ public class HamonSunlightYellowOverdrive extends HamonAction implements IPlayer
     
     
     
-    public static class Instance extends ContinuousActionInstance<Instance, INonStandPower> {
+    public static class Instance extends ContinuousActionInstance<HamonSunlightYellowOverdrive, INonStandPower> {
         private float energySpentRatio;
         private HamonData userHamon;
-        private final HamonSunlightYellowOverdrive hamonAction;
         
-        public Instance(LivingEntity user, PlayerUtilCap userCap, INonStandPower playerPower,
-                IPlayerAction<Instance, INonStandPower> action, float spentEnergy) {
+        public Instance(LivingEntity user, PlayerUtilCap userCap, 
+                INonStandPower playerPower, HamonSunlightYellowOverdrive action, float spentEnergy) {
             super(user, userCap, playerPower, action);
             energySpentRatio = playerPower == null ? 0 : Math.min(spentEnergy / getActualMaxEnergy(playerPower), 1);
-            
             userHamon = playerPower.getTypeSpecificData(ModPowers.HAMON.get()).get();
-            hamonAction = (HamonSunlightYellowOverdrive) action;
         }
         
         @Override
@@ -179,6 +176,7 @@ public class HamonSunlightYellowOverdrive extends HamonAction implements IPlayer
             World world = user.level;
             
             if (!world.isClientSide()) {
+                HamonSunlightYellowOverdrive hamonAction = getAction();
                 if (hamonAction.checkHeldItems(user, playerPower).isPositive()) {
                     float efficiency = userHamon.getActionEfficiency(0, true, hamonAction.getUnlockingSkill());
                     float damage = 3.25F + 6.75F * energySpentRatio;
@@ -215,7 +213,7 @@ public class HamonSunlightYellowOverdrive extends HamonAction implements IPlayer
         
         @Override
         public float getWalkSpeed() {
-            return hamonAction.getHeldWalkSpeed();
+            return getAction().getHeldWalkSpeed();
         }
         
         @Override
@@ -224,11 +222,6 @@ public class HamonSunlightYellowOverdrive extends HamonAction implements IPlayer
             if (user.level.isClientSide() && user instanceof PlayerEntity) {
                 ModPlayerAnimations.sunlightYellowOverdrive.stopAnim((PlayerEntity) user);
             }
-        }
-        
-        @Override
-        protected Instance getThis() {
-            return this;
         }
         
     }

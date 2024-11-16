@@ -98,17 +98,12 @@ public class HamonSunlightYellowOverdriveBarrage extends HamonAction implements 
     
     
     
-    public static class Instance extends ContinuousActionInstance<Instance, INonStandPower> {
+    public static class Instance extends ContinuousActionInstance<HamonSunlightYellowOverdriveBarrage, INonStandPower> {
         private boolean finishingPunch = false;
 
         public Instance(LivingEntity user, PlayerUtilCap userCap, 
                 INonStandPower playerPower, HamonSunlightYellowOverdriveBarrage action) {
             super(user, userCap, playerPower, action);
-        }
-
-        @Override
-        protected Instance getThis() {
-            return this;
         }
 
         private static final int MAX_BARRAGE_DURATION = 70;

@@ -16,17 +16,17 @@ import com.github.standobyte.jojo.util.mc.damage.DamageUtil;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.DamageSource;
 
-public abstract class ContinuousActionInstance<T extends ContinuousActionInstance<T, P>, P extends IPower<P, ?>> {
+public abstract class ContinuousActionInstance<T extends IPlayerAction<?, P>, P extends IPower<P, ?>> {
     protected final LivingEntity user;
     protected final PlayerUtilCap userCap;
     protected final P playerPower;
-    protected final IPlayerAction<T, P> action;
+    protected final T action;
     private Phase phase;
     protected int tick = 0;
     private boolean stop = false;
     protected int actionCooldown;
     
-    public ContinuousActionInstance(LivingEntity user, PlayerUtilCap userCap, P playerPower, IPlayerAction<T, P> action) {
+    public ContinuousActionInstance(LivingEntity user, PlayerUtilCap userCap, P playerPower, T action) {
         this.user = user;
         this.userCap = userCap;
         this.action = action;
@@ -42,7 +42,6 @@ public abstract class ContinuousActionInstance<T extends ContinuousActionInstanc
         if (phase == null) {
             phase = Phase.PERFORM;
         }
-        action.playerTick(getThis());
         playerTick();
         tick++;
         int maxTicks = getMaxDuration();
@@ -50,8 +49,6 @@ public abstract class ContinuousActionInstance<T extends ContinuousActionInstanc
             stopAction();
         }
     }
-    
-    protected abstract T getThis();
     
     protected void playerTick() {}
     
@@ -63,7 +60,7 @@ public abstract class ContinuousActionInstance<T extends ContinuousActionInstanc
         return playerPower;
     }
     
-    public IPlayerAction<T, P> getAction() {
+    public T getAction() {
         return action;
     }
     

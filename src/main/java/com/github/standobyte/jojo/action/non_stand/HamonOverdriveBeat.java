@@ -59,16 +59,14 @@ public class HamonOverdriveBeat extends HamonAction implements IPlayerAction<Ham
     protected void consumeEnergy(World world, LivingEntity user, INonStandPower power, ActionTarget target) {} // and so is energy consumption
     
     
-    public static class Instance extends ContinuousActionInstance<Instance, INonStandPower> {
-        private final HamonOverdriveBeat hamonAction;
+    public static class Instance extends ContinuousActionInstance<HamonOverdriveBeat, INonStandPower> {
         private HamonData userHamon;
         
-        public Instance(LivingEntity user, PlayerUtilCap userCap, INonStandPower playerPower,
-                IPlayerAction<Instance, INonStandPower> action) {
+        public Instance(LivingEntity user, PlayerUtilCap userCap, 
+                INonStandPower playerPower, HamonOverdriveBeat action) {
             super(user, userCap, playerPower, action);
             
             userHamon = playerPower.getTypeSpecificData(ModPowers.HAMON.get()).get();
-            hamonAction = (HamonOverdriveBeat) action;
         }
         
         @Override
@@ -98,6 +96,7 @@ public class HamonOverdriveBeat extends HamonAction implements IPlayerAction<Ham
         private void punch(LivingEntity target) {
             World world = user.level;
             if (!world.isClientSide()) {
+                HamonOverdriveBeat hamonAction = getAction();
                 if (hamonAction.checkHeldItems(user, playerPower).isPositive()) {
                     float damage = 3.0f;
                     float cost = hamonAction.getEnergyCost(playerPower, new ActionTarget(target));
@@ -136,11 +135,6 @@ public class HamonOverdriveBeat extends HamonAction implements IPlayerAction<Ham
             if (user.level.isClientSide() && user instanceof PlayerEntity) {
                 ModPlayerAnimations.hamonBeat.setAnimEnabled((PlayerEntity) user, false);
             }
-        }
-        
-        @Override
-        protected Instance getThis() {
-            return this;
         }
         
     }
