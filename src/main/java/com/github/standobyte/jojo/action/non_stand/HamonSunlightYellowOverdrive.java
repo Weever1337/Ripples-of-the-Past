@@ -129,8 +129,6 @@ public class HamonSunlightYellowOverdrive extends HamonAction implements IPlayer
                     power.setEnergy(Math.min(power.getMaxEnergy(), power.getEnergy() + energySpent));
                 }
             }
-            // FIXME always triggers for other players in MP
-            // FIXME sometimes wrong on the client side of the user too
             else if (user instanceof PlayerEntity) {
                 ModPlayerAnimations.sunlightYellowOverdrive.stopAnim((PlayerEntity) user);
             }

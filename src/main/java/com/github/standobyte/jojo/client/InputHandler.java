@@ -690,7 +690,7 @@ public class InputHandler {
         PowerClassification powerClass = power.getPowerClassification();
         
         if (!keyHeld && power.getHeldAction() != null) {
-            stopHeldAction(power, powerClass == actionsOverlay.getCurrentMode());
+            stopHeldAction(power);
         }
         
         boolean targetUpdatePrevTick = prevTargetUpdateTick.contains(powerClass);
@@ -703,9 +703,16 @@ public class InputHandler {
         }
     }
     
-    public void stopHeldAction(IPower<?, ?> power, boolean shouldFire) {
-        if (power.getHeldAction() != null) {
-            power.stopHeldAction(shouldFire);
+    public <P extends IPower<P, ?>> void stopHeldAction(IPower<?, ?> p) {
+        P power = (P) p;
+        Action<P> heldAction = power.getHeldAction();
+        if (heldAction != null) {
+            boolean shouldFire = false;
+            if (!heldAction.holdOnly(power)) {
+                int heldForTicks = power.getHeldActionTicks();
+                int ticksToFire = heldAction.getHoldDurationToFire(power);
+                shouldFire = heldForTicks >= ticksToFire;
+            }
             PacketManager.sendToServer(new ClStopHeldActionPacket(power.getPowerClassification(), shouldFire));
         }
     }
