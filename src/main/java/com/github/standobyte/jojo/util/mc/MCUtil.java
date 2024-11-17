@@ -935,6 +935,7 @@ public class MCUtil {
         return areHandsFree(entity, hand);
     }
     
+    // TODO areBothHandsFree method?
     public static boolean areHandsFree(LivingEntity entity, Hand... hands) {
         if (entity.level.isClientSide() && entity.is(ClientUtil.getClientPlayer()) && ClientUtil.arePlayerHandsBusy()) {
             return false;

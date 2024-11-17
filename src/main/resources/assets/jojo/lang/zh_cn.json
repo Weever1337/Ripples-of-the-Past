@@ -999,7 +999,7 @@
  "hamonSkill.natural_talent.name": "天赋",
  "hamonSkill.natural_talent.desc": "你的波纹训练效率提升了两倍",
  "hamonSkill.scarlet_overdrive.name": "绯红色波纹疾走",
- "hamonSkill.scarlet_overdrive.desc": "一种特殊类型的波纹攻击，可造成额外波纹伤害并点燃目标",
+  "hamonSkill.scarlet_overdrive.desc": "A special type of Sunlight Yellow Overdrive attack that sets the target on fire.",
  "hamonSkill.metal_silver_overdrive.name": "银白色波纹疾走",
   "hamonSkill.metal_silver_overdrive.desc": "你可以在武器和工具上缠绕波纹进行攻击，可造成额外的波纹伤害。\nWithout a weapon, the regular Overdrive deals more damage to targets with armor or an equipped melee weapon.",
  "hamonSkill.overdrive_barrage.name": "波纹疾走连打",

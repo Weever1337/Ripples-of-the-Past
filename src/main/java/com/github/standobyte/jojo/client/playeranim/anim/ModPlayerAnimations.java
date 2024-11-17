@@ -17,6 +17,7 @@ public class ModPlayerAnimations {
     public static BasicToggleAnim hamonBreath;
     public static BasicToggleAnim hamonBeat;
     public static WindupAttackAnim sunlightYellowOverdrive;
+    public static WindupAttackAnim scarletOverdrive;
     public static WallClimbAnim wallClimbing;
     public static HamonSYOBAnim syoBarrage;
     public static BasicToggleAnim sendoWaveKick;
@@ -62,6 +63,11 @@ public class ModPlayerAnimations {
         sunlightYellowOverdrive = PlayerAnimationHandler.getPlayerAnimator().registerAnimLayer(
                 "com.github.standobyte.jojo.client.playeranim.anim.kosmximpl.hamon.KosmXSYOHandler",
                 new ResourceLocation(JojoMod.MOD_ID, "syo"), 1, 
+                WindupAttackAnim.NoPlayerAnimator::new);
+        
+        scarletOverdrive = PlayerAnimationHandler.getPlayerAnimator().registerAnimLayer(
+                "com.github.standobyte.jojo.client.playeranim.anim.kosmximpl.hamon.KosmXScarletOverdriveHandler",
+                new ResourceLocation(JojoMod.MOD_ID, "scarlet_overdrive"), 1, 
                 WindupAttackAnim.NoPlayerAnimator::new);
         
         syoBarrage = PlayerAnimationHandler.getPlayerAnimator().registerAnimLayer(
