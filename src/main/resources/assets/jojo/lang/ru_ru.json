@@ -145,6 +145,12 @@
   "jojo.stand_user_crafting.jei_hint.multiple": "Этот предмет можно создать только если ваш Стенд - один из перечисленных:",
   "jojo.stand_user_crafting.jei_hint.error": "Неизвестные идентификаторы Стендов:",
   
+  "jojo.player_anim_reminder.1": "Ripples of the Past использует два сторонних мода, добавляющих возможность анимировать модель игрока.",
+  "jojo.player_anim_reminder.2": "Следующие моды не найдены в списке модов:",
+  "jojo.player_anim_reminder.cf_link": "[Ссылка на CurseForge]",
+  "jojo.player_anim_reminder.3": "Эти моды клиентские, их не обязательно устанавливать на сервер.",
+  "jojo.player_anim_reminder.4": "Игра будет работать и без них, но не забудьте установить их, прежде чем запускать игру в следующий раз!",
+  
   "walkman.button.play": "Воспроизвести %s",
   "walkman.button.flip": "Развернуть кассету (начнёт играть %s)",
   "walkman.button.rewind": "Отмотать назад (к %s)",

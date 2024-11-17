@@ -13,6 +13,7 @@ import java.util.OptionalInt;
 import java.util.Random;
 import java.util.UUID;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import javax.annotation.Nullable;
@@ -85,6 +86,7 @@ import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.IngameGui;
+import net.minecraft.client.gui.NewChatGui;
 import net.minecraft.client.gui.screen.ControlsScreen;
 import net.minecraft.client.gui.screen.DeathScreen;
 import net.minecraft.client.gui.screen.IngameMenuScreen;
@@ -123,12 +125,15 @@ import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.util.math.vector.Vector3f;
 import net.minecraft.util.math.vector.Vector3i;
+import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.ITextProperties;
 import net.minecraft.util.text.KeybindTextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.util.text.event.ClickEvent;
+import net.minecraft.util.text.event.HoverEvent;
 import net.minecraftforge.client.ForgeHooksClient;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
 import net.minecraftforge.client.event.EntityViewRenderEvent;
@@ -366,6 +371,10 @@ public class ClientEventHandler {
                     InventoryItemHighlight.tick();
                 }
                 
+                if (mc.player != null && mc.player.tickCount == 200) {
+                    extraModsReminder();
+                }
+                
                 tickResolveEffect();
                 PhotosCache.tick();
                 break;
@@ -390,6 +399,51 @@ public class ClientEventHandler {
             
             if (!mc.isPaused()) {
                 if (overlayMessageTime > 0) overlayMessageTime--;
+            }
+        }
+    }
+    
+    private static final List<String[]> MOD_LINKS = Util.make(new ArrayList<>(), list -> {
+        list.add(new String[] { 
+                "playeranimator", 
+                "playerAnimator ", 
+                "forge-0.4.0+1.16.5 ", 
+                "https://www.curseforge.com/minecraft/mc-mods/playeranimator/files/4111516" });
+        list.add(new String[] { 
+                "bendylib", 
+                "bendy-lib ", 
+                "forge-1.2.1 ", 
+                "https://www.curseforge.com/minecraft/mc-mods/bendy-lib/files/3930015" });
+    });
+    public static boolean seenExtraModsReminder = false;
+    private void extraModsReminder() {
+        if (!seenExtraModsReminder) {
+            seenExtraModsReminder = true;
+            
+            List<String[]> missingMods = MOD_LINKS.stream()
+                    .filter(modEntry -> !ModInteractionUtil.isModLoaded(modEntry[0]))
+                    .collect(Collectors.toList());
+            if (!missingMods.isEmpty()) {
+                NewChatGui chat = mc.gui.getChat();
+                chat.addMessage(new TranslationTextComponent("jojo.player_anim_reminder.1")
+                        .withStyle(TextFormatting.GRAY, TextFormatting.ITALIC));
+                chat.addMessage(new TranslationTextComponent("jojo.player_anim_reminder.2")
+                        .withStyle(TextFormatting.GRAY, TextFormatting.ITALIC));
+                for (String[] modEntry : missingMods) {
+                    IFormattableTextComponent line = new StringTextComponent("  ").withStyle(TextFormatting.ITALIC)
+                            .append(modEntry[1])
+                            .append(modEntry[2])
+                            .append(new TranslationTextComponent("jojo.player_anim_reminder.cf_link")
+                                    .withStyle(TextFormatting.GREEN)
+                                    .withStyle(style -> style
+                                            .withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, modEntry[3]))
+                                            .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new TranslationTextComponent("chat.link.open")))));
+                    chat.addMessage(line);
+                }
+                chat.addMessage(new TranslationTextComponent("jojo.player_anim_reminder.3")
+                        .withStyle(TextFormatting.GRAY, TextFormatting.ITALIC));
+                chat.addMessage(new TranslationTextComponent("jojo.player_anim_reminder.4")
+                        .withStyle(TextFormatting.GRAY, TextFormatting.ITALIC));
             }
         }
     }

@@ -146,6 +146,12 @@
   "jojo.stand_user_crafting.jei_hint.multiple": "This can only be crafted if your Stand is either one of these:",
   "jojo.stand_user_crafting.jei_hint.error": "Missing Stand id(s):",
   
+  "jojo.player_anim_reminder.1": "Ripples of the Past uses two third-party mods to be able to add player animations.",
+  "jojo.player_anim_reminder.2": "The following mods were not found in the mod list:",
+  "jojo.player_anim_reminder.cf_link": "[CurseForge link]",
+  "jojo.player_anim_reminder.3": "They are client-side, you do not have to install them on a server.",
+  "jojo.player_anim_reminder.4": "The game will run without them, just don't forget to install them next time you launch the game!",
+  
   "walkman.button.play": "Play %s",
   "walkman.button.flip": "Flip (play %s)",
   "walkman.button.rewind": "Rewind (play %s)",
