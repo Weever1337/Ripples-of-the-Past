@@ -16,6 +16,8 @@ public class ModPlayerAnimations {
     public static PlayerBarrageAnim playerBarrageAnim;
     public static BasicToggleAnim hamonBreath;
     public static BasicToggleAnim hamonBeat;
+    public static BasicToggleAnim vampireClawSwipe;
+    public static BasicToggleAnim pillarManPunch;
     public static WindupAttackAnim sunlightYellowOverdrive;
     public static WindupAttackAnim scarletOverdrive;
     public static WallClimbAnim wallClimbing;
@@ -59,6 +61,14 @@ public class ModPlayerAnimations {
         hamonBeat = PlayerAnimationHandler.getPlayerAnimator().registerBasicAnimLayer(
                 "com.github.standobyte.jojo.client.playeranim.anim.kosmximpl.hamon.KosmXHamonBeatHandler",
                 new ResourceLocation(JojoMod.MOD_ID, "hamon_beat"), 1);
+        
+        vampireClawSwipe = PlayerAnimationHandler.getPlayerAnimator().registerBasicAnimLayer(
+                "com.github.standobyte.jojo.client.playeranim.anim.kosmximpl.vampire.KosmXVampireClawSwipeHandler",
+                new ResourceLocation(JojoMod.MOD_ID, "vampire_claw_swipe"), 1);
+        
+        pillarManPunch = PlayerAnimationHandler.getPlayerAnimator().registerBasicAnimLayer(
+                "com.github.standobyte.jojo.client.playeranim.anim.kosmximpl.pillarman.KosmXPillarManPunchHandler",
+                new ResourceLocation(JojoMod.MOD_ID, "pillar_man_punch"), 1);
         
         sunlightYellowOverdrive = PlayerAnimationHandler.getPlayerAnimator().registerAnimLayer(
                 "com.github.standobyte.jojo.client.playeranim.anim.kosmximpl.hamon.KosmXSYOHandler",
