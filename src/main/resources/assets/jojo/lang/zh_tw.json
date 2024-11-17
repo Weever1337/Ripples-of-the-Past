@@ -822,7 +822,7 @@
  "hamonSkill.hypnosis.name": "動物催眠",
  "hamonSkill.hypnosis.desc": "暫時馴服可馴服的動物。",
  "hamonSkill.hamon_shock.name": "波紋衝擊",
- "hamonSkill.hamon_shock.desc": "將波紋直接施加到生物的頭部擊暈，短時間內喪失行動能力。",
+ "hamonSkill.hamon_shock.desc": "將波紋直接施加到生物的頭部擊暈，短時間內喪失行動能力。 The shock wears off when if target takes damage.",
  "hamonSkill.hamon_spread.name": "波紋擴散",
  "hamonSkill.hamon_spread.desc": "當玩家用波紋攻擊不死生物、節肢生物等敵對生物時，它就會持續在對手的身體中擴散，造成額外的傷害。",
  

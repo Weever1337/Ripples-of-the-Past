@@ -21,6 +21,7 @@ public class ModPlayerAnimations {
     public static WindupAttackAnim sunlightYellowOverdrive;
     public static WindupAttackAnim scarletOverdrive;
     public static WallClimbAnim wallClimbing;
+    public static BasicToggleAnim hamonShock;
     public static HamonSYOBAnim syoBarrage;
     public static BasicToggleAnim sendoWaveKick;
     public static WindupAttackAnim rebuffOverdrive;
@@ -89,6 +90,10 @@ public class ModPlayerAnimations {
                 "com.github.standobyte.jojo.client.playeranim.anim.kosmximpl.hamon.KosmXWallClimbHandler",
                 new ResourceLocation(JojoMod.MOD_ID, "wall_climb"), 1, 
                 WallClimbAnim.NoPlayerAnimator::new);
+        
+        hamonShock = PlayerAnimationHandler.getPlayerAnimator().registerBasicAnimLayer(
+                "com.github.standobyte.jojo.client.playeranim.anim.kosmximpl.hamon.KosmXHamonShockHandler",
+                new ResourceLocation(JojoMod.MOD_ID, "hamon_shock"), 1);
         
         sendoWaveKick = PlayerAnimationHandler.getPlayerAnimator().registerBasicAnimLayer(
                 "com.github.standobyte.jojo.client.playeranim.anim.kosmximpl.hamon.KosmXSendoWaveKickHandler",

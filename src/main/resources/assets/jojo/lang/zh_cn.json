@@ -985,7 +985,7 @@
  "hamonSkill.hypnosis.name": "生物操控",
  "hamonSkill.hypnosis.desc": "允许玩家临时驯服一只可驯服的生物.",
  "hamonSkill.hamon_shock.name": "波纹痉挛",
- "hamonSkill.hamon_shock.desc": "向生物头部施加波纹，使其短时间失去行动能力。",
+ "hamonSkill.hamon_shock.desc": "向生物头部施加波纹，使其短时间失去行动能力。 The shock wears off when if target takes damage.",
  "hamonSkill.hamon_spread.name": "波纹扩散",
  "hamonSkill.hamon_spread.desc": "当玩家用波纹攻击亡灵生物时，它就会持续在对方的身体中扩散，造成额外的伤害。",
  

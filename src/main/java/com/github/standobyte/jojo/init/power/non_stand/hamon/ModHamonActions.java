@@ -49,7 +49,7 @@ public class ModHamonActions {
                     .needsFreeMainHand().swingHand()));
     
     public static final RegistryObject<HamonAction> HAMON_BEAT = ACTIONS.register("hamon_overdrive_beat", 
-            () -> new HamonOverdriveBeat(new HamonAction.Builder().energyCost(1500F)
+            () -> new HamonOverdriveBeat(new HamonAction.Builder().energyCost(1500F).heldWalkSpeed(0.5f)
                     .needsFreeOffHand().shiftVariationOf(HAMON_OVERDRIVE)));
    
    public static final RegistryObject<HamonAction> HAMON_SENDO_OVERDRIVE = ACTIONS.register("hamon_sendo_overdrive", 
@@ -119,7 +119,7 @@ public class ModHamonActions {
             () -> new HamonHypnosis(new HamonAction.Builder().holdToFire(60, false).holdEnergyCost(15)));
     
     public static final RegistryObject<HamonAction> HAMON_SHOCK = ACTIONS.register("hamon_shock", 
-            () -> new HamonShock(new HamonAction.Builder().holdToFire(15, false).holdEnergyCost(180)));
+            () -> new HamonShock(new HamonAction.Builder().heldWalkSpeed(0)));
     
     
     

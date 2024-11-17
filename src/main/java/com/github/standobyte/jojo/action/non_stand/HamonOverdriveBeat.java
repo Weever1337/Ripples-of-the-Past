@@ -113,10 +113,9 @@ public class HamonOverdriveBeat extends HamonAction implements IPlayerAction<Ham
             return true;
         }
         
-        
         @Override
         public float getWalkSpeed() {
-            return 0.5f;
+            return getAction().getHeldWalkSpeed();
         }
         
         @Override
