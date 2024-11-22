@@ -8,6 +8,7 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import com.github.standobyte.jojo.client.ClientUtil;
+import com.github.standobyte.jojo.client.particle.custom.CustomParticlesHelper;
 import com.github.standobyte.jojo.entity.damaging.projectile.TommyGunBulletEntity;
 import com.github.standobyte.jojo.init.ModSounds;
 import com.github.standobyte.jojo.init.power.non_stand.ModPowers;
@@ -36,6 +37,7 @@ import net.minecraft.item.Items;
 import net.minecraft.item.UseAction;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
+import net.minecraft.util.HandSide;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.vector.Vector3d;
@@ -92,7 +94,7 @@ public class TommyGunItem extends Item {
                     entity.yRot += (random.nextFloat() - 0.5F) * 0.3F * recoil;
                     entity.xRot += -random.nextFloat() * 0.75F * recoil;
                 }
-//                if (world.isClientSide() && remainingTicks % 4 == 0) {
+//                if (world.isClientSide()) {
 //                    HandSide handSide = entity.getItemInHand(Hand.OFF_HAND) == stack ? HandSide.LEFT : HandSide.RIGHT;
 //                    CustomParticlesHelper.addGunshotParticle(entity, handSide, new Vector3d(0, -0.425, 0.275));
 //                }

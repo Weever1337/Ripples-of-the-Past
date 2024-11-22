@@ -2,7 +2,6 @@ package com.github.standobyte.jojo.entity.damaging.projectile;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Queue;
 
 import com.github.standobyte.jojo.action.ActionTarget.TargetType;
 import com.github.standobyte.jojo.init.ModEntityTypes;
@@ -22,7 +21,6 @@ import net.minecraft.world.World;
 public class TommyGunBulletEntity extends ModdedProjectileEntity {
     public final List<Vector3d> tracePos = new LinkedList<>();
     public Vector3d initialPos;
-    public final Queue<Vector3d> traceDeflectedPos = new LinkedList<>();
     
     public TommyGunBulletEntity(LivingEntity shooter, World world) {
         super(ModEntityTypes.TOMMY_GUN_BULLET.get(), shooter, world);
@@ -67,6 +65,22 @@ public class TommyGunBulletEntity extends ModdedProjectileEntity {
     protected double getGravityAcceleration() {
         return 1.5;
     }
+    
+    
+    @Override
+    public boolean hasDeflectedVisuals() {
+        return true;
+    }
+    
+    @Override
+    public void setIsDeflected(Vector3d deflectVec, Vector3d deflectPos) {
+        super.setIsDeflected(deflectVec, deflectPos);
+        if (level.isClientSide()) {
+            setDeltaMovement(deflectVec);
+            tracePos.add(deflectPos);
+        }
+    }
+    
     
     protected boolean blockDestroyed;
     @Override

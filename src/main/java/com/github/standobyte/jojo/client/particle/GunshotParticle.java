@@ -11,8 +11,10 @@ import net.minecraft.client.particle.SpriteTexturedParticle;
 import net.minecraft.client.renderer.ActiveRenderInfo;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.particles.BasicParticleType;
+import net.minecraft.util.math.MathHelper;
 
 public class GunshotParticle extends SpriteTexturedParticle {
+    private float startingScale;
     
     protected GunshotParticle(ClientWorld world, double x, double y, double z) {
         super(world, x, y, z, 0, 0, 0);
@@ -21,15 +23,17 @@ public class GunshotParticle extends SpriteTexturedParticle {
         zd = 0;
         gravity = 0;
         hasPhysics = false;
-        setLifetime(3);
+        setLifetime(2);
         scale(0.75F);
+        startingScale = quadSize;
         roll = (float)Math.random() * ((float)Math.PI * 2F);
         oRoll = roll;
     }
     
     @Override
     public void render(IVertexBuilder pBuffer, ActiveRenderInfo pRenderInfo, float pPartialTicks) {
-        alpha = age > lifetime - 2 ? 1 - pPartialTicks : 1;
+        alpha = MathHelper.clamp((lifetime - age - pPartialTicks) * 2 / lifetime, 0, 1);
+        quadSize = startingScale * alpha;
         super.render(pBuffer, pRenderInfo, pPartialTicks);
     }
 

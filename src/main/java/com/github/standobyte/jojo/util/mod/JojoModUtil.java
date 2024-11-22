@@ -363,13 +363,21 @@ public class JojoModUtil {
         entity.remove();
     }
     
+    @Deprecated
     public static void deflectProjectile(Entity projectile, @Nullable Vector3d deflectVec) {
-        projectile.setDeltaMovement(deflectVec != null ? 
-                deflectVec.scale(Math.sqrt(projectile.getDeltaMovement().lengthSqr() / deflectVec.lengthSqr()))
-                : projectile.getDeltaMovement().reverse());
+        deflectProjectile(projectile, deflectVec, null);
+    }
+    
+    public static void deflectProjectile(Entity projectile, @Nullable Vector3d deflectVec, @Nullable Vector3d deflectPos) {
+        if (deflectVec == null) {
+            deflectVec = projectile.getDeltaMovement().reverse();
+        }
+        projectile.setDeltaMovement(deflectVec);
         projectile.move(MoverType.SELF, projectile.getDeltaMovement());
-        if (projectile instanceof ModdedProjectileEntity) {
-            ((ModdedProjectileEntity) projectile).setIsDeflected();
+        deflectVec = projectile.getDeltaMovement();
+        if (!projectile.level.isClientSide() && projectile instanceof ModdedProjectileEntity) {
+            if (deflectPos == null) deflectPos = projectile.position();
+            ((ModdedProjectileEntity) projectile).setIsDeflected(deflectVec, deflectPos);
         }
     }
     

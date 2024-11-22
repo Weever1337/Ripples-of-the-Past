@@ -40,8 +40,7 @@ public class TommyGunBulletRenderer extends EntityRenderer<TommyGunBulletEntity>
         return super.shouldRender(entity, pCamera, pCamX, pCamY, pCamZ) || 
                 entity.initialPos != null && pCamera.isVisible(new AxisAlignedBB(entity.initialPos, entity.position()));
     }
-
-    // TODO bullet deflection
+    
     @Override
     public void render(TommyGunBulletEntity entity, float yRotation, float partialTick, MatrixStack matrixStack, IRenderTypeBuffer buffer, int packedLight) {
         List<Vector3d> trace = entity.tracePos;
