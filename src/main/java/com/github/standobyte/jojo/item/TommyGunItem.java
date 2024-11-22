@@ -8,7 +8,7 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import com.github.standobyte.jojo.client.ClientUtil;
-import com.github.standobyte.jojo.client.particle.custom.CustomParticlesHelper;
+import com.github.standobyte.jojo.client.sound.ClientTickingSoundsHelper;
 import com.github.standobyte.jojo.entity.damaging.projectile.TommyGunBulletEntity;
 import com.github.standobyte.jojo.init.ModSounds;
 import com.github.standobyte.jojo.init.power.non_stand.ModPowers;
@@ -37,7 +37,6 @@ import net.minecraft.item.Items;
 import net.minecraft.item.UseAction;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
-import net.minecraft.util.HandSide;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.vector.Vector3d;
@@ -55,7 +54,7 @@ public class TommyGunItem extends Item {
     public TommyGunItem(Properties properties) {
         super(properties);
     }
-
+    
     @Override
     public void onUseTick(World world, LivingEntity entity, ItemStack stack, int remainingTicks) {
         int ammo = getAmmo(stack);
@@ -70,15 +69,21 @@ public class TommyGunItem extends Item {
                 JojoModUtil.sayVoiceLine(entity, ModSounds.JOSEPH_SCREAM_SHOOTING.get());
             }
             if (ammo > 0) {
+//                shotTick = true;
+//                int bulletsPerTickForLulz = 20;
                 if (shotTick) {
-                    TommyGunBulletEntity bullet = new TommyGunBulletEntity(entity, world);
-                    Vector3d pos = entity.getEyePosition(1).subtract(0, bullet.getBbHeight() / 2, 0).add(entity.getLookAngle());
-                    bullet.setPos(pos.x, pos.y, pos.z);
-                    bullet.shootFromRotation(entity, 2F, 0);
-                    world.addFreshEntity(bullet);
-                    if (!(entity instanceof PlayerEntity && ((PlayerEntity) entity).abilities.instabuild)) {
-                        consumeAmmo(stack, 1);
-                    }
+//                    for (int i = 0; i < bulletsPerTickForLulz; i++) {
+                        TommyGunBulletEntity bullet = new TommyGunBulletEntity(entity, world);
+                        Vector3d pos = entity.getEyePosition(1).subtract(0, bullet.getBbHeight() / 2, 0).add(entity.getLookAngle());
+                        bullet.shootFromRotation(entity, 2, 0);
+//                        pos = pos.add(bullet.getDeltaMovement().scale((double) i / bulletsPerTickForLulz));
+                        bullet.setPos(pos.x, pos.y, pos.z);
+                        world.addFreshEntity(bullet);
+                        if (!(entity instanceof PlayerEntity && ((PlayerEntity) entity).abilities.instabuild)) {
+                            consumeAmmo(stack, 1);
+                        }
+//                        if (getAmmo(stack) <= 0) break;
+//                    }
                 }
             }
             else {
@@ -88,7 +93,6 @@ public class TommyGunItem extends Item {
         if (ammo > 0) {
             if (shotTick) {
                 Random random = entity.getRandom();
-                entity.playSound(ModSounds.TOMMY_GUN_SHOT.get(), 1.0F, 1.0F + (random.nextFloat() - 0.5F) * 0.3F);
                 if (entity.getType() == EntityType.PLAYER ? world.isClientSide() : !world.isClientSide()) {
                     float recoil = 1F + Math.min((1F - (float) remainingTicks / (float) getUseDuration(stack)) * 6F, 3F);
                     entity.yRot += (random.nextFloat() - 0.5F) * 0.3F * recoil;
@@ -102,6 +106,9 @@ public class TommyGunItem extends Item {
         }
         else {
             entity.playSound(ModSounds.TOMMY_GUN_NO_AMMO.get(), 1.0F, 1.0F);
+        }
+        if (world.isClientSide() && remainingTicks == getUseDuration(stack)) {
+            ClientTickingSoundsHelper.playTommyGunLoop(entity, ModSounds.TOMMY_GUN_LOOP.get(), 1.0F, stack);
         }
     }
     

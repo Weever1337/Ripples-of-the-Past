@@ -101,7 +101,7 @@ public class TommyGunBulletEntity extends ModdedProjectileEntity {
     
     private void blockSound(BlockPos blockPos, BlockState blockState) {
         SoundType soundType = blockState.getSoundType(level, blockPos, this);
-        level.playSound(null, blockPos, soundType.getHitSound(), SoundCategory.BLOCKS, 1.0F, soundType.getPitch() * 0.5F);
+//        level.playSound(null, blockPos, soundType.getHitSound(), SoundCategory.BLOCKS, 1.0F, soundType.getPitch() * 0.5F);
     }
     
     @Override
