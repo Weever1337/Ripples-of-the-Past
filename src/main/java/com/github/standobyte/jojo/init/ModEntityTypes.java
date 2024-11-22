@@ -174,7 +174,7 @@ public class ModEntityTypes {
             .build(new ResourceLocation(JojoMod.MOD_ID, "snake_muffler").toString()));
     
     public static final RegistryObject<EntityType<TommyGunBulletEntity>> TOMMY_GUN_BULLET = ENTITIES.register("tommy_gun_bullet", 
-            () -> EntityType.Builder.<TommyGunBulletEntity>of(TommyGunBulletEntity::new, EntityClassification.MISC).sized(0.0625F, 0.0625F).clientTrackingRange(4).setUpdateInterval(20).fireImmune()
+            () -> EntityType.Builder.<TommyGunBulletEntity>of(TommyGunBulletEntity::new, EntityClassification.MISC).sized(0.0625F, 0.0625F).clientTrackingRange(16).setUpdateInterval(1).fireImmune()
             .build(new ResourceLocation(JojoMod.MOD_ID, "tommy_gun_bullet").toString()));
     
     public static final RegistryObject<EntityType<MolotovEntity>> MOLOTOV = ENTITIES.register("molotov", 
