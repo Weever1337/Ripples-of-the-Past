@@ -504,13 +504,13 @@ public class GameplayEventHandler {
             IStandPower.getStandPowerOptional((LivingEntity) attacker).ifPresent(attackerStand -> {
                 IStandPower.getStandPowerOptional(target).ifPresent(boyIIManStand -> {
                     StandEffectsTracker standEffects = boyIIManStand.getContinuousEffects();
-                    if (!standEffects.getEffects(effect -> {
+                    if (standEffects.getEffects().filter(effect -> {
                         if (effect.effectType == ModStandEffects.BOY_II_MAN_PART_TAKE.get() && attacker.is(effect.getTarget())) {
                             StandInstance partsTaken = ((BoyIIManStandPartTakenEffect) effect).getPartsTaken();
                             return partsTaken.getType() == attackerStand.getType() && partsTaken.hasPart(StandPart.ARMS);
                         }
                         return false;
-                    }).isEmpty()) {
+                    }).findAny().isPresent()) {
                         attacker.hurt(dmgSource, event.getAmount());
                         event.setCanceled(true);
                         return;
