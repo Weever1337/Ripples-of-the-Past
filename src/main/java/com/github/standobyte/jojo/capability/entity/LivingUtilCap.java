@@ -189,7 +189,6 @@ public class LivingUtilCap {
     private void tickKnockbackBlockImpact() {
         if (blockImpactKbVec != null) {
             Vector3d speedVec = entity.getDeltaMovement()
-//                    .subtract(0, entity.getAttributeValue(ForgeMod.ENTITY_GRAVITY.get()), 0)
                     .multiply(1, 0, 1);
             
             if (Math.abs(speedVec.x) < 1.0E-7 && Math.abs(speedVec.z) < 1.0E-7) {
@@ -207,14 +206,8 @@ public class LivingUtilCap {
                     entity.getBoundingBox(), speedVec, entity.level, true);
             if (!blocksCollision.isEmpty()) {
                 blocksCollision.forEach(blockPos -> {
-//                  BlockState blockState = entity.level.getBlockState(blockPos);
-                  entity.level.destroyBlock(blockPos, true);
+                    entity.level.destroyBlock(blockPos, true);
                 });
-                // and ig we reduce blockImpactMultiplier?
-                
-//                if (entity.isOnGround()) {
-//                    blockImpactKbVec = null;
-//                }
             }
         }
     }

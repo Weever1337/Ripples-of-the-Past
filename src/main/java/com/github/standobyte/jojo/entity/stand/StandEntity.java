@@ -16,7 +16,6 @@ import com.github.standobyte.jojo.JojoModConfig;
 import com.github.standobyte.jojo.action.ActionConditionResult;
 import com.github.standobyte.jojo.action.ActionTarget;
 import com.github.standobyte.jojo.action.ActionTarget.TargetType;
-import com.github.standobyte.jojo.action.stand.CrazyDiamondRestoreTerrain;
 import com.github.standobyte.jojo.action.stand.IHasStandPunch;
 import com.github.standobyte.jojo.action.stand.StandEntityAction;
 import com.github.standobyte.jojo.action.stand.punch.IPunch;
@@ -1960,12 +1959,7 @@ public class StandEntity extends LivingEntity implements IStandManifestation, IE
                 blockState.getBlock().playerWillDestroy(level, blockPos, blockState, playerUser);
                 dropItem &= !playerUser.abilities.instabuild;
             }
-            if (!dropItem) {
-                CrazyDiamondRestoreTerrain.rememberBrokenBlock(level, blockPos, blockState, 
-                        Optional.ofNullable(level.getBlockEntity(blockPos)), 
-                        createdDrops != null ? createdDrops : Collections.emptyList());
-            }
-            if (level.destroyBlock(blockPos, dropItem, this)) {
+            if (MCUtil.destroyBlock(level, blockPos, dropItem, this)) {
                 blockState.getBlock().destroy(level, blockPos, blockState);
                 return true;
             }

@@ -708,6 +708,17 @@ public class MCUtil {
         }
     }
     
+    public static boolean destroyBlock(World world, BlockPos blockPos, boolean dropBlock, @Nullable Entity entity) {
+        BlockState oldState = dropBlock ? null /*no need to call it in this case*/ : world.getBlockState(blockPos);
+        boolean res = world.destroyBlock(blockPos, dropBlock, entity);
+        if (!dropBlock) {
+            CrazyDiamondRestoreTerrain.rememberBrokenBlock(world, blockPos, oldState, 
+                    Optional.ofNullable(world.getBlockEntity(blockPos)), 
+                    Collections.emptyList());
+        }
+        return res;
+    }
+    
     
     
     
