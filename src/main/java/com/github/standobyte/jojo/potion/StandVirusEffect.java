@@ -38,22 +38,21 @@ public class StandVirusEffect extends StatusEffect implements IApplicableEffect 
                     return handler.decXpLevelsTakenByArrow(player) >= handler.getStandXpLevelsRequirement(player.level.isClientSide(), arrowPiercedBy);
                 }).orElse(false);
             }
-
-            if (stopEffect) {
-                entity.removeEffect(this);
+            
+            player.giveExperienceLevels(-1);
+            float damage = 0.15F + amplifier * 0.2F;
+            if (hasXpLevel) {
+                if (damage > entity.getHealth()) {
+                    damage = 0.001F;
+                }
             }
             else {
-                player.giveExperienceLevels(-1);
-                float damage = 0.15F + amplifier * 0.2F;
-                if (hasXpLevel) {
-                    if (damage > entity.getHealth()) {
-                        damage = 0.001F;
-                    }
-                }
-                else {
-                    damage *= 10;
-                }
-                DamageUtil.hurtThroughInvulTicks(entity, DamageUtil.STAND_VIRUS, damage);
+                damage *= 10;
+            }
+            DamageUtil.hurtThroughInvulTicks(entity, DamageUtil.STAND_VIRUS, damage);
+            
+            if (stopEffect) {
+                entity.removeEffect(this);
             }
         }
     }
