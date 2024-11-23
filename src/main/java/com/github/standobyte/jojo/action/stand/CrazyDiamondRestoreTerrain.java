@@ -128,10 +128,9 @@ public class CrazyDiamondRestoreTerrain extends StandEntityAction {
                     .thenComparingInt((PrevBlockInfo block) -> block.pos.distManhattan(eyePos)))
             .limit(blocksToRestore)
             .forEach(block -> {
-                if (tryPlaceBlock(world, block.pos, block.state, blocksPlaced, 
+                if (block.onRestore() && tryPlaceBlock(world, block.pos, block.state, blocksPlaced, 
                         creative, block.drops, block.getDroppedXp(), playerUser, userInventory, itemsAround, 
                         resolveEffect && !onlyAimedAt)) {
-                    block.onRestore();
                     blocksToForget.add(block.pos);
                 }
             });

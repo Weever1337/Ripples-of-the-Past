@@ -561,7 +561,7 @@ public class StandEntityHeavyAttack extends StandEntityAction implements IHasSta
                                 ((Chunk) chunk).getCapability(ChunkCapProvider.CAPABILITY).ifPresent(cap -> {
                                     PrevBlockInfo brokenBlock = cap.getBrokenBlockAt(pos);
                                     if (brokenBlock != null) {
-                                        brokenBlock.withBlockShards(shards);
+                                        brokenBlock.withEntities(shards);
                                     }
                                 });
                             }
