@@ -526,7 +526,7 @@
   "jojo.layout_edit.locked.stand.resolve": "Решимости",
   "jojo.layout_edit.locked.hamon_skill": "Открывается навыком %s",
   
-  "_jojo.command.desc.jojoconfigpack": "Generates a data pack for editing Stand stats",
+  "_jojo.command.desc.jojoconfig": "Generates a data pack for editing Stand stats",
   "jojo.command.desc.hamonstat": "Устанавливает характеристики Хамона (силу, контроль и тренировку дыхания)",
   "jojo.command.desc.jojocontrols": "Обучение интерфейсу и управлению мода",
   "_jojo.command.desc.jojoenergy": "Checks or sets a player's non-Stand energy meter value",

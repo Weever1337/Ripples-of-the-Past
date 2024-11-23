@@ -546,7 +546,7 @@
   "jojo.layout_edit.locked.hamon_skill": "Unlocks with %s skill",
   
   "jojo.command_description": "%s - %s",
-  "jojo.command.desc.jojoconfigpack": "Generates a data pack for editing Stand stats",
+  "jojo.command.desc.jojoconfig": "Generates a data pack for editing Stand stats",
   "jojo.command.desc.hamonstat": "Sets a player's Hamon stat (Strength, Control or Breathing training)",
   "jojo.command.desc.jojocontrols": "The mod's HUD and controls tutorial",
   "jojo.command.desc.jojoenergy": "Checks or sets a player's non-Stand energy meter value",
