@@ -12,6 +12,7 @@ import com.mojang.serialization.Codec;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityPredicate;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.ai.goal.GoalSelector;
 import net.minecraft.entity.ai.goal.NearestAttackableTargetGoal;
 import net.minecraft.entity.ai.goal.PrioritizedGoal;
@@ -32,6 +33,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.tileentity.AbstractFurnaceTileEntity;
+import net.minecraft.util.SoundEvent;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.world.Explosion;
 import net.minecraft.world.GameRules;
@@ -217,6 +219,13 @@ public class CommonReflection {
     private static final Field MERCHANT_INVENTORY_MERCHANT = ObfuscationReflectionHelper.findField(MerchantInventory.class, "field_70476_a");
     public static IMerchant getMerchant(MerchantInventory merchantContainer) {
         return ReflectionUtil.getFieldValue(MERCHANT_INVENTORY_MERCHANT, merchantContainer);
+    }
+    
+    
+    
+    private static final Method MOB_ENTITY_GET_AMBIENT_SOUND = ObfuscationReflectionHelper.findMethod(MobEntity.class, "func_184639_G");
+    public static SoundEvent getAmbientSound(MobEntity entity) {
+        return ReflectionUtil.invokeMethod(MOB_ENTITY_GET_AMBIENT_SOUND, entity);
     }
     
     

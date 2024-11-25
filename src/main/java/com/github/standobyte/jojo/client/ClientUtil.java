@@ -34,6 +34,7 @@ import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.network.play.NetworkPlayerInfo;
 import net.minecraft.client.renderer.ActiveRenderInfo;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.ItemModelMesher;
@@ -79,6 +80,7 @@ import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.Style;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.world.GameType;
 import net.minecraft.world.IBlockDisplayReader;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.client.gui.GuiUtils;
@@ -142,6 +144,17 @@ public class ClientUtil {
     
     public static float getPartialTick() {
         return ClientEventHandler.getInstance().getPartialTick();
+    }
+    
+    public static GameType getPlayerGameMode(PlayerEntity player) {
+        if (player.isLocalPlayer()) {
+            return Minecraft.getInstance().gameMode.getPlayerMode();
+        }
+        NetworkPlayerInfo networkPlayerInfo = Minecraft.getInstance().getConnection().getPlayerInfo(player.getGameProfile().getId());
+        if (networkPlayerInfo != null) {
+            return networkPlayerInfo.getGameMode();
+        }
+        return null;
     }
     
     public static String getCurrentLanguageCode() {

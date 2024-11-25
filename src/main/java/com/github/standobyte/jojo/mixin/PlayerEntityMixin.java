@@ -1,5 +1,7 @@
 package com.github.standobyte.jojo.mixin;
 
+import javax.annotation.Nullable;
+
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -7,18 +9,27 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.github.standobyte.jojo.action.non_stand.HamonWallClimbing2;
+import com.github.standobyte.jojo.capability.entity.player.PlayerMixinExtension;
+import com.github.standobyte.jojo.network.PacketManager;
+import com.github.standobyte.jojo.network.packets.fromserver.TrPossessEntityPacket;
+import com.github.standobyte.jojo.util.mc.EntityOwnerResolver;
 import com.github.standobyte.jojo.util.mod.IPlayerLeap;
+import com.github.standobyte.jojo.util.mod.IPlayerPossess;
 import com.github.standobyte.jojo.util.mod.JojoModUtil;
 
 import net.minecraft.entity.CreatureAttribute;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.world.GameType;
 import net.minecraft.world.World;
 
 @Mixin(PlayerEntity.class)
-public abstract class PlayerEntityMixin extends LivingEntityMixin implements IPlayerLeap {
+public abstract class PlayerEntityMixin extends LivingEntityMixin implements PlayerMixinExtension, IPlayerLeap, IPlayerPossess {
     
     protected PlayerEntityMixin(EntityType<? extends LivingEntity> type, World world) {
         super(type, world);
@@ -27,6 +38,7 @@ public abstract class PlayerEntityMixin extends LivingEntityMixin implements IPl
     @Override
     public void jojoMixinTick(CallbackInfo ci) {
         leapFlagTick();
+        jojoTickEntityPossession();
     }
     
     @Override
@@ -71,5 +83,84 @@ public abstract class PlayerEntityMixin extends LivingEntityMixin implements IPl
 //        else if (isDoingDash) {
 //            ci.setReturnValue(true);
 //        }
+    }
+    
+    
+    
+    private final EntityOwnerResolver jojoPossessedEntity = new EntityOwnerResolver();
+    private GameType jojoPossessPrevGameMode;
+    
+    @Override
+    public void jojoPossessEntity(@Nullable Entity entity) {
+        jojoPossessedEntity.setOwner(entity);
+        if (!level.isClientSide()) {
+            ServerPlayerEntity player = ((ServerPlayerEntity) (Entity) this);
+            if (entity != null) {
+                jojoPossessPrevGameMode = player.gameMode.getGameModeForPlayer();
+                player.setGameMode(GameType.SPECTATOR);
+                player.setCamera(entity);
+            }
+            else {
+                if (jojoPossessPrevGameMode != null) {
+                    player.setGameMode(jojoPossessPrevGameMode);
+                }
+                player.setCamera(player);
+            }
+            PacketManager.sendToClientsTrackingAndSelf(new TrPossessEntityPacket(
+                    this.getId(), jojoPossessedEntity.getNetworkId(), jojoPossessPrevGameMode), this);
+        }
+    }
+    
+    private void jojoTickEntityPossession() {
+        if (!level.isClientSide() && jojoPossessedEntity.hasEntityId()) {
+            Entity possessed = jojoGetPossessedEntity();
+            if (possessed == null || !possessed.isAlive() || !this.isAlive()) {
+                jojoPossessEntity(null);
+            }
+        }
+    }
+    
+    @Override
+    @Nullable public Entity jojoGetPossessedEntity() {
+        return jojoPossessedEntity.getEntity(level);
+    }
+    
+    @Override
+    @Nullable public GameType jojoGetPrePossessGameMode() {
+        return jojoGetPossessedEntity() != null ? jojoPossessPrevGameMode : null;
+    }
+    
+    @Override
+    public void jojoSetPrePossessGameMode(GameType gameMode) {
+        this.jojoPossessPrevGameMode = gameMode;
+        if (!level.isClientSide()) {
+            PacketManager.sendToClient(new TrPossessEntityPacket(this.getId(), 
+                    jojoPossessedEntity.getNetworkId(), null), ((ServerPlayerEntity) (Entity) this));
+        }
+    }
+    
+    
+    @Override
+    public void toNBT(CompoundNBT forgeCapNbt) {
+//        jojoPossessedEntity.saveNbt(forgeCapNbt, "Possessed");
+//        if (jojoPossessPrevGameMode != null) forgeCapNbt.putString("PossessPrevMode", jojoPossessPrevGameMode.name());
+    }
+    
+    @Override
+    public void fromNBT(CompoundNBT forgeCapNbt) {
+//        jojoPossessedEntity.loadNbt(forgeCapNbt, "Possessed");
+//        jojoPossessPrevGameMode = GameType.byName(forgeCapNbt.getString("PossessPrevMode"), null);
+    }
+
+    @Override
+    public void syncToClient(ServerPlayerEntity thisAsPlayer) {
+        PacketManager.sendToClient(new TrPossessEntityPacket(this.getId(), 
+                jojoPossessedEntity.getNetworkId(), jojoPossessPrevGameMode), thisAsPlayer);
+    }
+
+    @Override
+    public void syncToTracking(ServerPlayerEntity tracking) {
+        PacketManager.sendToClient(new TrPossessEntityPacket(this.getId(), 
+                jojoPossessedEntity.getNetworkId(), null), tracking);
     }
 }

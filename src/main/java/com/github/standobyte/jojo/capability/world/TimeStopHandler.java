@@ -44,6 +44,7 @@ import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.network.play.server.SPlayEntityEffectPacket;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraft.world.GameType;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.event.TickEvent;
@@ -348,8 +349,16 @@ public class TimeStopHandler {
     }
     
     public static boolean canPlayerMoveInStoppedTime(PlayerEntity player, boolean checkEffect) {
-        return checkEffect && player.hasEffect(ModStatusEffects.TIME_STOP.get()) || player.isCreative() || player.isSpectator() || 
+        return checkEffect && player.hasEffect(ModStatusEffects.TIME_STOP.get()) || hasOpVisibility(player) || 
                 player instanceof ServerPlayerEntity && ((ServerPlayerEntity) player).server.isSingleplayerOwner(player.getGameProfile());
+    }
+    
+    public static boolean hasOpVisibility(PlayerEntity player) {
+        GameType gameMode = JojoModUtil.getActualGameMode(player);
+        if (gameMode == null) {
+            return player.isCreative() || player.isSpectator();
+        }
+        return gameMode == GameType.CREATIVE || gameMode == GameType.SPECTATOR;
     }
     
     public static boolean hasTimeStopAbility(LivingEntity entity) {

@@ -78,6 +78,7 @@ import com.github.standobyte.jojo.power.impl.stand.StandUtil;
 import com.github.standobyte.jojo.util.mc.MCUtil;
 import com.github.standobyte.jojo.util.mc.OstSoundList;
 import com.github.standobyte.jojo.util.mc.reflection.ClientReflection;
+import com.github.standobyte.jojo.util.mod.JojoModUtil;
 import com.google.common.base.MoreObjects;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -137,6 +138,7 @@ import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.util.text.event.ClickEvent;
 import net.minecraft.util.text.event.HoverEvent;
+import net.minecraft.world.GameType;
 import net.minecraftforge.client.ForgeHooksClient;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
 import net.minecraftforge.client.event.EntityViewRenderEvent;
@@ -341,6 +343,13 @@ public class ClientEventHandler {
                 }
                 
                 PlayerAnimationHandler.getPlayerAnimator().onRenderFrameStart(ClientUtil.getPartialTick());
+                
+                if (mc.player.isSpectator() && mc.options.keySpectatorOutlines.isDown()) {
+                    GameType actualGameMode = JojoModUtil.getActualGameMode(mc.player);
+                    if (actualGameMode != null && actualGameMode != GameType.SPECTATOR) {
+                        mc.options.keySpectatorOutlines.setDown(false);
+                    }
+                }
                 break;
             case END:
                 PlayerAnimationHandler.getPlayerAnimator().onRenderFrameEnd(ClientUtil.getPartialTick());

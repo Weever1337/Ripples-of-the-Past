@@ -60,6 +60,7 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.RayTraceContext;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.world.GameType;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.ForgeMod;
@@ -286,6 +287,23 @@ public class JojoModUtil {
     public static boolean playerHasClientInput(PlayerEntity player) {
         return player.level.isClientSide() ? InputHandler.getInstance().hasInput
                 : player.getCapability(PlayerUtilCapProvider.CAPABILITY).map(PlayerUtilCap::hasClientInput).orElse(false);
+    }
+    
+    
+    
+    /**
+     * In case the player temporarily has a specific game mode for gameplay reasons 
+     * (e.g. spectator mode when possessing an entity)
+     */
+    @Nullable
+    public static GameType getActualGameMode(PlayerEntity player) {
+        if (player instanceof IPlayerPossess) {
+            IPlayerPossess possessing = (IPlayerPossess) player;
+            if (possessing.jojoGetPossessedEntity() != null) {
+                return possessing.jojoGetPrePossessGameMode();
+            }
+        }
+        return null;
     }
     
 
