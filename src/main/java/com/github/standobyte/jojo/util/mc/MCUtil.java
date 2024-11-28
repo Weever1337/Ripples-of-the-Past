@@ -69,6 +69,8 @@ import net.minecraft.entity.projectile.PotionEntity;
 import net.minecraft.fluid.FluidState;
 import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.inventory.IInventory;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.TieredItem;
 import net.minecraft.nbt.ByteArrayNBT;
@@ -441,6 +443,15 @@ public class MCUtil {
             itemEntity.setOwner(entity.getUUID());
             return itemEntity;
         }
+    }
+    
+    
+    
+    // i ain't using access transformers for this, this is ridiculous
+    public static boolean itemAllowedIn(Item item, ItemGroup creativeTab) {
+        if (item.getCreativeTabs().stream().anyMatch(tab -> tab == creativeTab)) return true;
+        ItemGroup itemCategory = item.getItemCategory();
+        return itemCategory != null && (creativeTab == ItemGroup.TAB_SEARCH || creativeTab == itemCategory);
     }
     
 
