@@ -18,12 +18,14 @@ import net.minecraftforge.fml.network.NetworkEvent;
 public class TrPossessEntityPacket {
     private final int entityId;
     private final int hostEntityId;
+    private final boolean asAlive;
     @Nullable
     private final GameType prevGameMode;
 
-    public TrPossessEntityPacket(int entityId, int hostEntityId, @Nullable GameType prevGameMode) {
+    public TrPossessEntityPacket(int entityId, int hostEntityId, boolean asAlive, @Nullable GameType prevGameMode) {
         this.entityId = entityId;
         this.hostEntityId = hostEntityId;
+        this.asAlive = asAlive;
         this.prevGameMode = prevGameMode;
     }
     
@@ -35,12 +37,13 @@ public class TrPossessEntityPacket {
         public void encode(TrPossessEntityPacket msg, PacketBuffer buf) {
             buf.writeInt(msg.entityId);
             buf.writeInt(msg.hostEntityId);
+            buf.writeBoolean(msg.asAlive);
             NetworkUtil.writeOptionally(buf, msg.prevGameMode, buf::writeEnum);
         }
 
         @Override
         public TrPossessEntityPacket decode(PacketBuffer buf) {
-            return new TrPossessEntityPacket(buf.readInt(), buf.readInt(), 
+            return new TrPossessEntityPacket(buf.readInt(), buf.readInt(), buf.readBoolean(), 
                     NetworkUtil.readOptional(buf, buffer -> buffer.readEnum(GameType.class)).orElse(null));
         }
 
@@ -50,7 +53,7 @@ public class TrPossessEntityPacket {
             if (entity instanceof IPlayerPossess) {
                 Entity hostEntity = ClientUtil.getEntityById(msg.hostEntityId);
                 IPlayerPossess player = (IPlayerPossess) entity;
-                player.jojoPossessEntity(hostEntity);
+                player.jojoPossessEntity(hostEntity, msg.asAlive);
                 player.jojoSetPrePossessGameMode(msg.prevGameMode);
                 ForgeIngameGui.renderSpectatorTooltip = hostEntity == null;
             }

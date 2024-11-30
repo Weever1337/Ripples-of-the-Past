@@ -89,9 +89,17 @@ public abstract class PlayerEntityMixin extends LivingEntityMixin implements Pla
     
     private final EntityOwnerResolver jojoPossessedEntity = new EntityOwnerResolver();
     private GameType jojoPossessPrevGameMode;
+    private boolean jojoPossessingAsAlive;
     
+    /* TODO specific interactions when possessing someone with asAlive flag:
+     *   render hp/hunger/etc.
+     *   tick the player
+     *     tick status effects
+     *   allow the power HUD to be opened
+     *   ...?
+     */
     @Override
-    public void jojoPossessEntity(@Nullable Entity entity) {
+    public void jojoPossessEntity(@Nullable Entity entity, boolean asAlive) {
         jojoPossessedEntity.setOwner(entity);
         if (!level.isClientSide()) {
             ServerPlayerEntity player = ((ServerPlayerEntity) (Entity) this);
@@ -107,15 +115,17 @@ public abstract class PlayerEntityMixin extends LivingEntityMixin implements Pla
                 player.setCamera(player);
             }
             PacketManager.sendToClientsTrackingAndSelf(new TrPossessEntityPacket(
-                    this.getId(), jojoPossessedEntity.getNetworkId(), jojoPossessPrevGameMode), this);
+                    this.getId(), jojoPossessedEntity.getNetworkId(), jojoPossessingAsAlive, 
+                    jojoPossessPrevGameMode), this);
         }
+        this.jojoPossessingAsAlive = asAlive;
     }
     
     private void jojoTickEntityPossession() {
         if (!level.isClientSide() && jojoPossessedEntity.hasEntityId()) {
             Entity possessed = jojoGetPossessedEntity();
             if (possessed == null || !possessed.isAlive() || !this.isAlive()) {
-                jojoPossessEntity(null);
+                jojoPossessEntity(null, jojoPossessingAsAlive);
             }
         }
     }
@@ -123,6 +133,11 @@ public abstract class PlayerEntityMixin extends LivingEntityMixin implements Pla
     @Override
     @Nullable public Entity jojoGetPossessedEntity() {
         return jojoPossessedEntity.getEntity(level);
+    }
+    
+    @Override
+    public boolean jojoIsPossessingAsAlive() {
+        return jojoPossessingAsAlive;
     }
     
     @Override
@@ -135,7 +150,17 @@ public abstract class PlayerEntityMixin extends LivingEntityMixin implements Pla
         this.jojoPossessPrevGameMode = gameMode;
         if (!level.isClientSide()) {
             PacketManager.sendToClient(new TrPossessEntityPacket(this.getId(), 
-                    jojoPossessedEntity.getNetworkId(), null), ((ServerPlayerEntity) (Entity) this));
+                    jojoPossessedEntity.getNetworkId(), jojoPossessingAsAlive, null), ((ServerPlayerEntity) (Entity) this));
+        }
+    }
+    
+    @Override
+    public void jojoOnPossessingDead() {
+        if (!level.isClientSide() && getType() == EntityType.PLAYER) {
+            Entity possessedEntity = jojoGetPossessedEntity();
+            if (possessedEntity != null) {
+                jojoPossessEntity(null, false);
+            }
         }
     }
     
@@ -144,23 +169,25 @@ public abstract class PlayerEntityMixin extends LivingEntityMixin implements Pla
     public void toNBT(CompoundNBT forgeCapNbt) {
 //        jojoPossessedEntity.saveNbt(forgeCapNbt, "Possessed");
 //        if (jojoPossessPrevGameMode != null) forgeCapNbt.putString("PossessPrevMode", jojoPossessPrevGameMode.name());
+//        forgeCapNbt.putBoolean("PossessAsAlive", jojoPossessingAsAlive);
     }
     
     @Override
     public void fromNBT(CompoundNBT forgeCapNbt) {
 //        jojoPossessedEntity.loadNbt(forgeCapNbt, "Possessed");
 //        jojoPossessPrevGameMode = GameType.byName(forgeCapNbt.getString("PossessPrevMode"), null);
+//        jojoPossessingAsAlive = forgeCapNbt.getBoolean("PossessAsAlive");
     }
 
     @Override
     public void syncToClient(ServerPlayerEntity thisAsPlayer) {
         PacketManager.sendToClient(new TrPossessEntityPacket(this.getId(), 
-                jojoPossessedEntity.getNetworkId(), jojoPossessPrevGameMode), thisAsPlayer);
+                jojoPossessedEntity.getNetworkId(), jojoPossessingAsAlive, jojoPossessPrevGameMode), thisAsPlayer);
     }
 
     @Override
     public void syncToTracking(ServerPlayerEntity tracking) {
         PacketManager.sendToClient(new TrPossessEntityPacket(this.getId(), 
-                jojoPossessedEntity.getNetworkId(), null), tracking);
+                jojoPossessedEntity.getNetworkId(), jojoPossessingAsAlive, null), tracking);
     }
 }

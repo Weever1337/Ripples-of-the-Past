@@ -993,6 +993,15 @@ public class GameplayEventHandler {
         }
     }
     
+    @SubscribeEvent(priority = EventPriority.HIGH)
+    public static void cancelChestOpenWhenPossessing(PlayerInteractEvent.RightClickBlock event) {
+        PlayerEntity player = event.getPlayer();
+        if (MCUtil.getGameMode(player) == GameType.SPECTATOR && IPlayerPossess.getPossessedEntity(player) != null) {
+            event.setCanceled(true);
+            event.setCancellationResult(ActionResultType.FAIL);
+        }
+    }
+    
     @SubscribeEvent(priority = EventPriority.LOW, receiveCanceled = true)
     public static void tripwireInteract(PlayerInteractEvent.RightClickBlock event) {
         if (event.getHand() == Hand.MAIN_HAND && event.getUseBlock() != Event.Result.DENY) {
@@ -1060,12 +1069,8 @@ public class GameplayEventHandler {
     @SubscribeEvent(priority = EventPriority.HIGH)
     public static void beforeLivingDeath(LivingDeathEvent event) {
         LivingEntity dead = event.getEntityLiving();
-        if (!dead.level.isClientSide() && dead.getType() == EntityType.PLAYER) {
-            IPlayerPossess player = (IPlayerPossess) dead;
-            Entity possessedEntity = player.jojoGetPossessedEntity();
-            if (possessedEntity != null) {
-                player.jojoPossessEntity(null);
-            }
+        if (dead instanceof IPlayerPossess) {
+            ((IPlayerPossess) dead).jojoOnPossessingDead();
         }
     }
 
@@ -1383,7 +1388,7 @@ public class GameplayEventHandler {
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public static void cancelTeleport(EntityTeleportEvent event) {
         Entity entity = event.getEntity();
-        if (entity instanceof IPlayerPossess && ((IPlayerPossess) entity).jojoGetPossessedEntity() != null) {
+        if (IPlayerPossess.getPossessedEntity(entity) != null) {
             event.setCanceled(true);
         }
     }
@@ -1391,7 +1396,7 @@ public class GameplayEventHandler {
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public static void cancelOtherDimensionTeleport(EntityTravelToDimensionEvent event) {
         Entity entity = event.getEntity();
-        if (entity instanceof IPlayerPossess && ((IPlayerPossess) entity).jojoGetPossessedEntity() != null) {
+        if (IPlayerPossess.getPossessedEntity(entity) != null) {
             event.setCanceled(true);
         }
     }
