@@ -349,16 +349,14 @@ public class TimeStopHandler {
     }
     
     public static boolean canPlayerMoveInStoppedTime(PlayerEntity player, boolean checkEffect) {
-        return checkEffect && player.hasEffect(ModStatusEffects.TIME_STOP.get()) || hasOpVisibility(player) || 
+        return checkEffect && player.hasEffect(ModStatusEffects.TIME_STOP.get()) || gamemodeIgnoresTimeStop(player) || 
                 player instanceof ServerPlayerEntity && ((ServerPlayerEntity) player).server.isSingleplayerOwner(player.getGameProfile());
     }
     
-    public static boolean hasOpVisibility(PlayerEntity player) {
-        GameType gameMode = JojoModUtil.getActualGameMode(player);
-        if (gameMode == null) {
-            return player.isCreative() || player.isSpectator();
-        }
-        return gameMode == GameType.CREATIVE || gameMode == GameType.SPECTATOR;
+    public static boolean gamemodeIgnoresTimeStop(PlayerEntity player) {
+        return JojoModUtil.getActualGameModeWhilePossessing(player)
+                .map(gameMode -> gameMode == GameType.CREATIVE || gameMode == GameType.SPECTATOR)
+                .orElseGet(() -> player.isCreative() || player.isSpectator());
     }
     
     public static boolean hasTimeStopAbility(LivingEntity entity) {

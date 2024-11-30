@@ -1408,7 +1408,7 @@ public class GameplayEventHandler {
             if (entity instanceof IPlayerPossess) {
                 IPlayerPossess player = (IPlayerPossess) entity;
                 if (player.jojoGetPossessedEntity() != null) {
-                    player.jojoSetPrePossessGameMode(event.getNewGameMode());
+                    player.jojoSetPrePossessGameMode(Optional.of(event.getNewGameMode()));
                     event.setCanceled(true);
                 }
             }

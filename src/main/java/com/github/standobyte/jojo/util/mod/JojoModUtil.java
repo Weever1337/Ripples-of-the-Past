@@ -296,14 +296,14 @@ public class JojoModUtil {
      * (e.g. spectator mode when possessing an entity)
      */
     @Nullable
-    public static GameType getActualGameMode(PlayerEntity player) {
+    public static Optional<GameType> getActualGameModeWhilePossessing(PlayerEntity player) {
         if (player instanceof IPlayerPossess) {
             IPlayerPossess possessing = (IPlayerPossess) player;
             if (possessing.jojoGetPossessedEntity() != null) {
                 return possessing.jojoGetPrePossessGameMode();
             }
         }
-        return null;
+        return Optional.empty();
     }
     
 

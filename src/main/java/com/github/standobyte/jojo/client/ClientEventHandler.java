@@ -345,10 +345,11 @@ public class ClientEventHandler {
                 PlayerAnimationHandler.getPlayerAnimator().onRenderFrameStart(ClientUtil.getPartialTick());
                 
                 if (mc.player.isSpectator() && mc.options.keySpectatorOutlines.isDown()) {
-                    GameType actualGameMode = JojoModUtil.getActualGameMode(mc.player);
-                    if (actualGameMode != null && actualGameMode != GameType.SPECTATOR) {
-                        mc.options.keySpectatorOutlines.setDown(false);
-                    }
+                    JojoModUtil.getActualGameModeWhilePossessing(mc.player).ifPresent(actualGameMode -> {
+                        if (actualGameMode != GameType.SPECTATOR) {
+                            mc.options.keySpectatorOutlines.setDown(false);
+                        }
+                    });
                 }
                 break;
             case END:

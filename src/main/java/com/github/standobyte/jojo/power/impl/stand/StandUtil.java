@@ -27,6 +27,7 @@ import com.github.standobyte.jojo.power.IPower.PowerClassification;
 import com.github.standobyte.jojo.power.impl.stand.type.StandType;
 import com.github.standobyte.jojo.power.impl.stand.type.StandType.StandSurvivalGameplayPool;
 import com.github.standobyte.jojo.util.general.MathUtil;
+import com.github.standobyte.jojo.util.mod.JojoModUtil;
 import com.mojang.datafixers.util.Either;
 
 import net.minecraft.client.Minecraft;
@@ -40,6 +41,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.world.GameType;
 import net.minecraft.world.server.ServerWorld;
 
 public class StandUtil {
@@ -143,7 +145,8 @@ public class StandUtil {
     }
     
     public static boolean playerCanSeeStands(PlayerEntity player) {
-        return player.isSpectator() || isEntityStandUser(player) || player.hasEffect(ModStatusEffects.SPIRIT_VISION.get());
+        return JojoModUtil.getActualGameModeWhilePossessing(player).map(gameMode -> gameMode == GameType.SPECTATOR).orElse(player.isSpectator())
+                || isEntityStandUser(player) || player.hasEffect(ModStatusEffects.SPIRIT_VISION.get());
     }
     
     public static boolean playerCanHearStands(PlayerEntity player) {

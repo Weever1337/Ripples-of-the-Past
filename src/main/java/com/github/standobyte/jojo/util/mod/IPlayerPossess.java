@@ -1,5 +1,7 @@
 package com.github.standobyte.jojo.util.mod;
 
+import java.util.Optional;
+
 import javax.annotation.Nullable;
 
 import net.minecraft.entity.Entity;
@@ -9,8 +11,8 @@ public interface IPlayerPossess {
     void jojoPossessEntity(@Nullable Entity entity, boolean asAlive);
     @Nullable Entity jojoGetPossessedEntity();
     boolean jojoIsPossessingAsAlive();
-    @Nullable GameType jojoGetPrePossessGameMode();
-    void jojoSetPrePossessGameMode(GameType gameType);
+    Optional<GameType> jojoGetPrePossessGameMode();
+    void jojoSetPrePossessGameMode(Optional<GameType> gameType);
     void jojoOnPossessingDead();
     
     public static Entity getPossessedEntity(Entity possessing) {

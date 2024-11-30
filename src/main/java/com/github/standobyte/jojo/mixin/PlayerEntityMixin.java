@@ -1,5 +1,8 @@
 package com.github.standobyte.jojo.mixin;
 
+import java.util.Optional;
+
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import org.spongepowered.asm.mixin.Mixin;
@@ -88,7 +91,7 @@ public abstract class PlayerEntityMixin extends LivingEntityMixin implements Pla
     
     
     private final EntityOwnerResolver jojoPossessedEntity = new EntityOwnerResolver();
-    private GameType jojoPossessPrevGameMode;
+    private Optional<GameType> jojoPossessPrevGameMode = Optional.empty();
     private boolean jojoPossessingAsAlive;
     
     /* TODO specific interactions when possessing someone with asAlive flag:
@@ -104,14 +107,13 @@ public abstract class PlayerEntityMixin extends LivingEntityMixin implements Pla
         if (!level.isClientSide()) {
             ServerPlayerEntity player = ((ServerPlayerEntity) (Entity) this);
             if (entity != null) {
-                jojoPossessPrevGameMode = player.gameMode.getGameModeForPlayer();
+                jojoPossessPrevGameMode = Optional.of(player.gameMode.getGameModeForPlayer());
                 player.setGameMode(GameType.SPECTATOR);
                 player.setCamera(entity);
             }
             else {
-                if (jojoPossessPrevGameMode != null) {
-                    player.setGameMode(jojoPossessPrevGameMode);
-                }
+                jojoPossessPrevGameMode.ifPresent(player::setGameMode);
+                jojoPossessPrevGameMode = Optional.empty();
                 player.setCamera(player);
             }
             PacketManager.sendToClientsTrackingAndSelf(new TrPossessEntityPacket(
@@ -141,16 +143,16 @@ public abstract class PlayerEntityMixin extends LivingEntityMixin implements Pla
     }
     
     @Override
-    @Nullable public GameType jojoGetPrePossessGameMode() {
-        return jojoGetPossessedEntity() != null ? jojoPossessPrevGameMode : null;
+    public Optional<GameType> jojoGetPrePossessGameMode() {
+        return jojoPossessPrevGameMode;
     }
     
     @Override
-    public void jojoSetPrePossessGameMode(GameType gameMode) {
+    public void jojoSetPrePossessGameMode(@Nonnull Optional<GameType> gameMode) {
         this.jojoPossessPrevGameMode = gameMode;
         if (!level.isClientSide()) {
             PacketManager.sendToClient(new TrPossessEntityPacket(this.getId(), 
-                    jojoPossessedEntity.getNetworkId(), jojoPossessingAsAlive, null), ((ServerPlayerEntity) (Entity) this));
+                    jojoPossessedEntity.getNetworkId(), jojoPossessingAsAlive, jojoPossessPrevGameMode), ((ServerPlayerEntity) (Entity) this));
         }
     }
     
@@ -168,14 +170,14 @@ public abstract class PlayerEntityMixin extends LivingEntityMixin implements Pla
     @Override
     public void toNBT(CompoundNBT forgeCapNbt) {
 //        jojoPossessedEntity.saveNbt(forgeCapNbt, "Possessed");
-//        if (jojoPossessPrevGameMode != null) forgeCapNbt.putString("PossessPrevMode", jojoPossessPrevGameMode.name());
+//        jojoPossessPrevGameMode.ifPresent(gameMode -> forgeCapNbt.putString("PossessPrevMode", gameMode.name()));
 //        forgeCapNbt.putBoolean("PossessAsAlive", jojoPossessingAsAlive);
     }
     
     @Override
     public void fromNBT(CompoundNBT forgeCapNbt) {
 //        jojoPossessedEntity.loadNbt(forgeCapNbt, "Possessed");
-//        jojoPossessPrevGameMode = GameType.byName(forgeCapNbt.getString("PossessPrevMode"), null);
+//        jojoPossessPrevGameMode = Optional.ofNullable(GameType.byName(forgeCapNbt.getString("PossessPrevMode"), null));
 //        jojoPossessingAsAlive = forgeCapNbt.getBoolean("PossessAsAlive");
     }
 
@@ -188,6 +190,6 @@ public abstract class PlayerEntityMixin extends LivingEntityMixin implements Pla
     @Override
     public void syncToTracking(ServerPlayerEntity tracking) {
         PacketManager.sendToClient(new TrPossessEntityPacket(this.getId(), 
-                jojoPossessedEntity.getNetworkId(), jojoPossessingAsAlive, null), tracking);
+                jojoPossessedEntity.getNetworkId(), jojoPossessingAsAlive, Optional.empty()), tracking);
     }
 }
