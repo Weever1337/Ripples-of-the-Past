@@ -306,6 +306,10 @@ public class JojoModUtil {
         return Optional.empty();
     }
     
+    public static boolean seesInvisibleAsSpectator(PlayerEntity player) {
+        return getActualGameModeWhilePossessing(player).map(gameMode -> gameMode == GameType.SPECTATOR).orElse(player.isSpectator());
+    }
+    
 
 
     @Deprecated

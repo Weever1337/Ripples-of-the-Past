@@ -145,7 +145,7 @@ public class StandUtil {
     }
     
     public static boolean playerCanSeeStands(PlayerEntity player) {
-        return JojoModUtil.getActualGameModeWhilePossessing(player).map(gameMode -> gameMode == GameType.SPECTATOR).orElse(player.isSpectator())
+        return JojoModUtil.seesInvisibleAsSpectator(player)
                 || isEntityStandUser(player) || player.hasEffect(ModStatusEffects.SPIRIT_VISION.get());
     }
     
