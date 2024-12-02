@@ -459,6 +459,10 @@
   "jojo.key.scroll_ability": "Выбрать след. способность",
   "jojo.key.meditation": "Быстрая клавиша - медитация Хамона",
   
+  "key.mouse.lmb_and_rmb": "ЛКМ + ПКМ",
+  "key.mouse.left.shortened": "ЛКМ",
+  "key.mouse.right.shortened": "ПКМ",
+  "key.mouse.middle.shortened": "СКМ",
   "key.mouse.shortened": "Кн.%1$s",
   "key.keyboard.left.alt.shortened": "Л.Alt",
   "key.keyboard.left.control.shortened": "Л.Ctrl",

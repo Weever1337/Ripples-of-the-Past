@@ -443,6 +443,7 @@
   "key.categories.jojo": "JoJo",
   "jojo.key.toggle_stand": "Summon Stand",
   "jojo.key.stand_remote_control": "Stand Remote Control",
+  "jojo.key.jojo_test": "§oTest keybind (NYI)",
   "jojo.key.hamon_skills_window": "Hamon Skills",
   "jojo.key.jojo_menu": "JoJo Menu",
   
@@ -461,6 +462,7 @@
   "jojo.key.scroll_ability": "Tap To Select Next RMB Action",
   "jojo.key.meditation": "Hamon meditation shortcut",
   
+  "key.mouse.lmb_and_rmb": "LMB + RMB",
   "key.mouse.left.shortened": "LMB",
   "key.mouse.right.shortened": "RMB",
   "key.mouse.middle.shortened": "MMB",
