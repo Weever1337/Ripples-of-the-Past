@@ -14,6 +14,7 @@ import com.github.standobyte.jojo.action.non_stand.PillarmanEnhancedSenses;
 import com.github.standobyte.jojo.action.non_stand.PillarmanErraticBlazeKing;
 import com.github.standobyte.jojo.action.non_stand.PillarmanGiantCarthwheelPrison;
 import com.github.standobyte.jojo.action.non_stand.PillarmanHeavyPunch;
+import com.github.standobyte.jojo.action.non_stand.PillarmanHideInEntity;
 import com.github.standobyte.jojo.action.non_stand.PillarmanHornAttack;
 import com.github.standobyte.jojo.action.non_stand.PillarmanLightFlash;
 import com.github.standobyte.jojo.action.non_stand.PillarmanRegeneration;
@@ -43,8 +44,8 @@ public class ModPillarmanActions {
     public static final RegistryObject<PillarmanAction> PILLARMAN_RIBS_BLADES = ACTIONS.register("pillarman_ribs_blades", 
             () -> new PillarmanRibsBlades(new NonStandAction.Builder().energyCost(60F).cooldown(80, 0)));
 
-    /*public static final RegistryObject<PillarmanAction> PILLARMAN_HIDE_IN_ENTITY = ACTIONS.register("pillarman_hide_in_entity", 
-        () -> new PillarmanHideInEntity(new NonStandAction.Builder().holdToFire(20, false).heldWalkSpeed(0.5F)));*/
+    public static final RegistryObject<PillarmanAction> PILLARMAN_HIDE_IN_ENTITY = ACTIONS.register("pillarman_hide_in_entity", 
+        () -> new PillarmanHideInEntity(new NonStandAction.Builder().holdToFire(20, false).heldWalkSpeed(0.5F)));
 
     public static final RegistryObject<PillarmanAction> PILLARMAN_STONE_FORM = ACTIONS.register("pillarman_stone_form", 
             () -> new PillarmanStoneForm(new NonStandAction.Builder().holdToFire(40, false).heldWalkSpeed(0.5F).ignoresPerformerStun()));

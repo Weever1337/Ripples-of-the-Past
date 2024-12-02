@@ -32,7 +32,6 @@ public class PillarmanData extends TypeSpecificData {
 	public static final int MAX_STAGE_LEVEL = 3;
     private int stage = 1;
     private boolean stoneForm = false;
-    private boolean invaded = false;
     private float lastEnergy = -999;
     private Mode mode = Mode.NONE;
     private List<MutableInt> eatenTntFuse = new ArrayList<>();
@@ -197,20 +196,6 @@ public class PillarmanData extends TypeSpecificData {
     
     public boolean isStoneFormEnabled() {
         return stoneForm;
-    }
-    
-    public void setInvaded(boolean isEnabled) {
-        if (this.invaded != isEnabled) {
-            this.invaded = isEnabled;
-            LivingEntity user = power.getUser();
-            if (!user.level.isClientSide()) {
-                PacketManager.sendToClientsTrackingAndSelf(new TrPillarmanDataPacket(user.getId(), this), user);
-            }
-        }
-    }
-    
-    public boolean isInvaded() {
-        return invaded;
     }
     
     public Mode getMode() {

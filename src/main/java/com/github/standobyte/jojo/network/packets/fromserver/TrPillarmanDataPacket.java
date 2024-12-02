@@ -19,18 +19,16 @@ public class TrPillarmanDataPacket {
     private final int entityId;
     private final boolean stoneFormEnabled;
     private final int stage;
-    private final boolean invaded;
     public PillarmanData.Mode mode;
     
     public TrPillarmanDataPacket(int entityId, PillarmanData pillarmanData) {
-        this(entityId, pillarmanData.isStoneFormEnabled(), pillarmanData.getEvolutionStage(), pillarmanData.isInvaded(), pillarmanData.getMode());
+        this(entityId, pillarmanData.isStoneFormEnabled(), pillarmanData.getEvolutionStage(), pillarmanData.getMode());
     }
     
-    public TrPillarmanDataPacket(int entityId, boolean stoneFormEnabled, int stage, boolean invaded, PillarmanData.Mode mode) {
+    public TrPillarmanDataPacket(int entityId, boolean stoneFormEnabled, int stage, PillarmanData.Mode mode) {
         this.entityId = entityId;
         this.stoneFormEnabled = stoneFormEnabled;
         this.stage = stage;
-        this.invaded = invaded;
         this.mode = mode;
     }
     
@@ -43,13 +41,12 @@ public class TrPillarmanDataPacket {
             buf.writeInt(msg.entityId);
             buf.writeBoolean(msg.stoneFormEnabled);
             buf.writeVarInt(msg.stage);
-            buf.writeBoolean(msg.invaded);
             buf.writeEnum(msg.mode);
         }
 
         @Override
         public TrPillarmanDataPacket decode(PacketBuffer buf) {
-            return new TrPillarmanDataPacket(buf.readInt(), buf.readBoolean(), buf.readVarInt(), buf.readBoolean(), buf.readEnum(PillarmanData.Mode.class));
+            return new TrPillarmanDataPacket(buf.readInt(), buf.readBoolean(), buf.readVarInt(), buf.readEnum(PillarmanData.Mode.class));
         }
 
         @Override
@@ -62,7 +59,6 @@ public class TrPillarmanDataPacket {
                     boolean prevStoneForm = pillarman.isStoneFormEnabled();
                     pillarman.setStoneFormEnabled(msg.stoneFormEnabled);
                     pillarman.setEvolutionStage(msg.stage);
-                    pillarman.setInvaded(msg.invaded);
                     pillarman.setMode(msg.mode);
                     if (entity instanceof PlayerEntity) {
                         PlayerEntity userPlayer = (PlayerEntity) entity;
