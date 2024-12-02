@@ -16,6 +16,7 @@ import net.minecraft.entity.ai.goal.GoalSelector;
 import net.minecraft.entity.ai.goal.NearestAttackableTargetGoal;
 import net.minecraft.entity.ai.goal.PrioritizedGoal;
 import net.minecraft.entity.ai.goal.TargetGoal;
+import net.minecraft.entity.item.minecart.TNTMinecartEntity;
 import net.minecraft.entity.merchant.IMerchant;
 import net.minecraft.entity.monster.CreeperEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -168,6 +169,17 @@ public class CommonReflection {
     private static final Field EXPLOSION_RADIUS = ObfuscationReflectionHelper.findField(Explosion.class, "field_77280_f");
     public static float getRadius(Explosion explosion) {
         return ReflectionUtil.getFloatFieldValue(EXPLOSION_RADIUS, explosion);
+    }
+    
+    
+    
+    private static final Field TNT_MINECART_ENTITY_FUSE = ObfuscationReflectionHelper.findField(TNTMinecartEntity.class, "field_94106_a");
+    public static int getFuse(TNTMinecartEntity entity) {
+        return ReflectionUtil.getIntFieldValue(TNT_MINECART_ENTITY_FUSE, entity);
+    }
+    
+    public static void setFuse(TNTMinecartEntity entity, int fuse) {
+        ReflectionUtil.setIntFieldValue(TNT_MINECART_ENTITY_FUSE, entity, fuse);
     }
     
     

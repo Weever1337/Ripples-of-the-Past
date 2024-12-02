@@ -65,6 +65,7 @@ import com.github.standobyte.jojo.power.impl.nonstand.INonStandPower;
 import com.github.standobyte.jojo.power.impl.nonstand.type.hamon.HamonData;
 import com.github.standobyte.jojo.power.impl.nonstand.type.hamon.HamonUtil;
 import com.github.standobyte.jojo.power.impl.nonstand.type.hamon.skill.BaseHamonSkill.HamonStat;
+import com.github.standobyte.jojo.power.impl.nonstand.type.pillarman.PillarmanData;
 import com.github.standobyte.jojo.power.impl.nonstand.type.vampirism.VampirismData;
 import com.github.standobyte.jojo.power.impl.nonstand.type.vampirism.VampirismUtil;
 import com.github.standobyte.jojo.power.impl.stand.IStandPower;
@@ -92,6 +93,7 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.SoundType;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.ai.attributes.Attributes;
@@ -99,6 +101,8 @@ import net.minecraft.entity.ai.attributes.ModifiableAttributeInstance;
 import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.item.PaintingEntity;
 import net.minecraft.entity.item.PaintingType;
+import net.minecraft.entity.item.TNTEntity;
+import net.minecraft.entity.item.minecart.TNTMinecartEntity;
 import net.minecraft.entity.monster.StrayEntity;
 import net.minecraft.entity.player.ChatVisibility;
 import net.minecraft.entity.player.PlayerEntity;
@@ -108,6 +112,7 @@ import net.minecraft.entity.projectile.ProjectileEntity;
 import net.minecraft.item.Food;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.play.server.SChatPacket;
 import net.minecraft.network.play.server.SPlayEntityEffectPacket;
 import net.minecraft.network.play.server.SPlaySoundEffectPacket;
@@ -939,37 +944,51 @@ public class GameplayEventHandler {
         }
     }
     
-//    @SubscribeEvent(priority = EventPriority.LOWEST)
-//    public static void onPlayerAttack(AttackEntityEvent event) {
-//        overdrive was there
-//    }
-    
-//    @SubscribeEvent(priority = EventPriority.LOW, receiveCanceled = true)
-//    public static void onEntityInteract(PlayerInteractEvent.EntityInteract event) {
-//        if (event.getCancellationResult() == ActionResultType.PASS && event.getHand() == Hand.MAIN_HAND && !event.getPlayer().isShiftKeyDown()) {
-//            Entity target = event.getTarget();
-//            if (target instanceof PlayerEntity) {
-//                PlayerEntity targetPlayer = (PlayerEntity) target;
-//                INonStandPower targetPower = INonStandPower.getNonStandPowerOptional(targetPlayer).orElse(null);
-//                INonStandPower playerPower = INonStandPower.getNonStandPowerOptional(event.getPlayer()).orElse(null);
-//                if (targetPower != null && playerPower != null && 
-//                        targetPower.getType() == ModPowers.HAMON.get()
-//                        && (!playerPower.hasPower() || playerPower.getType().isReplaceableWith(ModPowers.HAMON.get()))) {
-//                    HamonUtil.interactWithHamonTeacher(target.level, event.getPlayer(), targetPlayer, 
-//                            targetPower.getTypeSpecificData(ModPowers.HAMON.get()).get());
-//                    event.setCanceled(true);
-//                    event.setCancellationResult(ActionResultType.sidedSuccess(target.level.isClientSide));
-//                }
-//                else {
-//                    playerPower.getTypeSpecificData(ModPowers.HAMON.get()).ifPresent(hamon -> {
-//                        hamon.interactWithNewLearner(targetPlayer);
-//                        event.setCanceled(true);
-//                        event.setCancellationResult(ActionResultType.sidedSuccess(target.level.isClientSide));
-//                    });
-//                }
-//            }
-//        }
-//    }
+    @SubscribeEvent
+    public static void onEntityInteract(PlayerInteractEvent.EntityInteract event) {
+        PlayerEntity player = event.getPlayer();
+        if (!player.level.isClientSide() && event.getHand() == Hand.MAIN_HAND) {
+            ServerWorld world = (ServerWorld) player.level;
+            Entity target = event.getTarget();
+            
+            INonStandPower.getNonStandPowerOptional(player).resolve()
+            .flatMap(power -> power.getTypeSpecificData(ModPowers.PILLAR_MAN.get()))
+            .filter(pillarMan -> pillarMan.getMode() == PillarmanData.Mode.HEAT).ifPresent(acdc -> {
+                int fuse = -1;
+                if (target instanceof TNTEntity) {
+                    TNTEntity tnt = (TNTEntity) target;
+                    fuse = tnt.getLife();
+                    tnt.remove();
+                }
+                else if (target instanceof TNTMinecartEntity) {
+                    TNTMinecartEntity tntMinecart = (TNTMinecartEntity) target;
+                    if (tntMinecart.isPrimed()) {
+                        // mfw the getter is client-only
+                        fuse = CommonReflection.getFuse(tntMinecart);
+                        CompoundNBT nbt = new CompoundNBT();
+                        tntMinecart.saveWithoutId(nbt);
+                        nbt.putString("id", EntityType.MINECART.getRegistryName().toString());
+                        Entity regularMinecart = EntityType.loadEntityRecursive(nbt, world, e -> e);
+                        tntMinecart.remove();
+                        world.removeEntity(tntMinecart, false);
+                        if (regularMinecart != null) {
+                            world.tryAddFreshEntityWithPassengers(regularMinecart);
+                        }
+                    }
+                }
+                
+                if (fuse > -1) {
+                    Random random = world.random;
+                    world.playSound(null, 
+                            player.getX(), player.getY(), player.getZ(), 
+                            SoundEvents.GENERIC_EAT, SoundCategory.NEUTRAL, 
+                            1.0F, 1.0F + (random.nextFloat() - random.nextFloat()) * 0.4F);
+                    acdc.addEatenTntFuse(fuse);
+                    event.setCancellationResult(ActionResultType.SUCCESS);
+                }
+            });
+        }
+    }
     
     @SubscribeEvent(priority = EventPriority.LOW, receiveCanceled = true)
     public static void tripwireInteract(PlayerInteractEvent.RightClickBlock event) {
