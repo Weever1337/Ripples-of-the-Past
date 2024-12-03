@@ -127,26 +127,31 @@ public class ClientReflection {
     }
     
     
-    private static final Field MODEL_RENDERER_CUBES = ObfuscationReflectionHelper.findField(ModelRenderer.class, "field_78804_l");
+    @Deprecated private static final Field MODEL_RENDERER_CUBES = ObfuscationReflectionHelper.findField(ModelRenderer.class, "field_78804_l");
+    @Deprecated
     public static void setCubes(ModelRenderer modelRenderer, ObjectList<ModelRenderer.ModelBox> cubes) {
         ReflectionUtil.setFieldValue(MODEL_RENDERER_CUBES, modelRenderer, cubes);
     }
     
+    @Deprecated
     public static void addCube(ModelRenderer modelRenderer, ModelRenderer.ModelBox cube) {
         List<ModelRenderer.ModelBox> cubes = ReflectionUtil.getFieldValue(MODEL_RENDERER_CUBES, modelRenderer);
         cubes.add(cube);
     }
     
+    @Deprecated
     public static ObjectList<ModelRenderer.ModelBox> getCubes(ModelRenderer modelRenderer) {
         return ReflectionUtil.getFieldValue(MODEL_RENDERER_CUBES, modelRenderer);
     }
     
     
-    private static final Field MODEL_RENDERER_CHILDREN = ObfuscationReflectionHelper.findField(ModelRenderer.class, "field_78805_m");
+    @Deprecated private static final Field MODEL_RENDERER_CHILDREN = ObfuscationReflectionHelper.findField(ModelRenderer.class, "field_78805_m");
+    @Deprecated
     public static ObjectList<ModelRenderer> getChildren(ModelRenderer modelRenderer) {
         return ReflectionUtil.getFieldValue(MODEL_RENDERER_CHILDREN, modelRenderer);
     }
     
+    @Deprecated
     public static void setChildren(ModelRenderer modelRenderer, ObjectList<ModelRenderer> children) {
         ReflectionUtil.setFieldValue(MODEL_RENDERER_CHILDREN, modelRenderer, children);
     }
@@ -178,11 +183,13 @@ public class ClientReflection {
     }
     
     
-    private static final Field MODEL_BOX_POLYGONS = ObfuscationReflectionHelper.findField(ModelRenderer.ModelBox.class, "field_78254_i");
+    @Deprecated private static final Field MODEL_BOX_POLYGONS = ObfuscationReflectionHelper.findField(ModelRenderer.ModelBox.class, "field_78254_i");
+    @Deprecated
     public static ModelRenderer.TexturedQuad[] getPolygons(ModelRenderer.ModelBox modelBox) {
         return ReflectionUtil.getFieldValue(MODEL_BOX_POLYGONS, modelBox);
     }
     
+    @Deprecated
     public static void setPolygons(ModelRenderer.ModelBox modelBox, ModelRenderer.TexturedQuad[] polygons) {
         ReflectionUtil.setFieldValue(MODEL_BOX_POLYGONS, modelBox, polygons);
     }
