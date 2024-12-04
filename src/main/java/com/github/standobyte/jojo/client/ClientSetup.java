@@ -13,7 +13,6 @@ import com.github.standobyte.jojo.client.particle.AirStreamParticle;
 import com.github.standobyte.jojo.client.particle.BloodParticle;
 import com.github.standobyte.jojo.client.particle.CDRestorationParticle;
 import com.github.standobyte.jojo.client.particle.DivineSandstormParticle;
-import com.github.standobyte.jojo.client.particle.GunshotParticle;
 import com.github.standobyte.jojo.client.particle.HamonAuraParticle;
 import com.github.standobyte.jojo.client.particle.HamonSparkParticle;
 import com.github.standobyte.jojo.client.particle.MeteoriteVirusParticle;
@@ -404,6 +403,8 @@ public class ClientSetup {
                 model -> new StandDiscISTERModel(model));
         registerCustomBakedModel(ModItems.POLAROID.get().getRegistryName(), event.getModelRegistry(), 
                 model -> new ItemISTERModelWrapper(model).setCaptureEntity());
+        registerCustomBakedModel(ModItems.TOMMY_GUN.get().getRegistryName(), event.getModelRegistry(), 
+                model -> new ItemISTERModelWrapper(model));
         registerCustomBakedModel(ModItems.CLACKERS.get().getRegistryName(), event.getModelRegistry(), 
                 model -> new ItemISTERModelWrapper(model).setCaptureEntity());
         CustomIconItem.onModelBake(event.getModelRegistry());
@@ -445,7 +446,6 @@ public class ClientSetup {
     public static void onMcConstructor(ParticleFactoryRegisterEvent event) {
         Minecraft mc = Minecraft.getInstance();
         mc.particleEngine.register(ModParticles.BLOOD.get(),                BloodParticle.Factory::new);
-        mc.particleEngine.register(ModParticles.GUNSHOT.get(),              GunshotParticle.Factory::new);
         mc.particleEngine.register(ModParticles.HAMON_SPARK.get(),          HamonSparkParticle.HamonParticleFactory::new);
         mc.particleEngine.register(ModParticles.HAMON_SPARK_BLUE.get(),     HamonSparkParticle.HamonParticleFactory::new);
         mc.particleEngine.register(ModParticles.HAMON_SPARK_YELLOW.get(),   HamonSparkParticle.HamonParticleFactory::new);

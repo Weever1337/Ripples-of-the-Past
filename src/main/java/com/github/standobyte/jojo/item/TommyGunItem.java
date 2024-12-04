@@ -23,6 +23,7 @@ import com.google.common.collect.ImmutableMultimap.Builder;
 import com.google.common.collect.Multimap;
 
 import net.minecraft.client.util.ITooltipFlag;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.attributes.Attribute;
@@ -35,6 +36,7 @@ import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.item.UseAction;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.NonNullList;
@@ -65,7 +67,7 @@ public class TommyGunItem extends Item {
             return;
         }
         if (!world.isClientSide()) {
-            if (remainingTicks == getUseDuration(stack) - 12 && ammo == MAX_AMMO - 7 && josephVoiceLine(entity)) {
+            if (remainingTicks == getUseDuration(stack) - 14 && ammo == MAX_AMMO - 7 && josephVoiceLine(entity)) {
                 JojoModUtil.sayVoiceLine(entity, ModSounds.JOSEPH_SCREAM_SHOOTING.get());
             }
             if (ammo > 0) {
@@ -98,10 +100,9 @@ public class TommyGunItem extends Item {
                     entity.yRot += (random.nextFloat() - 0.5F) * 0.3F * recoil;
                     entity.xRot += -random.nextFloat() * 0.75F * recoil;
                 }
-//                if (world.isClientSide()) {
-//                    HandSide handSide = entity.getItemInHand(Hand.OFF_HAND) == stack ? HandSide.LEFT : HandSide.RIGHT;
-//                    CustomParticlesHelper.addGunshotParticle(entity, handSide, new Vector3d(0, -0.425, 0.275));
-//                }
+                if (!world.isClientSide()) {
+                    stack.getOrCreateTag().putByte("GunshotTick", (byte) 3);
+                }
             }
         }
         else {
@@ -219,7 +220,25 @@ public class TommyGunItem extends Item {
             JojoModUtil.sayVoiceLine(entity, ModSounds.JOSEPH_WAR_DECLARATION.get());
         }
     }
-
+    
+    @Override
+    public void inventoryTick(ItemStack stack, World world, Entity entity, int itemSlot, boolean isSelected) {
+        if (!world.isClientSide()) {
+            CompoundNBT tag = stack.getTag();
+            byte textureTicks = tag.getByte("GunshotTick");
+            if (textureTicks > 0) {
+                tag.putByte("GunshotTick", --textureTicks);
+            }
+        }
+    }
+    
+    public static int getGunshotTick(ItemStack stack) {
+        if (stack.hasTag()) {
+            return stack.getTag().getByte("GunshotTick");
+        }
+        return 0;
+    }
+    
     @Override
     public ActionResult<ItemStack> use(World world, PlayerEntity player, Hand hand) {
         ItemStack stack = player.getItemInHand(hand);
@@ -234,12 +253,12 @@ public class TommyGunItem extends Item {
 
     @Override
     public UseAction getUseAnimation(ItemStack stack) {
-        return UseAction.BOW;
+        return UseAction.NONE;
     }
 
     @Override
     public int getUseDuration(ItemStack stack) {
-        return 85;
+        return 100;
     }
 
     @Override
@@ -268,6 +287,11 @@ public class TommyGunItem extends Item {
                         .map(hamon -> hamon.characterIs(ModHamonSkills.CHARACTER_JOSEPH.get()))
                         .orElse(false))
                 .orElse(false);
+    }
+    
+    @Override
+    public boolean shouldCauseReequipAnimation(ItemStack oldStack, ItemStack newStack, boolean slotChanged) {
+        return oldStack.getItem() != newStack.getItem();
     }
 
     @SuppressWarnings("deprecation")
