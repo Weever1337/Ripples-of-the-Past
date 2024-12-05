@@ -46,6 +46,8 @@ public class ParseGeckoAnims {
             for (Map.Entry<String, JsonElement> bone : boneAnims.entrySet()) {
                 JsonObject tfJson = bone.getValue().getAsJsonObject();
                 parseKeyframes(builder, tfJson, "rotation", Transformation.Targets.ROTATE, bone.getKey());
+                parseKeyframes(builder, tfJson, "position", Transformation.Targets.TRANSLATE, bone.getKey());
+                parseKeyframes(builder, tfJson, "scale", Transformation.Targets.SCALE, bone.getKey());
             }
         }
         
@@ -73,8 +75,11 @@ public class ParseGeckoAnims {
                 JsonArray rotVecJson = rotVecJsonElem.getAsJsonArray();
                 
                 KeyframeWithQuery rotVec = KeyframeWithQuery.parseJsonVec(rotVecJson);
-                if ("rotation".equals(targetName)) {
+                if (target == Transformation.Targets.ROTATE) {
                     rotVec.mul(MathUtil.DEG_TO_RAD);
+                }
+                else if (target == Transformation.Targets.TRANSLATE) {
+                    rotVec.mul(1, -1, 1);
                 }
                 
                 String easingName = Optional.ofNullable(rotation.get("easing"))

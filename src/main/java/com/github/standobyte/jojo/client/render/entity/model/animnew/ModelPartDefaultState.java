@@ -4,6 +4,7 @@ import net.minecraft.client.renderer.model.ModelRenderer;
 
 public class ModelPartDefaultState {
     public final ModelRenderer modelPart;
+    public final IModelRendererScale modelPartScale;
     public final float x;
     public final float y;
     public final float z;
@@ -27,6 +28,7 @@ public class ModelPartDefaultState {
         this.xRot = xRot;
         this.yRot = yRot;
         this.zRot = zRot;
+        this.modelPartScale = modelPart instanceof IModelRendererScale ? (IModelRendererScale) modelPart : null;
     }
     
     public void reset() {
@@ -36,6 +38,9 @@ public class ModelPartDefaultState {
         modelPart.xRot = this.xRot;
         modelPart.yRot = this.yRot;
         modelPart.zRot = this.zRot;
+        if (modelPartScale != null) {
+            modelPartScale.resetScale();
+        }
     }
     
 }

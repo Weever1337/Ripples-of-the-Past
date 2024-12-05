@@ -62,4 +62,13 @@ public class KeyframeWithQuery {
         }
     }
     
+    public void mul(float x, float y, float z) {
+        this.keyframeTarget.mul(x, y, z);
+        if (query != null) {
+            query[0].multiplyNumerics(x);
+            query[1].multiplyNumerics(y);
+            query[2].multiplyNumerics(z);
+        }
+    }
+    
 }

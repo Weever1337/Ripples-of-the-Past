@@ -2,6 +2,7 @@ package com.github.standobyte.jojo.client.render.entity.model.animnew.mojang;
 
 import java.util.Arrays;
 
+import com.github.standobyte.jojo.client.render.entity.model.animnew.IModelRendererScale;
 import com.github.standobyte.jojo.client.render.entity.model.animnew.floatquery.FloatQuery;
 import com.github.standobyte.jojo.client.render.entity.model.animnew.floatquery.KeyframeWithQuery;
 
@@ -37,9 +38,6 @@ public class Transformation {
     public static class Targets {
         public static final Target TRANSLATE = Transformation::translateModelPart;
         public static final Target ROTATE = Transformation::rotateModelPart;
-        /**
-         * Placeholder - 1.16's ModelRenderers do not have scale fields
-         */
         public static final Target SCALE = Transformation::scaleModelPart;
         
     }
@@ -61,9 +59,7 @@ public class Transformation {
         modelRenderer.zRot += rotVec.z();
     }
     
-    /**
-     * Placeholder - 1.16's ModelRenderers do not have scale fields
-     */
     public static void scaleModelPart(ModelRenderer modelRenderer, Vector3f scaleVec) {
+        ((IModelRendererScale) modelRenderer).setScale(scaleVec.x(), scaleVec.y(), scaleVec.z());
     }
 }

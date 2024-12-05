@@ -23,6 +23,7 @@
     "client.EntityClMixin",
     "client.LivingEntityClMixin",
     "client.BipedModelMixin",
+    "client.ModelRendererScaleMixin",
     "client.PlayerModelAnimationMixin",
     "client.ItemRendererMixin",
     "client.SMapDataPacketMixin",
