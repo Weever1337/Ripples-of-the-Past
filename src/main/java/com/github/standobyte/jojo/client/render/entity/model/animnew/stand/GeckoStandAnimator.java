@@ -72,8 +72,8 @@ public class GeckoStandAnimator implements IStandAnimator {
         if (standPose != null && standPose != StandPose.IDLE) {
             model.idleLoopTickStamp = ticks;
             
-            if (namedAnimations.containsKey(standPose.getName())) {
-                List<StandActionAnimation> anims = namedAnimations.get(standPose.getName());
+            List<StandActionAnimation> anims = getAnims(entity, standPose);
+            if (anims != null) {
                 StandActionAnimation anim = standPose.getAnim(anims, entity);
                 if (anim != null) {
                     return anim.poseStand(entity, model, ticks, yRotOffsetRad, xRotRad, 
@@ -93,6 +93,17 @@ public class GeckoStandAnimator implements IStandAnimator {
     
     public IStandAnimator getIdleAnim(@Nullable StandEntity entity) {
         return idleAnim;
+    }
+    
+    protected List<StandActionAnimation> getAnims(StandEntity entity, StandPose standPose) {
+        String key = standPose.getName();
+        if (entity.isArmsOnlyMode()) {
+            String key2 = "armsOnly_" + key;
+            if (namedAnimations.containsKey(key2)) {
+                return namedAnimations.get(key2);
+            }
+        }
+        return namedAnimations.get(key);
     }
     
     

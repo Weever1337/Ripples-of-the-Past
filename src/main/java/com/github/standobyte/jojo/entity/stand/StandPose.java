@@ -2,6 +2,7 @@ package com.github.standobyte.jojo.entity.stand;
 
 import java.util.List;
 
+import com.github.standobyte.jojo.action.stand.StandEntityLightAttack;
 import com.github.standobyte.jojo.client.render.entity.model.animnew.stand.StandActionAnimation;
 
 public class StandPose {
@@ -33,12 +34,7 @@ public class StandPose {
         }
     };
     public static final StandPose BLOCK = new StandPose("block");
-    public static final StandPose LIGHT_ATTACK = new StandPose("jab") {
-        @Override
-        public StandActionAnimation getAnim(List<StandActionAnimation> variants, StandEntity standEntity) {
-            return super.getAnim(variants, standEntity); // FIXME string jab anims one after another (string as in the punches, not the class)
-        }
-    };
+    public static final StandPose LIGHT_ATTACK = StandEntityLightAttack.STAND_POSE;
     public static final StandPose HEAVY_ATTACK = new StandPose("heavy_punch");
     @Deprecated public static final StandPose HEAVY_ATTACK_FINISHER = new StandPose("finisher_punch");
     @Deprecated public static final StandPose RANGED_ATTACK = new StandPose("ranged_attack");

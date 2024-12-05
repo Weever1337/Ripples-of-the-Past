@@ -166,6 +166,7 @@ public class StandEntity extends LivingEntity implements IStandManifestation, IE
     private ManualStandMovementLock manualMovementLocks = new ManualStandMovementLock(this);
     
     protected StandPose standPose = StandPose.SUMMON;
+    public int punchComboCount = 0;
     public int gradualSummonWeaknessTicks;
     public int unsummonTicks;
     public StandRelativeOffset unsummonOffset = offsetDefault.copy();

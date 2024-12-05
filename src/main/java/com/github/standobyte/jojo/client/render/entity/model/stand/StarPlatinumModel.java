@@ -552,21 +552,14 @@ public class StarPlatinumModel extends HumanoidStandModel<StarPlatinumEntity> {
     public void setupAnim(StarPlatinumEntity entity, float walkAnimPos, float walkAnimSpeed, float ticks, float yRotationOffset, float xRotation) {
         super.setupAnim(entity, walkAnimPos, walkAnimSpeed, ticks, yRotationOffset, xRotation);
         manualAnimateHair();
-//        rotateShoulderPad(rightShoulder, rightArm);
-//        rotateShoulderPad(leftShoulder, leftArm);
     }
-    
-//    private void rotateShoulderPad(ModelRenderer shoulderPad, ModelRenderer arm) {
-//        if (shoulderPad != null && arm != null) {
-//            shoulderPad.zRot = arm.zRot / 2;
-//        }
-//    }
     
     
     
     private final List<ModelRenderer> hairToAnimateManually;
     private static final float TWO_PI = (float) Math.PI * 2;
     private float ticksPrev;
+    @Deprecated
     private void manualAnimateHair() {
         for (int i = 0; i < hairToAnimateManually.size(); i++) {
             ModelRenderer hair = hairToAnimateManually.get(i);
