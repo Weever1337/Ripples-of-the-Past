@@ -67,9 +67,9 @@ public class TrPillarmanDataPacket {
                     if (entity instanceof PlayerEntity) {
                         PlayerEntity userPlayer = (PlayerEntity) entity;
                         ModPlayerAnimations.stoneForm.setAnimEnabled(userPlayer, msg.stoneFormEnabled);
-                        if (!prevStoneForm && msg.stoneFormEnabled && userPlayer == ClientUtil.getClientPlayer()) {
+                        /*if (!prevStoneForm && msg.stoneFormEnabled && userPlayer == ClientUtil.getClientPlayer()) {
                             ClientUtil.setThirdPerson();
-                        }
+                        }*/
                     }
                 });
             }
