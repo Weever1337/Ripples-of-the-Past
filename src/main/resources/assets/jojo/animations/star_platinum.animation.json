@@ -2872,7 +2872,115 @@
 				}
 			},
 			"timeline": {
-				"0.0": "barrage=TWO_HANDED;"
+				"0.0": "barrage = TWO_HANDED;"
+			}
+		},
+		"inhale": {
+			"loop": "hold_on_last_frame",
+			"bones": {
+				"body": {
+					"rotation": {
+						"vector": [-4.73827, -22.58344, -0.01776],
+						"easing": "linear"
+					}
+				},
+				"leftArmXRot": {
+					"rotation": {
+						"vector": [0, 0, 0]
+					}
+				},
+				"leftForeArm": {
+					"rotation": {
+						"vector": [-96.90944, -29.46837, 58.8207],
+						"easing": "linear"
+					}
+				},
+				"rightArmXRot": {
+					"rotation": {
+						"vector": [0, 0, 0]
+					}
+				},
+				"rightForeArm": {
+					"rotation": {
+						"vector": [-90, 60, -90],
+						"easing": "linear"
+					}
+				},
+				"leftLegXRot": {
+					"rotation": {
+						"vector": [0, 0, 0]
+					}
+				},
+				"leftLowerLeg": {
+					"rotation": {
+						"vector": [17, 0, 0],
+						"easing": "linear"
+					}
+				},
+				"rightLegXRot": {
+					"rotation": {
+						"vector": [0, 0, 0]
+					}
+				},
+				"rightLowerLeg": {
+					"rotation": {
+						"vector": [21.32615, 0, 0],
+						"easing": "linear"
+					}
+				},
+				"frontFabric": {
+					"rotation": {
+						"vector": [-12, 0, 0],
+						"easing": "linear"
+					}
+				},
+				"backFabric": {
+					"rotation": {
+						"vector": [7.5, 0, 0],
+						"easing": "linear"
+					}
+				},
+				"upperPart": {
+					"rotation": {
+						"vector": [0, 0, 0],
+						"easing": "linear"
+					}
+				},
+				"root": {
+					"rotation": {
+						"vector": [0, 0, 0]
+					}
+				},
+				"head": {
+					"rotation": {
+						"vector": ["query.head_x_rotation", "query.head_y_rotation", 0],
+						"easing": "linear"
+					}
+				},
+				"leftArmBone": {
+					"rotation": {
+						"vector": [-14.78217, 2.57594, -35.3342],
+						"easing": "linear"
+					}
+				},
+				"rightArmBone": {
+					"rotation": {
+						"vector": [-24.16711, 25.35118, 16.72069],
+						"easing": "linear"
+					}
+				},
+				"leftLegBone": {
+					"rotation": {
+						"vector": [0.74992, -16.88606, -12.30217],
+						"easing": "linear"
+					}
+				},
+				"rightLegBone": {
+					"rotation": {
+						"vector": [10.84175, 24.21385, 17.86993],
+						"easing": "linear"
+					}
+				}
 			}
 		}
 	},

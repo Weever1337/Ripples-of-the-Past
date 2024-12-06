@@ -166,6 +166,7 @@ public class ModStandsInit {
     public static final RegistryObject<StarPlatinumInhale> STAR_PLATINUM_INHALE = ACTIONS.register("star_platinum_inhale", 
             () -> new StarPlatinumInhale(new StandEntityAction.Builder().holdType(80).staminaCostTick(2F).cooldown(80)
                     .ignoresPerformerStun().resolveLevelToUnlock(2)
+                    .standPose(StarPlatinumInhale.INHALE_POSE)
                     .standOffsetFromUser(0, -0.25).standSound(ModSounds.STAR_PLATINUM_INHALE)
                     .partsRequired(StandPart.MAIN_BODY)));
     
