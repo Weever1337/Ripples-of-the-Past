@@ -71,7 +71,7 @@ public class GeckoStandAnimator implements IStandAnimator {
                 }
                 
                 model.idleLoopTickStamp = ticks;
-                return summonAnim.poseStand(entity, model, ticks, yRotOffsetRad, xRotRad, 
+                return applyAnim(summonAnim, entity, model, ticks, yRotOffsetRad, xRotRad, 
                         standPose, actionPhase, phaseCompletion, swingingHand);
             }
         }
@@ -83,8 +83,7 @@ public class GeckoStandAnimator implements IStandAnimator {
             if (anims != null) {
                 StandActionAnimation anim = standPose.getAnim(anims, entity);
                 if (anim != null) {
-                    curAnim = anim;
-                    return anim.poseStand(entity, model, ticks, yRotOffsetRad, xRotRad, 
+                    return applyAnim(anim, entity, model, ticks, yRotOffsetRad, xRotRad, 
                             standPose, actionPhase, phaseCompletion, swingingHand);
                 }
             }
@@ -92,11 +91,20 @@ public class GeckoStandAnimator implements IStandAnimator {
         
         StandActionAnimation idleAnim = getIdleAnim(entity);
         if (idleAnim != null) {
-            return idleAnim.poseStand(entity, model, ticks, yRotOffsetRad, xRotRad, 
+            return applyAnim(idleAnim, entity, model, ticks, yRotOffsetRad, xRotRad, 
                     standPose, actionPhase, phaseCompletion, swingingHand);
         }
         
         return false;
+    }
+    
+    protected <T extends StandEntity> boolean applyAnim(StandActionAnimation anim, 
+            T entity, StandEntityModel<T> model, float ticks, float yRotOffsetRad, float xRotRad, 
+            StandPose standPose, Optional<Phase> actionPhase, float phaseCompletion, HandSide swingingHand) {
+        curAnim = anim;
+        return standPose.applyAnim(entity, model, anim, ticks, yRotOffsetRad, xRotRad, 
+                actionPhase, phaseCompletion, swingingHand);
+        
     }
     
     public StandActionAnimation getIdleAnim(@Nullable StandEntity entity) {
