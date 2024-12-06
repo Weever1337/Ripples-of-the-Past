@@ -10,8 +10,6 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import javax.annotation.Nullable;
-
 import org.apache.commons.lang3.mutable.MutableFloat;
 
 import com.github.standobyte.jojo.action.stand.StandEntityAction.Phase;
@@ -28,8 +26,6 @@ import com.github.standobyte.jojo.client.render.entity.pose.ModelPose.ModelAnim;
 import com.github.standobyte.jojo.client.render.entity.pose.ModelPoseTransition;
 import com.github.standobyte.jojo.client.render.entity.pose.RotationAngle;
 import com.github.standobyte.jojo.client.render.entity.pose.anim.IActionAnimation;
-import com.github.standobyte.jojo.client.render.entity.pose.anim.barrage.BarrageSwingsHolder;
-import com.github.standobyte.jojo.client.render.entity.pose.anim.barrage.IBarrageAnimation;
 import com.github.standobyte.jojo.entity.stand.StandEntity;
 import com.github.standobyte.jojo.entity.stand.StandPose;
 import com.github.standobyte.jojo.power.impl.stand.IStandPower;
@@ -40,6 +36,7 @@ import com.google.common.collect.HashBiMap;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.vertex.IVertexBuilder;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.model.AgeableModel;
 import net.minecraft.client.renderer.entity.model.IHasArm;
@@ -61,7 +58,7 @@ public abstract class StandEntityModel<T extends StandEntity> extends AgeableMod
     protected float yRotRad;
     protected float xRotRad;
     protected float ticks;
-    protected StandPose standPose;
+    public StandPose standPose;
 
     private boolean initialized = false;
     public float idleLoopTickStamp = 0;
@@ -71,7 +68,6 @@ public abstract class StandEntityModel<T extends StandEntity> extends AgeableMod
     @Deprecated protected IModelPose<T> idleLoop;
     @Deprecated private List<IModelPose<T>> summonPoses;
     @Deprecated protected final Map<StandPose, IActionAnimation<T>> actionAnim = new HashMap<>();
-    @Deprecated @Nullable private IActionAnimation<T> currentActionAnim = null;
     
     private Map<ModelRenderer, MutableFloat> secondXRotMap = new HashMap<>();
     
@@ -173,9 +169,6 @@ public abstract class StandEntityModel<T extends StandEntity> extends AgeableMod
             setRotationAngle(part, 0, 0, 0);
         });
 
-//        initPoses();
-//        initActionPoses();
-
         StandPose pose = entity.getStandPose();
         if (pose == StandPose.SUMMON && entity.isArmsOnlyMode()) {
             entity.setStandPose(StandPose.IDLE);
@@ -195,7 +188,6 @@ public abstract class StandEntityModel<T extends StandEntity> extends AgeableMod
     
     protected void poseStand(T entity, float ticks, float yRotOffsetRad, float xRotRad, 
             StandPose standPose, Optional<Phase> actionPhase, float phaseCompletion, HandSide swingingHand) {
-        resetPose(entity);
         IStandAnimator standAnimator = getAnimator();
         if (standAnimator != null && standAnimator.poseStand(entity, this, ticks, yRotOffsetRad, xRotRad, 
                 standPose, actionPhase, phaseCompletion, swingingHand)) {
@@ -299,9 +291,7 @@ public abstract class StandEntityModel<T extends StandEntity> extends AgeableMod
     }
     
     @Deprecated
-    public void setCurrentModelAnim(IActionAnimation<T> anim) {
-        this.currentActionAnim = anim;
-    }
+    public void setCurrentModelAnim(IActionAnimation<T> anim) {}
     
     @Deprecated
     public void onPose(T entity, float ticks) {
@@ -358,31 +348,16 @@ public abstract class StandEntityModel<T extends StandEntity> extends AgeableMod
     }
     
     public void addBarrageSwings(T entity) {
-        if (entity.getStandPose() == StandPose.BARRAGE && entity.getCurrentTaskPhase().map(phase -> phase == Phase.PERFORM).orElse(false)
-                && currentActionAnim instanceof IBarrageAnimation) {
-            ((IBarrageAnimation<T, StandEntityModel<T>>) currentActionAnim).addSwings(entity, entity.getPunchingHand(), ticks);
-        }
+        entity.getBarrageSwings().updateSwings(Minecraft.getInstance());
+        getAnimator().addBarrageSwings(entity, this, ticks);
     }
     
     public void render(T entity, MatrixStack matrixStack, IVertexBuilder buffer, 
             int packedLight, int packedOverlay, float red, float green, float blue, float alpha) {
         renderToBuffer(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
-//        if (currentActionAnim != null) {
-//            currentActionAnim.renderAdditional(entity, matrixStack, buffer, 
-//                    packedLight, packedOverlay, red, green, blue, alpha);
-//        }
-    }
-    
-    public final void renderBarrageSwings(T entity, MatrixStack matrixStack, IVertexBuilder buffer, 
-            int packedLight, int packedOverlay, float red, float green, float blue, float alpha) {
-        renderBarrageSwings(entity, this, matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
-    }
-    
-    protected <M extends StandEntityModel<T>> void renderBarrageSwings(T entity, M thisModel, MatrixStack matrixStack, IVertexBuilder buffer, int packedLight,
-            int packedOverlay, float red, float green, float blue, float alpha) {
-        BarrageSwingsHolder<T, M> barrageSwings = (BarrageSwingsHolder<T, M>) entity.getBarrageSwingsHolder();
-        barrageSwings.renderBarrageSwings(thisModel, entity, matrixStack, buffer, 
-                packedLight, packedOverlay, yRotRad, xRotRad, red, green, blue, alpha);
+        getAnimator().renderBarrageSwings(entity, this, yRotRad, xRotRad, 
+                matrixStack, buffer, 
+                packedLight, packedOverlay, red, green, blue, alpha);
     }
     
     protected void initOpposites() {}

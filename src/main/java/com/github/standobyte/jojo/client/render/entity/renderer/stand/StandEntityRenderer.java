@@ -316,7 +316,6 @@ public class StandEntityRenderer<T extends StandEntity, M extends StandEntityMod
         if (renderType != null) {
             IVertexBuilder vertexBuilder = buffer.getBuffer(renderType);
             model.render(entity, matrixStack, vertexBuilder, packedLight, packedOverlay, 1, 1, 1, alpha);
-            model.renderBarrageSwings(entity, matrixStack, vertexBuilder, packedLight, packedOverlay, 1, 1, 1, alpha);
         }
         if (!entity.isSpectator()) {
             for (LayerRenderer<T, M> layerRenderer : this.layers) {

@@ -11,16 +11,18 @@ import com.github.standobyte.jojo.client.render.entity.model.stand.StandEntityMo
 import com.github.standobyte.jojo.entity.stand.StandEntity;
 import com.github.standobyte.jojo.entity.stand.StandPose;
 
-import it.unimi.dsi.fastutil.floats.Float2ObjectArrayMap;
 import it.unimi.dsi.fastutil.floats.Float2ObjectMap;
 import net.minecraft.util.HandSide;
 import net.minecraft.util.math.MathHelper;
 
-public class StandActionAnimation implements IStandAnimator {
+public class StandActionAnimation {
     public static final float ANIM_SPEED = 1;
     public final Animation anim;
     
-    @Nullable Float2ObjectMap<Phase> phasesTimeline;
+    @Nullable public AnimObjTimeline<Phase> phasesTimeline;
+    @Nullable public AnimObjTimeline<String> barrageTimeline;
+    
+    public float lastPoseTime;
     
     public StandActionAnimation(Animation anim) {
         this.anim = anim;
@@ -28,17 +30,15 @@ public class StandActionAnimation implements IStandAnimator {
     
     
     
-    @Override
     public boolean poseStand(StandEntity entity, StandEntityModel<?> model, float ticks, float yRotOffsetRad, float xRotRad, 
             StandPose standPose, Optional<Phase> actionPhase, float phaseCompletion, HandSide swingingHand) {
-        float seconds;
         if (actionPhase.isPresent() && phasesTimeline != null) {
             Phase taskPhase = actionPhase.get();
             
             Float prevPhaseTime = null;
             Float curPhaseTime = null;
             Float2ObjectMap.Entry<Phase> prevAnimPhase = null;
-            for (Float2ObjectMap.Entry<Phase> animPhase : phasesTimeline.float2ObjectEntrySet()) {
+            for (Float2ObjectMap.Entry<Phase> animPhase : phasesTimeline.getEntries()) {
                 if (animPhase.getValue().ordinal() > taskPhase.ordinal()) {
                     prevPhaseTime = prevAnimPhase != null ? prevAnimPhase.getFloatKey() : 0;
                     curPhaseTime = animPhase.getFloatKey();
@@ -51,14 +51,14 @@ public class StandActionAnimation implements IStandAnimator {
                 curPhaseTime = anim.lengthInSeconds();
             }
             
-            seconds = MathHelper.lerp(phaseCompletion, prevPhaseTime, curPhaseTime);
+            lastPoseTime = MathHelper.lerp(phaseCompletion, prevPhaseTime, curPhaseTime);
         }
         else {
-            seconds = anim.looping() ? (ticks / 20.0f) % anim.lengthInSeconds() : ticks / 20.0f;
+            lastPoseTime = anim.looping() ? (ticks / 20.0f) % anim.lengthInSeconds() : ticks / 20.0f;
         }
         
-        FloatQuery.AnimContext animContext = FloatQuery.AnimContext.makeContext(entity, ticks, yRotOffsetRad, xRotRad, actionPhase, phaseCompletion);
-        GeckoStandAnimator.animateSecs(model, anim, seconds, ANIM_SPEED, animContext);
+        FloatQuery.AnimContext animContext = FloatQuery.AnimContext.makeContext(entity, ticks, yRotOffsetRad, xRotRad);
+        GeckoStandAnimator.animateSecs(model, anim, lastPoseTime, ANIM_SPEED, animContext);
         
         return true;
     }
@@ -69,13 +69,25 @@ public class StandActionAnimation implements IStandAnimator {
         case "phase":
             Phase phase = Phase.valueOf(value);
             if (phasesTimeline == null) {
-                phasesTimeline = new Float2ObjectArrayMap<>();
+                phasesTimeline = new AnimObjTimeline<>();
             }
-            phasesTimeline.put(keyframeTime, phase);
+            phasesTimeline.add(keyframeTime, phase);
             break;
         case "barrage":
-            
+            if (barrageTimeline == null) {
+                barrageTimeline = new AnimObjTimeline<>();
+            }
+            barrageTimeline.add(keyframeTime, value);
             break;
+        }
+    }
+    
+    public void onFinishedParsing() {
+        if (phasesTimeline != null) {
+            phasesTimeline.sort();
+        }
+        if (barrageTimeline != null) {
+            barrageTimeline.sort();
         }
     }
     

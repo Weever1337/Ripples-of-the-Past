@@ -5,13 +5,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import javax.annotation.Nullable;
+
 import com.github.standobyte.jojo.action.stand.StandEntityAction.Phase;
 import com.github.standobyte.jojo.client.render.entity.model.stand.StandEntityModel;
 import com.github.standobyte.jojo.client.render.entity.pose.IModelPose;
 import com.github.standobyte.jojo.client.render.entity.pose.ModelPose;
 import com.github.standobyte.jojo.client.render.entity.pose.anim.IActionAnimation;
+import com.github.standobyte.jojo.client.render.entity.pose.anim.barrage.BarrageSwingsHolder;
+import com.github.standobyte.jojo.client.render.entity.pose.anim.barrage.IBarrageAnimation;
 import com.github.standobyte.jojo.entity.stand.StandEntity;
 import com.github.standobyte.jojo.entity.stand.StandPose;
+import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.IVertexBuilder;
 
 import net.minecraft.util.HandSide;
 import net.minecraft.util.math.MathHelper;
@@ -23,6 +29,7 @@ public class LegacyStandAnimator<T extends StandEntity> implements IStandAnimato
     protected IModelPose<T> idleLoop;
     private List<IModelPose<T>> summonPoses;
     protected Map<StandPose, IActionAnimation<T>> actionAnim = new HashMap<>();
+    @Nullable private IActionAnimation<T> currentActionAnim = null;
     
     public LegacyStandAnimator(
             StandEntityModel<T> model,
@@ -40,11 +47,12 @@ public class LegacyStandAnimator<T extends StandEntity> implements IStandAnimato
     }
 
     @Override
-    public boolean poseStand(StandEntity standEntity, StandEntityModel<?> standEntityModel, float ticks, float yRotOffsetRad,
+    public <A extends StandEntity> boolean poseStand(A standEntity, StandEntityModel<A> standEntityModel, float ticks, float yRotOffsetRad,
             float xRotRad, StandPose standPose, Optional<Phase> actionPhase, float phaseCompletion,
             HandSide swingingHand) {
         T entity = (T) standEntity;
         StandEntityModel<T> model = (StandEntityModel<T>) standEntityModel;
+        currentActionAnim = null;
         
         if (standPose == StandPose.SUMMON && ticks > SUMMON_ANIMATION_LENGTH) {
             standPose = StandPose.IDLE;
@@ -57,6 +65,7 @@ public class LegacyStandAnimator<T extends StandEntity> implements IStandAnimato
             
             IActionAnimation<T> anim = model.dammit(entity, standPose);
             model.setCurrentModelAnim(anim);
+            this.currentActionAnim = anim;
             if (anim != null) {
                 anim.animate(actionPhase.get(), phaseCompletion, 
                         entity, ticks, yRotOffsetRad, xRotRad, swingingHand);
@@ -95,9 +104,26 @@ public class LegacyStandAnimator<T extends StandEntity> implements IStandAnimato
         idlePose.poseModel(summonPoseRotation(ticks), entity, ticks, yRotOffsetRad, xRotRad, swingingHand);
     }
     
-    
     public void poseIdleLoop(T entity, StandEntityModel<T> model, float ticks, float yRotOffsetRad, float xRotRad, HandSide swingingHand) {
         idleLoop.poseModel(ticks - model.idleLoopTickStamp, entity, ticks, yRotOffsetRad, xRotRad, swingingHand);
+    }
+    
+    
+    @Override
+    public <A extends StandEntity> void addBarrageSwings(A entity, StandEntityModel<A> model, float ticks) {
+        if (entity.getStandPose() == StandPose.BARRAGE && entity.getCurrentTaskPhase().map(phase -> phase == Phase.PERFORM).orElse(false)
+                && currentActionAnim instanceof IBarrageAnimation) {
+            ((IBarrageAnimation<T, StandEntityModel<T>>) currentActionAnim).addSwings((T) entity, entity.getPunchingHand(), ticks);
+        }
+    }
+    
+    @Override
+    public <A extends StandEntity> void renderBarrageSwings(A entity, StandEntityModel<A> model, float yRotOffsetRad, float xRotRad, 
+            MatrixStack matrixStack, IVertexBuilder buffer, 
+            int packedLight, int packedOverlay, float red, float green, float blue, float alpha) {
+        BarrageSwingsHolder<T, StandEntityModel<T>> barrageSwings = (BarrageSwingsHolder<T, StandEntityModel<T>>) entity.getBarrageSwingsHolder();
+        barrageSwings.renderBarrageSwings((StandEntityModel<T>) model, (T) entity, matrixStack, buffer, 
+                packedLight, packedOverlay, yRotOffsetRad, xRotRad, red, green, blue, alpha);
     }
 
 }

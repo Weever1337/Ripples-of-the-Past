@@ -12,6 +12,7 @@ import net.minecraft.util.HandSide;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.vector.Vector3d;
 
+@Deprecated
 public abstract class ArmBarrageSwing<T extends Entity, M extends EntityModel<T>> extends AdditionalBarrageSwing<T, M> {
     private static final Random RANDOM = new Random();
     private final HandSide side;
@@ -29,10 +30,6 @@ public abstract class ArmBarrageSwing<T extends Entity, M extends EntityModel<T>
         }
         zRot = MathUtil.wrapRadians((float) (Math.PI / 2 - MathHelper.atan2(upOffset, leftOffset)));
         offset = new Vector3d(leftOffset, upOffset, frontOffset);
-    }
-    
-    public HandSide getSide() {
-        return side;
     }
     
     @Override

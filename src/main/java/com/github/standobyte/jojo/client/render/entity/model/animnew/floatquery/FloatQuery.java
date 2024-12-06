@@ -1,10 +1,6 @@
 package com.github.standobyte.jojo.client.render.entity.model.animnew.floatquery;
 
-import java.util.Optional;
-
 import javax.annotation.Nullable;
-
-import com.github.standobyte.jojo.action.stand.StandEntityAction.Phase;
 
 import net.minecraft.entity.Entity;
 
@@ -70,22 +66,17 @@ public class FloatQuery implements IFloatSupplier {
         private float ticks;
         private float yRotOffsetRad;
         private float xRotRad;
-        private Optional<Phase> actionPhase;
-        private float phaseCompletion;
         
-        public static AnimContext makeContext(Entity entity, float ticks, float yRotOffsetRad, 
-                float xRotRad, Optional<Phase> actionPhase, float phaseCompletion) {
+        public static AnimContext makeContext(Entity entity, float ticks, float yRotOffsetRad, float xRotRad) {
             INSTANCE.entity = entity;
             INSTANCE.ticks = ticks;
             INSTANCE.yRotOffsetRad = yRotOffsetRad;
             INSTANCE.xRotRad = xRotRad;
-            INSTANCE.actionPhase = actionPhase;
-            INSTANCE.phaseCompletion = phaseCompletion;
             return INSTANCE;
         }
         
         public static AnimContext clearContext() {
-            return makeContext(null, 0, 0, 0, Optional.empty(), 0);
+            return makeContext(null, 0, 0, 0);
         }
         
         

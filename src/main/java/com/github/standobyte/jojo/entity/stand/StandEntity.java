@@ -25,6 +25,7 @@ import com.github.standobyte.jojo.action.stand.punch.StandMissedPunch;
 import com.github.standobyte.jojo.capability.entity.PlayerUtilCap.OneTimeNotification;
 import com.github.standobyte.jojo.capability.entity.PlayerUtilCapProvider;
 import com.github.standobyte.jojo.client.ClientUtil;
+import com.github.standobyte.jojo.client.render.entity.model.animnew.BarrageSwings;
 import com.github.standobyte.jojo.client.render.entity.model.stand.StandEntityModel;
 import com.github.standobyte.jojo.client.render.entity.pose.anim.barrage.BarrageSwingsHolder;
 import com.github.standobyte.jojo.client.sound.BarrageHitSoundHandler;
@@ -177,7 +178,8 @@ public class StandEntity extends LivingEntity implements IStandManifestation, IE
     private int alphaTicks;
 
     private IPunch lastPunch;
-    private BarrageSwingsHolder<?, ?> barrageSwings;
+    private BarrageSwingsHolder<?, ?> barrageSwingsOld;
+    private BarrageSwings barrageSwings;
     private final BarrageHitSoundHandler barrageSounds;
 
     public float lastRenderTick = 0;
@@ -206,10 +208,12 @@ public class StandEntity extends LivingEntity implements IStandManifestation, IE
         if (level.isClientSide()) {
             this.alphaTicks = this.summonLockTicks;
             this.barrageSounds = initBarrageHitSoundHandler();
+            this.barrageSwings = initBarrageSwings();
         }
         else {
             this.summonPoseRandomByte = random.nextInt(128);
             this.barrageSounds = null;
+            this.barrageSwings = null;
         }
         init(this);
     }
@@ -221,10 +225,10 @@ public class StandEntity extends LivingEntity implements IStandManifestation, IE
     
     private <T extends StandEntity> void init(T thisEntity) {
         if (level.isClientSide()) {
-            this.barrageSwings = new BarrageSwingsHolder<T, StandEntityModel<T>>();
+            this.barrageSwingsOld = new BarrageSwingsHolder<T, StandEntityModel<T>>();
         }
         else {
-            this.barrageSwings = null;
+            this.barrageSwingsOld = null;
         }
     }
     
@@ -1970,6 +1974,17 @@ public class StandEntity extends LivingEntity implements IStandManifestation, IE
     
 
     public BarrageSwingsHolder<?, ?> getBarrageSwingsHolder() {
+        if (!level.isClientSide()) {
+            throw new IllegalStateException("Barrage swing animating class is only available on the client!");
+        }
+        return this.barrageSwingsOld;
+    }
+    
+    protected BarrageSwings initBarrageSwings() {
+        return new BarrageSwings();
+    }
+    
+    public BarrageSwings getBarrageSwings() {
         if (!level.isClientSide()) {
             throw new IllegalStateException("Barrage swing animating class is only available on the client!");
         }

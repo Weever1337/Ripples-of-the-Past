@@ -10,6 +10,7 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.HandSide;
 import net.minecraft.util.math.MathHelper;
 
+@Deprecated
 public abstract class ArmsBarrageAnimation<T extends LivingEntity, M extends EntityModel<T>> implements IBarrageAnimation<T, M> {
     protected final M model;
     private final IModelPose<T> loop;
