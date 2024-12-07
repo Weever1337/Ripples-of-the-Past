@@ -5,14 +5,15 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 import org.apache.commons.lang3.mutable.MutableFloat;
 
-import com.github.standobyte.jojo.action.stand.StandEntityAction.Phase;
 import com.github.standobyte.jojo.client.ClientUtil;
 import com.github.standobyte.jojo.client.render.entity.model.animnew.INamedModelParts;
 import com.github.standobyte.jojo.client.render.entity.model.animnew.ModelPartDefaultState;
@@ -159,40 +160,24 @@ public abstract class StandEntityModel<T extends StandEntity> extends AgeableMod
     protected abstract void partMissing(StandPart standPart);
     
     @Override
-    public void setupAnim(T entity, float walkAnimPos, float walkAnimSpeed, float ticks, float yRotationOffset, float xRotation) {
-        resetXRotation();
-        
-        headParts().forEach(part -> {
-            setRotationAngle(part, 0, 0, 0);
-        });
-        bodyParts().forEach(part -> {
-            setRotationAngle(part, 0, 0, 0);
-        });
-        
-        this.yRotRad = yRotationOffset * MathUtil.DEG_TO_RAD;
-        this.xRotRad = xRotation * MathUtil.DEG_TO_RAD;
+    public void setupAnim(@Nonnull T entity, float walkAnimPos, float walkAnimSpeed, float ticks, float yRotationOffset, float xRotation) {
         float partialTick = ticks - entity.tickCount;
         StandPoseData poseData = entity.getCurPose(partialTick);
-        this.standPose = poseData.standPose;
-        poseStand(entity, ticks, yRotRad, xRotRad, 
-                poseData.standPose, poseData.actionPhase, poseData.phaseCompletion);
-        this.ticks = ticks;
-        
-        applyXRotation();
+        poseStand(entity, poseData, ticks, yRotationOffset * MathUtil.DEG_TO_RAD, xRotation * MathUtil.DEG_TO_RAD);
     }
     
-    protected void poseStand(T entity, float ticks, float yRotOffsetRad, float xRotRad, 
-            StandPose standPose, Optional<Phase> actionPhase, float phaseCompletion) {
+    public void poseStand(@Nullable T entity, StandPoseData pose, float ticks, float yRotOffsetRad, float xRotRad) {
+        this.yRotRad = yRotOffsetRad;
+        this.xRotRad = xRotRad;
+        this.standPose = pose.standPose;
+        
         IStandAnimator standAnimator = getAnimator();
-        if (standAnimator != null && standAnimator.poseStand(entity, this, ticks, yRotOffsetRad, xRotRad, 
-                standPose, actionPhase, phaseCompletion)) {
-            return;
+        if (standAnimator != null && standAnimator.poseStand(entity, this, pose, ticks, yRotOffsetRad, xRotRad)) {}
+        else if (standAnimator != legacyStandAnimHandler && !GeckoStandAnimator.IS_TESTING_GECKO) {
+            legacyStandAnimHandler.poseStand(entity, this, pose, ticks, yRotOffsetRad, xRotRad);
         }
         
-        if (standAnimator != legacyStandAnimHandler && !GeckoStandAnimator.IS_TESTING_GECKO) {
-            legacyStandAnimHandler.poseStand(entity, this, ticks, yRotOffsetRad, xRotRad, 
-                    standPose, actionPhase, phaseCompletion);
-        }
+        this.ticks = ticks;
     }
     
     @Override
@@ -201,18 +186,18 @@ public abstract class StandEntityModel<T extends StandEntity> extends AgeableMod
         return modelPart != null ? modelPart.modelPart : null;
     }
     
-    public void resetPose(T entity) {
+    public void resetPose(@Nullable T entity) {
         namedModelParts.values().forEach(ModelPartDefaultState::reset);
     }
 
 
     @Deprecated
-    public IActionAnimation<T> dammit(T entity, StandPose poseType) {
+    public IActionAnimation<T> dammit(@Nullable T entity, StandPose poseType) {
         return getActionAnim(entity, poseType);
     }
     
     @Deprecated
-    protected IActionAnimation<T> getActionAnim(T entity, StandPose poseType) {
+    protected IActionAnimation<T> getActionAnim(@Nullable T entity, StandPose poseType) {
         return actionAnim.get(poseType);
     }
 
@@ -228,8 +213,9 @@ public abstract class StandEntityModel<T extends StandEntity> extends AgeableMod
     @Deprecated
     protected void poseSummon(T entity, float ticks, float yRotOffsetRad, float xRotRad, HandSide swingingHand) {}
 
-    @Deprecated
-    public void poseIdleLoop(T entity, float ticks, float yRotOffsetRad, float xRotRad, HandSide swingingHand) {}
+    public void poseIdleLoop(T entity, float ticks, float yRotOffsetRad, float xRotRad, HandSide swingingHand) {
+        poseStand(entity, StandPoseData.start().standPose(StandPose.IDLE).end(), ticks, yRotOffsetRad, xRotRad);
+    }
 
     @Deprecated
     protected void initPoses() {
@@ -280,8 +266,10 @@ public abstract class StandEntityModel<T extends StandEntity> extends AgeableMod
     }
     
     
-    public void setStandPose(StandPose pose, StandEntity entity) {
-        entity.setStandPose(pose);
+    public void setStandPose(StandPose pose, @Nullable StandEntity entity) {
+        if (entity != null) {
+            entity.setStandPose(pose);
+        }
         this.standPose = pose;
     }
     
@@ -289,7 +277,7 @@ public abstract class StandEntityModel<T extends StandEntity> extends AgeableMod
     public void setCurrentModelAnim(IActionAnimation<T> anim) {}
     
     @Deprecated
-    public void onPose(T entity, float ticks) {
+    public void onPose(@Nullable T entity, float ticks) {
         idleLoopTickStamp = ticks;
     }
     
@@ -329,7 +317,7 @@ public abstract class StandEntityModel<T extends StandEntity> extends AgeableMod
         secondXRotMap.computeIfAbsent(modelPart, part -> new MutableFloat()).add(xRot);
     }
     
-    private void resetXRotation() {
+    public void resetXRotation() {
         secondXRotMap.forEach((modelPart, xRotMutable) -> xRotMutable.setValue(0));
     }
     

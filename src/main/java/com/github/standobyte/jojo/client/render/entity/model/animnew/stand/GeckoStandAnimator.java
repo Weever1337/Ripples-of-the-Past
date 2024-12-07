@@ -5,11 +5,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import javax.annotation.Nullable;
 
-import com.github.standobyte.jojo.action.stand.StandEntityAction.Phase;
 import com.github.standobyte.jojo.client.render.entity.model.animnew.BarrageSwings;
 import com.github.standobyte.jojo.client.render.entity.model.animnew.BarrageSwings.BarrageSwing;
 import com.github.standobyte.jojo.client.render.entity.model.animnew.floatquery.AnimContext;
@@ -55,10 +53,12 @@ public class GeckoStandAnimator implements IStandAnimator {
     }
     
     @Override
-    public <T extends StandEntity> boolean poseStand(T entity, StandEntityModel<T> model, float ticks, float yRotOffsetRad, float xRotRad, 
-            StandPose standPose, Optional<Phase> actionPhase, float phaseCompletion) {
+    public <T extends StandEntity> boolean poseStand(@Nullable T entity, StandEntityModel<T> model, StandPoseData poseData, 
+            float ticks, float yRotOffsetRad, float xRotRad) {
         model.resetPose(entity);
         curAnim = null;
+        
+        StandPose standPose = poseData.standPose;
         if (standPose == StandPose.SUMMON) {
             List<StandActionAnimation> summonAnims = namedAnimations.get(StandPose.SUMMON.getName());
             if (summonAnims != null && summonAnims.size() > 0) {
@@ -71,7 +71,7 @@ public class GeckoStandAnimator implements IStandAnimator {
                 
                 model.idleLoopTickStamp = ticks;
                 return applyAnim(summonAnim, entity, model, ticks, yRotOffsetRad, xRotRad, 
-                        standPose, actionPhase, phaseCompletion);
+                        standPose, poseData);
             }
         }
         
@@ -82,27 +82,25 @@ public class GeckoStandAnimator implements IStandAnimator {
             if (anims != null) {
                 StandActionAnimation anim = standPose.getAnim(anims, entity);
                 if (anim != null) {
-                    return applyAnim(anim, entity, model, ticks, yRotOffsetRad, xRotRad, 
-                            standPose, actionPhase, phaseCompletion);
+                    return applyAnim(anim, entity, model, ticks, yRotOffsetRad, xRotRad, standPose, poseData);
                 }
             }
         }
         
         StandActionAnimation idleAnim = getIdleAnim(entity);
         if (idleAnim != null) {
-            return applyAnim(idleAnim, entity, model, ticks, yRotOffsetRad, xRotRad, 
-                    standPose, actionPhase, phaseCompletion);
+            return applyAnim(idleAnim, entity, model, ticks, yRotOffsetRad, xRotRad, standPose, poseData);
         }
         
         return false;
     }
     
     protected <T extends StandEntity> boolean applyAnim(StandActionAnimation anim, 
-            T entity, StandEntityModel<T> model, float ticks, float yRotOffsetRad, float xRotRad, 
-            StandPose standPose, Optional<Phase> actionPhase, float phaseCompletion) {
+            @Nullable T entity, StandEntityModel<T> model, float ticks, 
+            float yRotOffsetRad, float xRotRad, StandPose standPose, StandPoseData poseData) {
         curAnim = anim;
-        return standPose.applyAnim(entity, model, anim, ticks, yRotOffsetRad, xRotRad, 
-                actionPhase, phaseCompletion);
+        poseData.edit().standPose(standPose);
+        return poseData.standPose.applyAnim(entity, model, anim, ticks, yRotOffsetRad, xRotRad, poseData);
         
     }
     
@@ -110,9 +108,9 @@ public class GeckoStandAnimator implements IStandAnimator {
         return idleAnim;
     }
     
-    protected List<StandActionAnimation> getAnims(StandEntity entity, StandPose standPose) {
+    protected List<StandActionAnimation> getAnims(@Nullable StandEntity entity, StandPose standPose) {
         String key = standPose.getName();
-        if (entity.isArmsOnlyMode()) {
+        if (entity != null && entity.isArmsOnlyMode()) {
             String key2 = "armsOnly_" + key;
             if (namedAnimations.containsKey(key2)) {
                 return namedAnimations.get(key2);
@@ -186,7 +184,7 @@ public class GeckoStandAnimator implements IStandAnimator {
     @Override
     public <T extends StandEntity> void addBarrageSwings(T entity, StandEntityModel<T> model, float ticks) {
         if (curAnim != null && curAnim.barrageTimeline != null) {
-            barrageType = curAnim.barrageTimeline.getCurValue(curAnim.lastPoseTime);
+            barrageType = curAnim.barrageTimeline.getCurValue(curAnim.animTime);
             if (barrageType != null) {
                 BarrageSwings.onBarrageAnim(barrageType, entity, model, curAnim, ticks);
             }

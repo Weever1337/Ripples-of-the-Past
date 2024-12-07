@@ -16,7 +16,7 @@ import net.minecraft.util.SoundEvent;
 import net.minecraft.world.World;
 
 public class MagiciansRedRedBind extends StandEntityAction {
-    public static final StandPose RED_BIND_POSE = new StandPose("red_bind");
+    public static final StandPose RED_BIND_POSE = new StandPose("redBind");
 
     public MagiciansRedRedBind(StandEntityAction.Builder builder) {
         super(builder);

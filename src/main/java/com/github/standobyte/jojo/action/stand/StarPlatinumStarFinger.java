@@ -9,7 +9,7 @@ import com.github.standobyte.jojo.power.impl.stand.IStandPower;
 import net.minecraft.world.World;
 
 public class StarPlatinumStarFinger extends StandEntityAction {
-    public static final StandPose STAR_FINGER_POSE = new StandPose("star_finger");
+    public static final StandPose STAR_FINGER_POSE = new StandPose("starFinger");
 
     public StarPlatinumStarFinger(StandEntityAction.Builder builder) {
         super(builder);

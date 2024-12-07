@@ -1977,7 +1977,7 @@
 				"0.3": "phase = RECOVERY;"
 			}
 		},
-		"heavy_punch": {
+		"heavyPunch": {
 			"loop": "hold_on_last_frame",
 			"animation_length": 1.35,
 			"bones": {
@@ -2510,7 +2510,7 @@
 				"0.5": "phase = RECOVERY;"
 			}
 		},
-		"star_finger": {
+		"starFinger": {
 			"loop": "hold_on_last_frame",
 			"bones": {
 				"body": {

@@ -35,13 +35,7 @@ public class StandEntityLightAttack extends StandEntityAction implements IHasSta
     public static final StandPose STAND_POSE = new StandPose("attack") {
         @Override
         public StandActionAnimation getAnim(List<StandActionAnimation> variants, StandEntity standEntity) {
-            return variants.get((standEntity.punchComboCount - 1) % variants.size());
-        }
-    };
-    public static final StandPose STAND_POSE_ARMS_ONLY = new StandPose("attack_arms") {
-        @Override
-        public StandActionAnimation getAnim(List<StandActionAnimation> variants, StandEntity standEntity) {
-            return variants.get((standEntity.punchComboCount - 1) % variants.size());
+            return standEntity != null ? variants.get((standEntity.punchComboCount - 1) % variants.size()) : super.getAnim(variants, standEntity);
         }
     };
     

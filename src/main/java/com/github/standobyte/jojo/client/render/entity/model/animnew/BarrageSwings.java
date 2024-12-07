@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Random;
 
 import com.github.standobyte.jojo.client.render.entity.model.animnew.stand.StandActionAnimation;
+import com.github.standobyte.jojo.client.render.entity.model.animnew.stand.StandPoseData;
 import com.github.standobyte.jojo.client.render.entity.model.stand.HumanoidStandModel;
 import com.github.standobyte.jojo.client.render.entity.model.stand.StandEntityModel;
 import com.github.standobyte.jojo.client.render.entity.model.stand.StandEntityModel.VisibilityMode;
@@ -167,7 +168,7 @@ public class BarrageSwings {
             matrixStack.translate(offsetRot.x, offsetRot.y, -offsetRot.z);
             model.resetPose(entity);
             barrageAnim.poseStand(entity, model, ticks, yRotOffsetRad, xRotRad, 
-                    model.standPose, entity.getCurrentTaskPhase(), 0);
+                    StandPoseData.start().standPose(model.standPose).actionPhase(entity.getCurrentTaskPhase()).end());
             ModelRenderer arm = model.getArm(side);
             arm.zRot = arm.zRot + HumanoidStandModel.barrageHitEasing(loopCompletion) * zRot;
             model.applyXRotation();

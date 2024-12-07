@@ -8,6 +8,7 @@ import javax.annotation.Nullable;
 
 import com.github.standobyte.jojo.JojoMod;
 import com.github.standobyte.jojo.JojoModConfig;
+import com.github.standobyte.jojo.action.ActionConditionResult;
 import com.github.standobyte.jojo.action.ActionTarget;
 import com.github.standobyte.jojo.action.config.ActionConfigField;
 import com.github.standobyte.jojo.capability.entity.LivingUtilCap;
@@ -15,6 +16,8 @@ import com.github.standobyte.jojo.capability.entity.LivingUtilCapProvider;
 import com.github.standobyte.jojo.capability.world.TimeStopHandler;
 import com.github.standobyte.jojo.capability.world.TimeStopInstance;
 import com.github.standobyte.jojo.capability.world.WorldUtilCapProvider;
+import com.github.standobyte.jojo.entity.stand.StandEntity;
+import com.github.standobyte.jojo.entity.stand.StandPose;
 import com.github.standobyte.jojo.init.ModStatusEffects;
 import com.github.standobyte.jojo.init.power.non_stand.ModPowers;
 import com.github.standobyte.jojo.network.PacketManager;
@@ -34,6 +37,9 @@ import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.World;
 
 public class TimeStop extends StandAction {
+    public static final StandPose CHARGE_UP_ANIM = new StandPose("timeStopCharge");
+    public static final StandPose PERFORM_ANIM = new StandPose("timeStop");
+    
     @ActionConfigField private final int timeStopMaxTicks;
     @ActionConfigField private final int timeStopMaxTicksVampire;
     @ActionConfigField public final float timeStopLearningPerTick;
@@ -63,6 +69,17 @@ public class TimeStop extends StandAction {
         this.timeResumeSound = builder.timeResumeSound;
         this.shaderWithAnim = builder.shaderWithAnim;
         this.shaderOld = builder.shaderOld;
+    }
+    
+    @Override
+    protected ActionConditionResult checkSpecificConditions(LivingEntity user, IStandPower power, ActionTarget target) {
+        if (power.getStandManifestation() instanceof StandEntity) {
+            StandEntity standEntity = (StandEntity) power.getStandManifestation();
+            return ActionConditionResult.noMessage(standEntity.getCurrentTask().map(task -> {
+                return task.getAction().canBeCanceled(power, standEntity, task.getPhase(), null);
+            }).orElse(true));
+        }
+        return super.checkSpecificConditions(user, power, target);
     }
 
     @Override

@@ -3,11 +3,11 @@ package com.github.standobyte.jojo.client.render.entity.model.animnew.stand;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import javax.annotation.Nullable;
 
 import com.github.standobyte.jojo.action.stand.StandEntityAction.Phase;
+import com.github.standobyte.jojo.client.ClientUtil;
 import com.github.standobyte.jojo.client.render.entity.model.stand.StandEntityModel;
 import com.github.standobyte.jojo.client.render.entity.pose.IModelPose;
 import com.github.standobyte.jojo.client.render.entity.pose.ModelPose;
@@ -47,18 +47,23 @@ public class LegacyStandAnimator<T extends StandEntity> implements IStandAnimato
     }
 
     @Override
-    public <A extends StandEntity> boolean poseStand(A standEntity, StandEntityModel<A> standEntityModel, float ticks, float yRotOffsetRad,
-            float xRotRad, StandPose standPose, Optional<Phase> actionPhase, float phaseCompletion) {
+    public <A extends StandEntity> boolean poseStand(@Nullable A standEntity, StandEntityModel<A> standEntityModel, StandPoseData poseData, 
+            float ticks, float yRotOffsetRad, float xRotRad) {
         T entity = (T) standEntity;
         StandEntityModel<T> model = (StandEntityModel<T>) standEntityModel;
         currentActionAnim = null;
         
+        model.resetXRotation();
+        model.headParts().forEach(part -> ClientUtil.setRotationAngle(part, 0, 0, 0));
+        model.bodyParts().forEach(part -> ClientUtil.setRotationAngle(part, 0, 0, 0));
+        
+        StandPose standPose = poseData.standPose;
         if (standPose == StandPose.SUMMON && ticks > SUMMON_ANIMATION_LENGTH) {
             standPose = StandPose.IDLE;
             model.setStandPose(standPose, entity);
         }
         
-        HandSide swingingHand = standEntity.getPunchingHand();
+        HandSide swingingHand = entity != null ? entity.getPunchingHand() : HandSide.RIGHT;
         if (actionAnim.containsKey(standPose)) {
             idlePose.poseModel(1.0F, entity, ticks, yRotOffsetRad, xRotRad, swingingHand);
             model.onPose(entity, ticks);
@@ -67,7 +72,7 @@ public class LegacyStandAnimator<T extends StandEntity> implements IStandAnimato
             model.setCurrentModelAnim(anim);
             this.currentActionAnim = anim;
             if (anim != null) {
-                anim.animate(actionPhase.get(), phaseCompletion, 
+                anim.animate(poseData.actionPhase.orElse(null), poseData.phaseCompletion, 
                         entity, ticks, yRotOffsetRad, xRotRad, swingingHand);
             }
         }
@@ -78,6 +83,7 @@ public class LegacyStandAnimator<T extends StandEntity> implements IStandAnimato
             poseIdleLoop(entity, model, ticks, yRotOffsetRad, xRotRad, swingingHand);
         }
         
+        model.applyXRotation();
         return true;
     }
     

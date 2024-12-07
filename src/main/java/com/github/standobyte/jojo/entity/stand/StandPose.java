@@ -1,20 +1,28 @@
 package com.github.standobyte.jojo.entity.stand;
 
+import java.util.HashMap;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 
-import com.github.standobyte.jojo.action.stand.StandEntityAction.Phase;
+import javax.annotation.Nullable;
+
+import com.github.standobyte.jojo.JojoMod;
 import com.github.standobyte.jojo.action.stand.StandEntityLightAttack;
 import com.github.standobyte.jojo.client.render.entity.model.animnew.stand.StandActionAnimation;
+import com.github.standobyte.jojo.client.render.entity.model.animnew.stand.StandPoseData;
 import com.github.standobyte.jojo.client.render.entity.model.stand.StandEntityModel;
 
 public class StandPose {
+    private static final Map<String, StandPose> ALL_POSES = new HashMap<>();
     private final String name;
     public final boolean armsObstructView;
     
     public StandPose(String name, boolean armsObstructView) {
-        this.name = name.toLowerCase();
+        this.name = name;
         this.armsObstructView = armsObstructView;
+        if (ALL_POSES.containsKey(name)) {
+            JojoMod.getLogger().warn("Stand pose {} is already present.", name);
+        }
     }
     
     public StandPose(String name) {
@@ -25,28 +33,26 @@ public class StandPose {
         return name;
     }
     
-    public StandActionAnimation getAnim(List<StandActionAnimation> variants, StandEntity standEntity) {
+    public StandActionAnimation getAnim(List<StandActionAnimation> variants, @Nullable StandEntity standEntity) {
         return variants.get(0);
     }
     
-    public <T extends StandEntity> boolean applyAnim(T entity, StandEntityModel<T> model, StandActionAnimation anim, 
-            float ticks, float yRotOffsetRad, float xRotRad, 
-            Optional<Phase> actionPhase, float phaseCompletion) {
-        return anim.poseStand(entity, model, ticks, yRotOffsetRad, xRotRad, 
-                this, actionPhase, phaseCompletion);
+    public <T extends StandEntity> boolean applyAnim(@Nullable T entity, StandEntityModel<T> model, StandActionAnimation anim, 
+            float ticks, float yRotOffsetRad, float xRotRad, StandPoseData poseData) {
+        return anim.poseStand(entity, model, ticks, yRotOffsetRad, xRotRad, poseData);
     }
     
     public static final StandPose IDLE = new StandPose("idle");
     public static final StandPose SUMMON = new StandPose("summon") {
         @Override
         public StandActionAnimation getAnim(List<StandActionAnimation> variants, StandEntity standEntity) {
-            return variants.get(standEntity.getSummonPoseRandomByte() % variants.size());
+            return standEntity != null ? variants.get(standEntity.getSummonPoseRandomByte() % variants.size()) : super.getAnim(variants, standEntity);
         }
     };
     public static final StandPose BLOCK = new StandPose("block");
     public static final StandPose LIGHT_ATTACK = StandEntityLightAttack.STAND_POSE;
-    public static final StandPose HEAVY_ATTACK = new StandPose("heavy_punch");
-    @Deprecated public static final StandPose HEAVY_ATTACK_FINISHER = new StandPose("finisher_punch");
-    @Deprecated public static final StandPose RANGED_ATTACK = new StandPose("ranged_attack");
+    public static final StandPose HEAVY_ATTACK = new StandPose("heavyPunch");
+    @Deprecated public static final StandPose HEAVY_ATTACK_FINISHER = new StandPose("finisherPunch");
+    @Deprecated public static final StandPose RANGED_ATTACK = new StandPose("rangedAttack");
     public static final StandPose BARRAGE = new StandPose("barrage");
 }

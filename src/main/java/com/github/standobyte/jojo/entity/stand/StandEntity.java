@@ -677,6 +677,7 @@ public class StandEntity extends LivingEntity implements IStandManifestation, IE
         if (this.standPose != pose) {
             if (level.isClientSide() && pose == StandPose.BARRAGE) {
                 getBarrageSwingsHolder().resetSwingTime();
+                getBarrageSwings().resetSwingTime();
             }
             this.standPose = pose;
         }
@@ -696,7 +697,18 @@ public class StandEntity extends LivingEntity implements IStandManifestation, IE
             setStandPose(StandPose.IDLE);
             pose = StandPose.IDLE;
         }
-        return StandPoseData.poseData(pose, getCurrentTaskPhase(), getCurrentTaskPhaseCompletion(partialTick));
+        return StandPoseData.start()
+                .standPose(pose)
+                .actionPhase(getCurrentTaskPhase())
+                .phaseCompletion(getCurrentTaskPhaseCompletion(partialTick))
+                .end();
+    }
+    
+    public void onSetPoseAnimEnded() {
+        setStandPose(getCurrentTask().map(task -> {
+            IStandPower userPower = getUserPower();
+            return userPower != null ? task.getAction().getStandPose(userPower, this, task) : null;
+        }).orElse(StandPose.IDLE));
     }
 
 

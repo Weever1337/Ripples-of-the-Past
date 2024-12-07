@@ -1,7 +1,5 @@
 package com.github.standobyte.jojo.client.render.entity.model.animnew.stand;
 
-import java.util.Optional;
-
 import javax.annotation.Nullable;
 
 import com.github.standobyte.jojo.action.stand.StandEntityAction.Phase;
@@ -21,7 +19,7 @@ public class StandActionAnimation {
     @Nullable public AnimObjTimeline<Phase> phasesTimeline;
     @Nullable public AnimObjTimeline<String> barrageTimeline;
     
-    public float lastPoseTime;
+    public float animTime;
     
     public StandActionAnimation(Animation anim) {
         this.anim = anim;
@@ -29,35 +27,46 @@ public class StandActionAnimation {
     
     
     
-    public boolean poseStand(StandEntity entity, StandEntityModel<?> model, float ticks, float yRotOffsetRad, float xRotRad, 
-            StandPose standPose, Optional<Phase> actionPhase, float phaseCompletion) {
-        if (actionPhase.isPresent() && phasesTimeline != null) {
-            Phase taskPhase = actionPhase.get();
+    public boolean poseStand(@Nullable StandEntity entity, StandEntityModel<?> model, 
+            float ticks, float yRotOffsetRad, float xRotRad, StandPoseData poseData) {
+        if (poseData.actionPhase.isPresent() && phasesTimeline != null) {
+            Phase taskPhase = poseData.actionPhase.get();
             
-            Float prevPhaseTime = null;
             Float curPhaseTime = null;
+            Float nextPhaseTime = null;
             Float2ObjectMap.Entry<Phase> prevAnimPhase = null;
             for (Float2ObjectMap.Entry<Phase> animPhase : phasesTimeline.getEntries()) {
                 if (animPhase.getValue().ordinal() > taskPhase.ordinal()) {
-                    prevPhaseTime = prevAnimPhase != null ? prevAnimPhase.getFloatKey() : 0;
-                    curPhaseTime = animPhase.getFloatKey();
+                    curPhaseTime = prevAnimPhase != null ? prevAnimPhase.getFloatKey() : 0;
+                    nextPhaseTime = animPhase.getFloatKey();
                     break;
                 }
                 prevAnimPhase = animPhase;
             }
-            if (prevPhaseTime == null) {
-                prevPhaseTime = prevAnimPhase.getValue() == taskPhase ? prevAnimPhase.getFloatKey() : anim.lengthInSeconds();
-                curPhaseTime = anim.lengthInSeconds();
+            if (curPhaseTime == null) {
+                curPhaseTime = prevAnimPhase.getValue() == taskPhase ? prevAnimPhase.getFloatKey() : anim.lengthInSeconds();
+                nextPhaseTime = anim.lengthInSeconds();
             }
             
-            lastPoseTime = MathHelper.lerp(phaseCompletion, prevPhaseTime, curPhaseTime);
+            if (poseData.phaseCompletion >= 0) {
+                animTime = MathHelper.lerp(poseData.phaseCompletion, curPhaseTime, nextPhaseTime);
+            }
+            else if (poseData.animTime >= 0) {
+                animTime = curPhaseTime + poseData.animTime / 20f;
+                if (entity != null && animTime >= anim.lengthInSeconds()) {
+                    entity.onSetPoseAnimEnded();
+                }
+            }
+            else {
+                animTime = curPhaseTime;
+            }
         }
         else {
-            lastPoseTime = anim.looping() ? (ticks / 20.0f) % anim.lengthInSeconds() : ticks / 20.0f;
+            animTime = anim.looping() ? (ticks / 20f) % anim.lengthInSeconds() : ticks / 20f;
         }
         
         AnimContext animContext = AnimContext.makeContext(entity, ticks, yRotOffsetRad, xRotRad);
-        GeckoStandAnimator.animateSecs(model, anim, lastPoseTime, ANIM_SPEED, animContext);
+        GeckoStandAnimator.animateSecs(model, anim, animTime, ANIM_SPEED, animContext);
         
         return true;
     }

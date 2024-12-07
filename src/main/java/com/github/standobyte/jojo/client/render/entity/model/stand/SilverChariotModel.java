@@ -3,6 +3,8 @@ package com.github.standobyte.jojo.client.render.entity.model.stand;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.annotation.Nullable;
+
 import com.github.standobyte.jojo.action.stand.StandEntityAction;
 import com.github.standobyte.jojo.client.render.entity.pose.IModelPose;
 import com.github.standobyte.jojo.client.render.entity.pose.ModelPose;
@@ -324,8 +326,8 @@ public class SilverChariotModel extends HumanoidStandModel<SilverChariotEntity> 
     }
     
     @Override
-    protected IActionAnimation<SilverChariotEntity> getActionAnim(SilverChariotEntity entity, StandPose poseType) {
-        if (entity.hasRapier() && rapierAnim.containsKey(poseType)) {
+    protected IActionAnimation<SilverChariotEntity> getActionAnim(@Nullable SilverChariotEntity entity, StandPose poseType) {
+        if (entity == null || entity.hasRapier() && rapierAnim.containsKey(poseType)) {
             return rapierAnim.get(poseType);
         }
         return super.getActionAnim(entity, poseType);
