@@ -7,7 +7,7 @@ import com.google.gson.JsonPrimitive;
 
 //TODO math equations support
 public interface IFloatSupplier {
-    float get(FloatQuery.AnimContext animContext);
+    float get(AnimContext animContext);
     default boolean isNumericLiteral() { return false; }
     void multiplyNumerics(float multiplier);
     

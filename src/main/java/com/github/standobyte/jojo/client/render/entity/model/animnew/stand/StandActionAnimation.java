@@ -5,14 +5,13 @@ import java.util.Optional;
 import javax.annotation.Nullable;
 
 import com.github.standobyte.jojo.action.stand.StandEntityAction.Phase;
-import com.github.standobyte.jojo.client.render.entity.model.animnew.floatquery.FloatQuery;
+import com.github.standobyte.jojo.client.render.entity.model.animnew.floatquery.AnimContext;
 import com.github.standobyte.jojo.client.render.entity.model.animnew.mojang.Animation;
 import com.github.standobyte.jojo.client.render.entity.model.stand.StandEntityModel;
 import com.github.standobyte.jojo.entity.stand.StandEntity;
 import com.github.standobyte.jojo.entity.stand.StandPose;
 
 import it.unimi.dsi.fastutil.floats.Float2ObjectMap;
-import net.minecraft.util.HandSide;
 import net.minecraft.util.math.MathHelper;
 
 public class StandActionAnimation {
@@ -31,7 +30,7 @@ public class StandActionAnimation {
     
     
     public boolean poseStand(StandEntity entity, StandEntityModel<?> model, float ticks, float yRotOffsetRad, float xRotRad, 
-            StandPose standPose, Optional<Phase> actionPhase, float phaseCompletion, HandSide swingingHand) {
+            StandPose standPose, Optional<Phase> actionPhase, float phaseCompletion) {
         if (actionPhase.isPresent() && phasesTimeline != null) {
             Phase taskPhase = actionPhase.get();
             
@@ -57,7 +56,7 @@ public class StandActionAnimation {
             lastPoseTime = anim.looping() ? (ticks / 20.0f) % anim.lengthInSeconds() : ticks / 20.0f;
         }
         
-        FloatQuery.AnimContext animContext = FloatQuery.AnimContext.makeContext(entity, ticks, yRotOffsetRad, xRotRad);
+        AnimContext animContext = AnimContext.makeContext(entity, ticks, yRotOffsetRad, xRotRad);
         GeckoStandAnimator.animateSecs(model, anim, lastPoseTime, ANIM_SPEED, animContext);
         
         return true;

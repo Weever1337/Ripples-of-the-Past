@@ -26,6 +26,7 @@ import com.github.standobyte.jojo.capability.entity.PlayerUtilCap.OneTimeNotific
 import com.github.standobyte.jojo.capability.entity.PlayerUtilCapProvider;
 import com.github.standobyte.jojo.client.ClientUtil;
 import com.github.standobyte.jojo.client.render.entity.model.animnew.BarrageSwings;
+import com.github.standobyte.jojo.client.render.entity.model.animnew.stand.StandPoseData;
 import com.github.standobyte.jojo.client.render.entity.model.stand.StandEntityModel;
 import com.github.standobyte.jojo.client.render.entity.pose.anim.barrage.BarrageSwingsHolder;
 import com.github.standobyte.jojo.client.sound.BarrageHitSoundHandler;
@@ -687,6 +688,15 @@ public class StandEntity extends LivingEntity implements IStandManifestation, IE
 
     public int getSummonPoseRandomByte() {
         return summonPoseRandomByte;
+    }
+    
+    public StandPoseData getCurPose(float partialTick) {
+        StandPose pose = getStandPose();
+        if (pose == StandPose.SUMMON && this.isArmsOnlyMode()) {
+            setStandPose(StandPose.IDLE);
+            pose = StandPose.IDLE;
+        }
+        return StandPoseData.poseData(pose, getCurrentTaskPhase(), getCurrentTaskPhaseCompletion(partialTick));
     }
 
 

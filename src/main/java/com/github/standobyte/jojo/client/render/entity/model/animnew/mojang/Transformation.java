@@ -3,7 +3,7 @@ package com.github.standobyte.jojo.client.render.entity.model.animnew.mojang;
 import java.util.Arrays;
 
 import com.github.standobyte.jojo.client.render.entity.model.animnew.IModelRendererScale;
-import com.github.standobyte.jojo.client.render.entity.model.animnew.floatquery.FloatQuery;
+import com.github.standobyte.jojo.client.render.entity.model.animnew.floatquery.AnimContext;
 import com.github.standobyte.jojo.client.render.entity.model.animnew.floatquery.KeyframeWithQuery;
 
 import net.minecraft.client.renderer.model.ModelRenderer;
@@ -24,7 +24,7 @@ public class Transformation {
         return target;
     }
     
-    public Keyframe[] keyframes(FloatQuery.AnimContext animContext) {
+    public Keyframe[] keyframes(AnimContext animContext) {
         for (KeyframeWithQuery query : keyframeWrappers) {
             query.applyContext(animContext);
         }

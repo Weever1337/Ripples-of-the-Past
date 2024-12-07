@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.github.standobyte.jojo.client.render.entity.model.animnew.floatquery.FloatQuery;
+import com.github.standobyte.jojo.client.render.entity.model.animnew.floatquery.AnimContext;
 import com.github.standobyte.jojo.client.render.entity.model.animnew.floatquery.KeyframeWithQuery;
 import com.github.standobyte.jojo.client.render.entity.model.animnew.mojang.Animation;
 import com.github.standobyte.jojo.client.render.entity.model.animnew.mojang.Keyframe;
@@ -37,7 +37,7 @@ public class AnimTimestamp {
         for (Map.Entry<String, List<Transformation>> entry : anim.boneAnimations().entrySet()) {
             List<Transformation> timestampTransforms = new ArrayList<>();
             for (Transformation tf : entry.getValue()) {
-                FloatQuery.AnimContext emptyCtx = FloatQuery.AnimContext.clearContext();
+                AnimContext emptyCtx = AnimContext.clearContext();
                 Keyframe[] keyframes = tf.keyframes(emptyCtx);
                 Vector3f vec = GeckoStandAnimator.lerpKeyframes(keyframes, timeInSeconds, 1);
                 

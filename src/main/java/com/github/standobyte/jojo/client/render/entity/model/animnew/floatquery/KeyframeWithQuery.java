@@ -2,7 +2,6 @@ package com.github.standobyte.jojo.client.render.entity.model.animnew.floatquery
 
 import javax.annotation.Nullable;
 
-import com.github.standobyte.jojo.client.render.entity.model.animnew.floatquery.FloatQuery.AnimContext;
 import com.github.standobyte.jojo.client.render.entity.model.animnew.mojang.Keyframe;
 import com.github.standobyte.jojo.client.render.entity.model.animnew.mojang.Transformation;
 import com.google.gson.JsonArray;

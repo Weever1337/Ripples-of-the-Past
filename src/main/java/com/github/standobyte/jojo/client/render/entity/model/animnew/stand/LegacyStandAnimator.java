@@ -48,8 +48,7 @@ public class LegacyStandAnimator<T extends StandEntity> implements IStandAnimato
 
     @Override
     public <A extends StandEntity> boolean poseStand(A standEntity, StandEntityModel<A> standEntityModel, float ticks, float yRotOffsetRad,
-            float xRotRad, StandPose standPose, Optional<Phase> actionPhase, float phaseCompletion,
-            HandSide swingingHand) {
+            float xRotRad, StandPose standPose, Optional<Phase> actionPhase, float phaseCompletion) {
         T entity = (T) standEntity;
         StandEntityModel<T> model = (StandEntityModel<T>) standEntityModel;
         currentActionAnim = null;
@@ -59,6 +58,7 @@ public class LegacyStandAnimator<T extends StandEntity> implements IStandAnimato
             model.setStandPose(standPose, entity);
         }
         
+        HandSide swingingHand = standEntity.getPunchingHand();
         if (actionAnim.containsKey(standPose)) {
             idlePose.poseModel(1.0F, entity, ticks, yRotOffsetRad, xRotRad, swingingHand);
             model.onPose(entity, ticks);

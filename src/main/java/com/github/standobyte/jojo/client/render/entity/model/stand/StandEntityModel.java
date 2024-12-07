@@ -19,6 +19,7 @@ import com.github.standobyte.jojo.client.render.entity.model.animnew.ModelPartDe
 import com.github.standobyte.jojo.client.render.entity.model.animnew.stand.GeckoStandAnimator;
 import com.github.standobyte.jojo.client.render.entity.model.animnew.stand.IStandAnimator;
 import com.github.standobyte.jojo.client.render.entity.model.animnew.stand.LegacyStandAnimator;
+import com.github.standobyte.jojo.client.render.entity.model.animnew.stand.StandPoseData;
 import com.github.standobyte.jojo.client.render.entity.model.stand.StandModelRegistry.StandModelRegistryObj;
 import com.github.standobyte.jojo.client.render.entity.pose.IModelPose;
 import com.github.standobyte.jojo.client.render.entity.pose.ModelPose;
@@ -161,42 +162,36 @@ public abstract class StandEntityModel<T extends StandEntity> extends AgeableMod
     public void setupAnim(T entity, float walkAnimPos, float walkAnimSpeed, float ticks, float yRotationOffset, float xRotation) {
         resetXRotation();
         
-        HandSide swingingHand = entity.getPunchingHand();
         headParts().forEach(part -> {
             setRotationAngle(part, 0, 0, 0);
         });
         bodyParts().forEach(part -> {
             setRotationAngle(part, 0, 0, 0);
         });
-
-        StandPose pose = entity.getStandPose();
-        if (pose == StandPose.SUMMON && entity.isArmsOnlyMode()) {
-            entity.setStandPose(StandPose.IDLE);
-            pose = StandPose.IDLE;
-        }
-        this.standPose = pose;
         
         this.yRotRad = yRotationOffset * MathUtil.DEG_TO_RAD;
         this.xRotRad = xRotation * MathUtil.DEG_TO_RAD;
+        float partialTick = ticks - entity.tickCount;
+        StandPoseData poseData = entity.getCurPose(partialTick);
+        this.standPose = poseData.standPose;
         poseStand(entity, ticks, yRotRad, xRotRad, 
-                pose, entity.getCurrentTaskPhase(), 
-                entity.getCurrentTaskPhaseCompletion(ticks - entity.tickCount), swingingHand);
+                poseData.standPose, poseData.actionPhase, poseData.phaseCompletion);
         this.ticks = ticks;
         
         applyXRotation();
     }
     
     protected void poseStand(T entity, float ticks, float yRotOffsetRad, float xRotRad, 
-            StandPose standPose, Optional<Phase> actionPhase, float phaseCompletion, HandSide swingingHand) {
+            StandPose standPose, Optional<Phase> actionPhase, float phaseCompletion) {
         IStandAnimator standAnimator = getAnimator();
         if (standAnimator != null && standAnimator.poseStand(entity, this, ticks, yRotOffsetRad, xRotRad, 
-                standPose, actionPhase, phaseCompletion, swingingHand)) {
+                standPose, actionPhase, phaseCompletion)) {
             return;
         }
         
         if (standAnimator != legacyStandAnimHandler && !GeckoStandAnimator.IS_TESTING_GECKO) {
             legacyStandAnimHandler.poseStand(entity, this, ticks, yRotOffsetRad, xRotRad, 
-                    standPose, actionPhase, phaseCompletion, swingingHand);
+                    standPose, actionPhase, phaseCompletion);
         }
     }
     

@@ -1,9 +1,5 @@
 package com.github.standobyte.jojo.client.render.entity.model.animnew.floatquery;
 
-import javax.annotation.Nullable;
-
-import net.minecraft.entity.Entity;
-
 public class FloatQuery implements IFloatSupplier {
     private final QueryType queryType;
     private float value;
@@ -49,7 +45,7 @@ public class FloatQuery implements IFloatSupplier {
     }
     
     @Override
-    public float get(FloatQuery.AnimContext animContext) {
+    public float get(AnimContext animContext) {
         switch (queryType) {
         case NUMERIC_LITERAL:
             return value;
@@ -59,28 +55,5 @@ public class FloatQuery implements IFloatSupplier {
             return animContext.yRotOffsetRad;
         }
         throw new AssertionError();
-    }
-    
-    public static class AnimContext {
-        @Nullable private Entity entity;
-        private float ticks;
-        private float yRotOffsetRad;
-        private float xRotRad;
-        
-        public static AnimContext makeContext(Entity entity, float ticks, float yRotOffsetRad, float xRotRad) {
-            INSTANCE.entity = entity;
-            INSTANCE.ticks = ticks;
-            INSTANCE.yRotOffsetRad = yRotOffsetRad;
-            INSTANCE.xRotRad = xRotRad;
-            return INSTANCE;
-        }
-        
-        public static AnimContext clearContext() {
-            return makeContext(null, 0, 0, 0);
-        }
-        
-        
-        private static final AnimContext INSTANCE = new AnimContext();
-        private AnimContext() {}
     }
 }

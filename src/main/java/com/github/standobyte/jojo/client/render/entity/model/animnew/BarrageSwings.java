@@ -167,7 +167,7 @@ public class BarrageSwings {
             matrixStack.translate(offsetRot.x, offsetRot.y, -offsetRot.z);
             model.resetPose(entity);
             barrageAnim.poseStand(entity, model, ticks, yRotOffsetRad, xRotRad, 
-                    model.standPose, entity.getCurrentTaskPhase(), 0, side);
+                    model.standPose, entity.getCurrentTaskPhase(), 0);
             ModelRenderer arm = model.getArm(side);
             arm.zRot = arm.zRot + HumanoidStandModel.barrageHitEasing(loopCompletion) * zRot;
             model.applyXRotation();
