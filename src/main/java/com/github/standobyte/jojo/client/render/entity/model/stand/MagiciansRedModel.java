@@ -215,15 +215,47 @@ public class MagiciansRedModel extends HumanoidStandModel<MagiciansRedEntity> {
     }
 
     @Override
-    public void afterInit() {
-        super.afterInit();
-        putNamedModelPart("beakUpper", beakUpper);
-        putNamedModelPart("beakLower", beakLower);
-        putNamedModelPart("feather", feather);
-        putNamedModelPart("feather2", feather2);
+    protected ModelPose<MagiciansRedEntity> initPoseReset() {
+        return super.initPoseReset()
+                .putRotation(RotationAngle.fromDegrees(beakUpper, 10F, 0.0F, 0.0F))
+                .putRotation(new RotationAngle(beakLower, 0.0F, 0.0F, 0.0F));
     }
 
-    // TODO remove allat, we're gonna parse the gecko animations now
+    @Override
+    protected RotationAngle[][] initSummonPoseRotations() {
+        return new RotationAngle[][] {
+            new RotationAngle[] {
+                    new RotationAngle(head, 0.0F, 0.1309F, 0.0F),
+                    new RotationAngle(beakUpper, -0.3491F, 0.0F, 0.0F),
+                    new RotationAngle(beakLower, 0.5236F, 0.0F, 0.0F),
+                    new RotationAngle(body, 0.0F, -0.3927F, 0.0F),
+                    new RotationAngle(leftArm, 0.0F, 0.0F, -2.3562F),
+                    new RotationAngle(rightArm, 0.0F, 0.0F, 2.3562F),
+                    new RotationAngle(leftLeg, 0.1745F, -0.7854F, 0.0F),
+                    new RotationAngle(rightLeg, -1.5708F, -0.7854F, 0.0F),
+                    new RotationAngle(rightLowerLeg, 2.3562F, 0.0F, 0.0F)
+            },
+            new RotationAngle[] {
+                    new RotationAngle(head, -0.7854F, 0.0F, 0.0F),
+                    new RotationAngle(beakUpper, -0.3491F, 0.0F, 0.0F),
+                    new RotationAngle(beakLower, 0.5236F, 0.0F, 0.0F),
+                    new RotationAngle(leftArm, 0.0F, 2.3562F, -2.8798F),
+                    new RotationAngle(leftForeArm, 0.0F, 0.0F, 2.3562F),
+                    new RotationAngle(rightArm, 0.0F, -2.3562F, 2.8798F),
+                    new RotationAngle(rightForeArm, 0.0F, 0.0F, -2.3562F),
+                    new RotationAngle(leftLeg, 0.2182F, 0.0F, 0.1309F),
+                    new RotationAngle(rightLeg, 0.5236F, 0.0F, -0.1309F)
+            }
+        };
+    }
+
+    @Override
+    public void setupAnim(MagiciansRedEntity entity, float walkAnimPos, float walkAnimSpeed, float ticks, float yRotationOffset, float xRotation) {
+        leftArm.setPos(6.0F, -10.0F, 0.0F);
+        rightArm.setPos(-6.0F, -10.0F, 0.0F);
+        super.setupAnim(entity, walkAnimPos, walkAnimSpeed, ticks, yRotationOffset, xRotation);
+    }
+    
     @Override
     protected void initActionPoses() {
         actionAnim.put(MagiciansRedFlameBurst.FLAME_BURST_POSE, new PosedActionAnimation.Builder<MagiciansRedEntity>()
@@ -293,6 +325,34 @@ public class MagiciansRedModel extends HumanoidStandModel<MagiciansRedEntity> {
         super.initActionPoses();
     }
 
+    @Override
+    protected ModelPose<MagiciansRedEntity> initIdlePose() {
+        return new ModelPose<>(new RotationAngle[] {
+                new RotationAngle(beakUpper, 0.1745F, 0.0F, 0.0F),
+                new RotationAngle(beakLower, 0.0F, 0.0F, 0.0F),
+                new RotationAngle(body, 0.0F, 0.1309F, 0.0F),
+                new RotationAngle(upperPart, 0.0F, 0.0F, 0.0F),
+                new RotationAngle(leftArm, 0.3054F, 0.0F, -0.2182F),
+                new RotationAngle(leftForeArm, -2.0944F, -0.2618F, 1.0472F),
+                new RotationAngle(rightArm, 0.1309F, 0.0F, 0.4363F),
+                new RotationAngle(rightForeArm, -2.3562F, 0.2618F, -1.8326F),
+                new RotationAngle(leftLeg, 0.1309F, -0.1309F, 0.0F),
+                new RotationAngle(leftLowerLeg, 0.2618F, 0.0F, 0.0F),
+                new RotationAngle(rightLeg, 0.0F, -0.1309F, 0.2182F),
+                new RotationAngle(rightLowerLeg, 0.1309F, 0.0F, 0.0F),
+        });
+    }
+
+    @Override
+    protected ModelPose<MagiciansRedEntity> initIdlePose2Loop() {
+        return new ModelPose<>(new RotationAngle[] {
+                new RotationAngle(leftArm, 0.3927F, 0.0F, -0.1745F),
+                new RotationAngle(leftForeArm, -1.9635F, -0.1309F, 1.0472F),
+                new RotationAngle(rightArm, 0.1309F, 0.0F, 0.3054F),
+                new RotationAngle(rightForeArm, -2.3562F, 0.2618F, -1.7017F)
+        });
+    }
+    
     @Override
     public void setupFirstPersonRotations(MatrixStack matrixStack, MagiciansRedEntity entity, float xRot, float yRot, float yBodyRot) {
         if (standPose == MagiciansRedFlameBurst.FLAME_BURST_POSE) {

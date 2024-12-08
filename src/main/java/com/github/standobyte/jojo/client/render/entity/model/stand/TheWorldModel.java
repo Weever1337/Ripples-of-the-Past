@@ -1,13 +1,6 @@
 package com.github.standobyte.jojo.client.render.entity.model.stand;
 
-import com.github.standobyte.jojo.action.stand.StandEntityAction;
 import com.github.standobyte.jojo.client.render.MeshModelBox;
-import com.github.standobyte.jojo.client.render.entity.pose.ModelPose;
-import com.github.standobyte.jojo.client.render.entity.pose.ModelPoseTransition;
-import com.github.standobyte.jojo.client.render.entity.pose.ModelPoseTransitionMultiple;
-import com.github.standobyte.jojo.client.render.entity.pose.RotationAngle;
-import com.github.standobyte.jojo.client.render.entity.pose.anim.PosedActionAnimation;
-import com.github.standobyte.jojo.entity.stand.StandPose;
 import com.github.standobyte.jojo.entity.stand.stands.TheWorldEntity;
 
 import net.minecraft.client.renderer.model.ModelRenderer;
@@ -302,17 +295,22 @@ public class TheWorldModel extends HumanoidStandModel<TheWorldEntity> {
         setRotationAngle(smallHeartCube3, 0.0F, 0.0F, -0.7854F);
         smallHeartCube3.texOffs(17, 85).addBox(0.0F, -1.0F, -0.5F, 1.0F, 0.825F, 1.0F, -0.2F, false);
 
-        leftArm = convertLimb(new ModelRenderer(this));
-        leftArm.setPos(6.0F, -10.0F, 0.0F);
-        upperPart.addChild(leftArm);
-        leftArm.texOffs(32, 108).addBox(-2.0F, -2.0F, -2.0F, 4.0F, 6.0F, 4.0F, 0.0F, false);
-        leftArm.texOffs(53, 95).addBox(-1.0F, -2.0F, -2.0F, 3.0F, 6.0F, 4.0F, 0.1F, true);
-        leftArm.texOffs(48, 110).addBox(-1.0F, -2.0F, -2.0F, 3.0F, 3.0F, 4.0F, 0.25F, true);
-        leftArm.texOffs(48, 105).addBox(-2.0F, 3.0F, -2.0F, 4.0F, 1.0F, 4.0F, 0.075F, true);
+        leftArmXRot = new ModelRenderer(this);
+        leftArmXRot.setPos(6.0F, -10.0F, 0.0F);
+        upperPart.addChild(leftArmXRot);
+        
+
+        leftArmBone = new ModelRenderer(this);
+        leftArmBone.setPos(0.0F, 0.0F, 0.0F);
+        leftArmXRot.addChild(leftArmBone);
+        leftArmBone.texOffs(32, 108).addBox(-2.0F, -2.0F, -2.0F, 4.0F, 6.0F, 4.0F, 0.0F, false);
+        leftArmBone.texOffs(53, 95).addBox(-1.0F, -2.0F, -2.0F, 3.0F, 6.0F, 4.0F, 0.1F, true);
+        leftArmBone.texOffs(48, 110).addBox(-1.0F, -2.0F, -2.0F, 3.0F, 3.0F, 4.0F, 0.25F, true);
+        leftArmBone.texOffs(48, 105).addBox(-2.0F, 3.0F, -2.0F, 4.0F, 1.0F, 4.0F, 0.075F, true);
 
         heartLeftArm = new ModelRenderer(this);
         heartLeftArm.setPos(0.0F, 3.8F, 1.8F);
-        leftArm.addChild(heartLeftArm);
+        leftArmBone.addChild(heartLeftArm);
         
 
         heartCube4 = new ModelRenderer(this);
@@ -335,29 +333,34 @@ public class TheWorldModel extends HumanoidStandModel<TheWorldEntity> {
 
         leftArmJoint = new ModelRenderer(this);
         leftArmJoint.setPos(0.0F, 4.0F, 0.0F);
-        leftArm.addChild(leftArmJoint);
+        leftArmBone.addChild(leftArmJoint);
         leftArmJoint.texOffs(32, 102).addBox(-1.5F, -1.5F, -1.5F, 3.0F, 3.0F, 3.0F, -0.1F, true);
 
         leftForeArm = new ModelRenderer(this);
         leftForeArm.setPos(0.0F, 4.0F, 0.0F);
-        leftArm.addChild(leftForeArm);
+        leftArmBone.addChild(leftForeArm);
         leftForeArm.texOffs(32, 118).addBox(-2.0F, 0.0F, -2.0F, 4.0F, 6.0F, 4.0F, -0.001F, true);
         leftForeArm.texOffs(48, 105).addBox(-2.0F, 3.1F, -2.0F, 4.0F, 1.0F, 4.0F, 0.075F, true);
         leftForeArm.texOffs(48, 119).addBox(-2.0F, -0.4F, -2.0F, 4.0F, 4.0F, 4.0F, 0.15F, true);
         leftForeArm.texOffs(32, 96).addBox(0.9F, 2.7F, -1.5F, 2.0F, 3.0F, 3.0F, -0.6F, true);
         leftForeArm.texOffs(42, 97).addBox(1.5F, 5.1F, -2.0F, 1.0F, 1.0F, 4.0F, -0.2F, true);
 
-        rightArm = convertLimb(new ModelRenderer(this));
-        rightArm.setPos(-6.0F, -10.0F, 0.0F);
-        upperPart.addChild(rightArm);
-        rightArm.texOffs(0, 108).addBox(-2.0F, -2.0F, -2.0F, 4.0F, 6.0F, 4.0F, 0.0F, false);
-        rightArm.texOffs(18, 87).addBox(-2.0F, -2.0F, -2.0F, 3.0F, 6.0F, 4.0F, 0.1F, false);
-        rightArm.texOffs(16, 110).addBox(-2.0F, -2.0F, -2.0F, 3.0F, 3.0F, 4.0F, 0.25F, false);
-        rightArm.texOffs(16, 105).addBox(-2.0F, 3.0F, -2.0F, 4.0F, 1.0F, 4.0F, 0.075F, false);
+        rightArmXRot = new ModelRenderer(this);
+        rightArmXRot.setPos(-6.0F, -10.0F, 0.0F);
+        upperPart.addChild(rightArmXRot);
+        
+
+        rightArmBone = new ModelRenderer(this);
+        rightArmBone.setPos(0.0F, 0.0F, 0.0F);
+        rightArmXRot.addChild(rightArmBone);
+        rightArmBone.texOffs(0, 108).addBox(-2.0F, -2.0F, -2.0F, 4.0F, 6.0F, 4.0F, 0.0F, false);
+        rightArmBone.texOffs(18, 87).addBox(-2.0F, -2.0F, -2.0F, 3.0F, 6.0F, 4.0F, 0.1F, false);
+        rightArmBone.texOffs(16, 110).addBox(-2.0F, -2.0F, -2.0F, 3.0F, 3.0F, 4.0F, 0.25F, false);
+        rightArmBone.texOffs(16, 105).addBox(-2.0F, 3.0F, -2.0F, 4.0F, 1.0F, 4.0F, 0.075F, false);
 
         heartRightArm = new ModelRenderer(this);
         heartRightArm.setPos(0.0F, 3.8F, 1.8F);
-        rightArm.addChild(heartRightArm);
+        rightArmBone.addChild(heartRightArm);
         
 
         heartCube1 = new ModelRenderer(this);
@@ -380,28 +383,33 @@ public class TheWorldModel extends HumanoidStandModel<TheWorldEntity> {
 
         rightArmJoint = new ModelRenderer(this);
         rightArmJoint.setPos(0.0F, 4.0F, 0.0F);
-        rightArm.addChild(rightArmJoint);
+        rightArmBone.addChild(rightArmJoint);
         rightArmJoint.texOffs(0, 102).addBox(-1.5F, -1.5F, -1.5F, 3.0F, 3.0F, 3.0F, -0.1F, false);
 
         rightForeArm = new ModelRenderer(this);
         rightForeArm.setPos(0.0F, 4.0F, 0.0F);
-        rightArm.addChild(rightForeArm);
+        rightArmBone.addChild(rightForeArm);
         rightForeArm.texOffs(0, 118).addBox(-2.0F, 0.0F, -2.0F, 4.0F, 6.0F, 4.0F, -0.001F, false);
         rightForeArm.texOffs(16, 105).addBox(-2.0F, 3.1F, -2.0F, 4.0F, 1.0F, 4.0F, 0.075F, false);
         rightForeArm.texOffs(16, 119).addBox(-2.0F, -0.4F, -2.0F, 4.0F, 4.0F, 4.0F, 0.15F, false);
         rightForeArm.texOffs(0, 96).addBox(-2.9F, 2.7F, -1.5F, 2.0F, 3.0F, 3.0F, -0.6F, false);
         rightForeArm.texOffs(10, 97).addBox(-2.5F, 5.1F, -2.0F, 1.0F, 1.0F, 4.0F, -0.2F, false);
 
-        leftLeg = convertLimb(new ModelRenderer(this));
-        leftLeg.setPos(1.9F, 12.0F, 0.0F);
-        body.addChild(leftLeg);
-        leftLeg.texOffs(96, 108).addBox(-2.0F, 0.0F, -2.0F, 4.0F, 6.0F, 4.0F, 0.0F, false);
-        leftLeg.texOffs(112, 99).addBox(-2.0F, 0.0F, -2.0F, 4.0F, 5.0F, 4.0F, 0.2F, false);
-        leftLeg.texOffs(112, 108).addBox(1.8F, -1.75F, -1.5F, 1.0F, 3.0F, 3.0F, 0.0F, true);
+        leftLegXRot = new ModelRenderer(this);
+        leftLegXRot.setPos(2.0F, 12.0F, 0.0F);
+        body.addChild(leftLegXRot);
+        
+
+        leftLegBone = new ModelRenderer(this);
+        leftLegBone.setPos(0.0F, 0.0F, 0.0F);
+        leftLegXRot.addChild(leftLegBone);
+        leftLegBone.texOffs(96, 108).addBox(-2.0F, 0.0F, -2.0F, 4.0F, 6.0F, 4.0F, 0.0F, false);
+        leftLegBone.texOffs(112, 99).addBox(-2.0F, 0.0F, -2.0F, 4.0F, 5.0F, 4.0F, 0.2F, false);
+        leftLegBone.texOffs(112, 108).addBox(1.8F, -1.75F, -1.5F, 1.0F, 3.0F, 3.0F, 0.0F, true);
 
         heartRightLeg = new ModelRenderer(this);
         heartRightLeg.setPos(0.0F, 6.0F, -1.8F);
-        leftLeg.addChild(heartRightLeg);
+        leftLegBone.addChild(heartRightLeg);
         
 
         heartCube10 = new ModelRenderer(this);
@@ -424,25 +432,30 @@ public class TheWorldModel extends HumanoidStandModel<TheWorldEntity> {
 
         leftLegJoint = new ModelRenderer(this);
         leftLegJoint.setPos(0.0F, 6.0F, 0.0F);
-        leftLeg.addChild(leftLegJoint);
+        leftLegBone.addChild(leftLegJoint);
         leftLegJoint.texOffs(96, 102).addBox(-1.5F, -1.5F, -1.5F, 3.0F, 3.0F, 3.0F, -0.1F, true);
 
         leftLowerLeg = new ModelRenderer(this);
         leftLowerLeg.setPos(0.0F, 6.0F, 0.0F);
-        leftLeg.addChild(leftLowerLeg);
+        leftLegBone.addChild(leftLowerLeg);
         leftLowerLeg.texOffs(96, 118).addBox(-2.0F, 0.0F, -2.0F, 4.0F, 6.0F, 4.0F, -0.001F, false);
         leftLowerLeg.texOffs(112, 118).addBox(-2.0F, 0.0F, -2.0F, 4.0F, 6.0F, 4.0F, 0.2F, false);
 
-        rightLeg = convertLimb(new ModelRenderer(this));
-        rightLeg.setPos(-1.9F, 12.0F, 0.0F);
-        body.addChild(rightLeg);
-        rightLeg.texOffs(64, 108).addBox(-2.0F, 0.0F, -2.0F, 4.0F, 6.0F, 4.0F, 0.0F, false);
-        rightLeg.texOffs(80, 99).addBox(-2.0F, 0.0F, -2.0F, 4.0F, 5.0F, 4.0F, 0.2F, false);
-        rightLeg.texOffs(80, 108).addBox(-2.8F, -1.25F, -1.5F, 1.0F, 3.0F, 3.0F, 0.0F, false);
+        rightLegXRot = new ModelRenderer(this);
+        rightLegXRot.setPos(-2.0F, 12.0F, 0.0F);
+        body.addChild(rightLegXRot);
+        
+
+        rightLegBone = new ModelRenderer(this);
+        rightLegBone.setPos(0.0F, 0.0F, 0.0F);
+        rightLegXRot.addChild(rightLegBone);
+        rightLegBone.texOffs(64, 108).addBox(-2.0F, 0.0F, -2.0F, 4.0F, 6.0F, 4.0F, 0.0F, false);
+        rightLegBone.texOffs(80, 99).addBox(-2.0F, 0.0F, -2.0F, 4.0F, 5.0F, 4.0F, 0.2F, false);
+        rightLegBone.texOffs(80, 108).addBox(-2.8F, -1.25F, -1.5F, 1.0F, 3.0F, 3.0F, 0.0F, false);
 
         heartLeftLeg = new ModelRenderer(this);
         heartLeftLeg.setPos(0.0F, 6.0F, -1.8F);
-        rightLeg.addChild(heartLeftLeg);
+        rightLegBone.addChild(heartLeftLeg);
         
 
         heartCube7 = new ModelRenderer(this);
@@ -465,12 +478,12 @@ public class TheWorldModel extends HumanoidStandModel<TheWorldEntity> {
 
         rightLegJoint = new ModelRenderer(this);
         rightLegJoint.setPos(0.0F, 6.0F, 0.0F);
-        rightLeg.addChild(rightLegJoint);
+        rightLegBone.addChild(rightLegJoint);
         rightLegJoint.texOffs(64, 102).addBox(-1.5F, -1.5F, -1.5F, 3.0F, 3.0F, 3.0F, -0.1F, false);
 
         rightLowerLeg = new ModelRenderer(this);
         rightLowerLeg.setPos(0.0F, 6.0F, 0.0F);
-        rightLeg.addChild(rightLowerLeg);
+        rightLegBone.addChild(rightLowerLeg);
         rightLowerLeg.texOffs(64, 118).addBox(-2.0F, 0.0F, -2.0F, 4.0F, 6.0F, 4.0F, -0.001F, false);
         rightLowerLeg.texOffs(80, 118).addBox(-2.0F, 0.0F, -2.0F, 4.0F, 6.0F, 4.0F, 0.2F, false);
     }
@@ -479,102 +492,6 @@ public class TheWorldModel extends HumanoidStandModel<TheWorldEntity> {
     public void afterInit() {
         super.afterInit();
         putNamedModelPart("heartLargeAbdomen", heartLargeAbdomen);
-    }
-
-    // TODO remove allat, we're gonna parse the gecko animations now
-    @Override
-    protected void initActionPoses() {
-        ModelPose<TheWorldEntity> heavyPunchPose1 = new ModelPose<>(new RotationAngle[] {
-                new RotationAngle(leftArm, 0.0F, 0.0F, -0.5236F),
-                new RotationAngle(leftForeArm, 0.0F, 0.0F, 0.5672F),
-                new RotationAngle(rightArm, 0.2182F, 0.8727F, 1.3963F),
-                new RotationAngle(rightForeArm, -1.1345F, -0.3927F, -1.5708F),
-                new RotationAngle(leftLeg, 0.0F, 0.0436F, -0.1309F),
-                new RotationAngle(rightLeg, 0.2618F, 0.2618F, 0.1309F)
-        });
-        ModelPose<TheWorldEntity> heavyPunchPose2 = new ModelPose<>(new RotationAngle[] {
-                new RotationAngle(head, -0.2182F, 0.0F, 0.0F), 
-                new RotationAngle(body, 0.2182F, 0.2618F, 0.0F),
-                new RotationAngle(upperPart, 0.0F, 0.1745F, 0.0F),
-                new RotationAngle(leftArm, 0.0F, 0.0F, -0.5236F),
-                new RotationAngle(leftForeArm, 0.0F, 0.0F, 0.5672F),
-                new RotationAngle(rightArm, 0.6981F, 1.0036F, 2.0071F),
-                new RotationAngle(rightForeArm, -0.7854F, -0.2618F, -1.5708F),
-                new RotationAngle(leftLeg, 0.1745F, 0.0F, 0.0F),
-                new RotationAngle(rightLeg, 0.2618F, 0.2618F, 0.1309F)
-        });
-        ModelPose<TheWorldEntity> heavyPunchPose3 = new ModelPose<>(new RotationAngle[] {
-                new RotationAngle(body, 0.2182F, -0.5236F, 0.0F),
-                new RotationAngle(upperPart, 0.0F, -0.5236F, 0.0F),
-                new RotationAngle(leftArm, 0.0F, 0.4363F, -1.5708F),
-                new RotationAngle(leftForeArm, 0.0F, 0.0F, 1.1781F),
-                new RotationAngle(rightArm, -0.3927F, -0.2182F, 1.0472F),
-                new RotationAngle(rightForeArm, 0.0F, 3.1416F, 0.6981F),
-                new RotationAngle(leftLeg, -1.0472F, 0.0F, 0.0F),
-                new RotationAngle(leftLowerLeg, 1.8326F, 0.0F, 0.0F),
-                new RotationAngle(rightLeg, 0.2618F, 0.2618F, 0.1309F)
-        });
-        ModelPose<TheWorldEntity> heavyPunchPose4 = new ModelPose<>(new RotationAngle[] {
-                new RotationAngle(body, 0.2182F, -0.0873F, 0.0F),
-                new RotationAngle(upperPart, 0.0F, -0.0873F, 0.0F),
-                new RotationAngle(leftArm, 0.0F, 0.4363F, -0.7854F),
-                new RotationAngle(leftForeArm, 0.0F, 0.0F, 0.5672F),
-                new RotationAngle(rightArm, 0.3927F, 0.0F, 0.3491F),
-                new RotationAngle(rightForeArm, -1.4399F, 0.0F, -1.309F),
-                new RotationAngle(leftLeg, -1.0472F, 0.0F, 0.0F),
-                new RotationAngle(leftLowerLeg, 1.8326F, 0.0F, 0.0F),
-                new RotationAngle(rightLeg, 0.2618F, 0.2618F, 0.1309F)
-        });
-        actionAnim.put(StandPose.HEAVY_ATTACK, new PosedActionAnimation.Builder<TheWorldEntity>()
-                .addPose(StandEntityAction.Phase.WINDUP, new ModelPoseTransition<>(heavyPunchPose1, heavyPunchPose2).setEasing(pr -> Math.max(pr * 3F - 2F, 0F)))
-                .addPose(StandEntityAction.Phase.PERFORM, new ModelPoseTransition<>(heavyPunchPose2, heavyPunchPose3))
-                .addPose(StandEntityAction.Phase.RECOVERY, new ModelPoseTransitionMultiple.Builder<>(heavyPunchPose3)
-                        .addPose(0.5F, heavyPunchPose3)
-                        .addPose(0.7F, heavyPunchPose4)
-                        .addPose(0.8F, heavyPunchPose4)
-                        .build(idlePose))
-                .build(idlePose));
-        
-        ModelPose<TheWorldEntity> kickPose1 = new ModelPose<>(new RotationAngle[] {
-                RotationAngle.fromDegrees(head, -7.5F, 153.33F, 0F), 
-                RotationAngle.fromDegrees(body, 0F, 153.33F, 0F),
-                RotationAngle.fromDegrees(leftArm, 0F, 0F, -30F),
-                RotationAngle.fromDegrees(leftForeArm, 0F, 0F, 15F),
-                RotationAngle.fromDegrees(rightArm, -32.5F, 22.5F, -22.5F),
-                RotationAngle.fromDegrees(rightForeArm, 0F, 0F, -45F),
-                RotationAngle.fromDegrees(leftLeg, 0F, 0F, 0F),
-                RotationAngle.fromDegrees(rightLeg, -10F, 0F, 20F),
-                RotationAngle.fromDegrees(rightLowerLeg, 50F, 0F, 0F)
-        });
-        ModelPose<TheWorldEntity> kickPose2 = new ModelPose<>(new RotationAngle[] {
-                RotationAngle.fromDegrees(head, -11.25F, 230F, 0F), 
-                RotationAngle.fromDegrees(body, 0F, 230F, 0F),
-                RotationAngle.fromDegrees(leftArm, 0F, 0F, -45F),
-                RotationAngle.fromDegrees(leftForeArm, 0F, 0F, 22.5F),
-                RotationAngle.fromDegrees(rightArm, -25.28F, 17.5F, -17.5F),
-                RotationAngle.fromDegrees(rightForeArm, 0F, 0F, -35F),
-                RotationAngle.fromDegrees(rightLeg, -15F, 0F, 30F),
-                RotationAngle.fromDegrees(rightLowerLeg, 75F, 0F, 0F)
-        });
-        ModelPose<TheWorldEntity> kickPose3 = new ModelPose<>(new RotationAngle[] {
-                RotationAngle.fromDegrees(head, -15F, 360F, 0F), 
-                RotationAngle.fromDegrees(body, -43.00306F, 308.28988F, 36.20399F),
-                RotationAngle.fromDegrees(leftArm, 0F, 0F, -60F),
-                RotationAngle.fromDegrees(leftForeArm, 0F, 0F, 30F),
-                RotationAngle.fromDegrees(rightArm, -18.06F, 12.5F, -12.5F),
-                RotationAngle.fromDegrees(rightForeArm, 0F, 0F, -25F),
-                RotationAngle.fromDegrees(leftLeg, 15.55245F, 35.50838F, -13.04428F),
-                RotationAngle.fromDegrees(rightLeg, -30F, 0, 105F),
-                RotationAngle.fromDegrees(rightLowerLeg, 0F, 0F, 0F)
-        });
-        actionAnim.put(StandPose.HEAVY_ATTACK_FINISHER, new PosedActionAnimation.Builder<TheWorldEntity>()
-                .addPose(StandEntityAction.Phase.WINDUP, new ModelPoseTransitionMultiple.Builder<>(idlePose)
-                        .addPose(0.5F, kickPose1)
-                        .addPose(0.75F, kickPose2)
-                        .build(kickPose3))
-                .build(idlePose));
-        
-        super.initActionPoses();
     }
     
 }

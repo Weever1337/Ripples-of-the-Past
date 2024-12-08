@@ -158,6 +158,22 @@ public class HierophantGreenModel extends HumanoidStandModel<HierophantGreenEnti
 
     // TODO remove allat, we're gonna parse the gecko animations now
     @Override
+    protected RotationAngle[][] initSummonPoseRotations() {
+        return new RotationAngle[][] {
+            new RotationAngle[] { 
+                    new RotationAngle(head, -0.5236F, 0.0F, 0.0F),
+                    new RotationAngle(leftArm, 0.0F, 0.0F, -0.5236F),
+                    new RotationAngle(leftForeArm, -0.5236F, 0.0F, 1.3963F),
+                    new RotationAngle(rightArm, -1.2217F, 0.0F, 0.0F),
+                    new RotationAngle(leftLeg, -1.8326F, 0.0F, 0.2618F),
+                    new RotationAngle(leftLowerLeg, 1.8326F, 0.0F, 0.0F),
+                    new RotationAngle(rightLeg, 0.0F, 0.0F, -0.2618F),
+                    new RotationAngle(rightLowerLeg, 1.5708F, 0.0F, 0.0F)
+            }
+        };
+    }
+    
+    @Override
     protected void initActionPoses() {
         ModelPose<HierophantGreenEntity> esPose1 = new ModelPose<>(new RotationAngle[] {
                 RotationAngle.fromDegrees(leftArm, -55, 0, 15),
@@ -212,6 +228,33 @@ public class HierophantGreenModel extends HumanoidStandModel<HierophantGreenEnti
                 .build(idlePose));
         
         super.initActionPoses();
+    }
+    
+    
+    @Override
+    protected ModelPose<HierophantGreenEntity> initIdlePose() {
+        return new ModelPose<>(new RotationAngle[] {
+                new RotationAngle(body, 0.0F, 0.3491F, 0.0F),
+                new RotationAngle(upperPart, 0.0F, 0.0F, 0.0F),
+                new RotationAngle(leftArm, 0.0F, 0.0F, -0.2182F),
+                new RotationAngle(leftForeArm, -0.4363F, 0.0F, 0.0F),
+                new RotationAngle(rightArm, -0.0873F, 0.0F, 0.7854F),
+                new RotationAngle(rightForeArm, -1.9199F, -0.5672F, 0.9599F),
+                new RotationAngle(leftLeg, -0.5672F, -0.6109F, -0.1309F),
+                new RotationAngle(leftLowerLeg, 1.309F, -0.1309F, 0.0F),
+                new RotationAngle(rightLeg, 0.2182F, 0.1309F, 0.1309F),
+                new RotationAngle(rightLowerLeg, 0.2182F, 0.1309F, 0.0F)
+        });
+    }
+
+    @Override
+    protected ModelPose<HierophantGreenEntity> initIdlePose2Loop() {
+        return new ModelPose<>(new RotationAngle[] {
+                new RotationAngle(leftArm, 0.0873F, 0.0F, -0.2182F),
+                new RotationAngle(leftForeArm, -0.5236F, 0.0F, 0.0F),
+                new RotationAngle(rightArm, 0.0698F, 0.0F, 0.7854F),
+                new RotationAngle(rightForeArm, -2.0071F, -0.4363F, 0.9599F)
+        });
     }
     
 }
