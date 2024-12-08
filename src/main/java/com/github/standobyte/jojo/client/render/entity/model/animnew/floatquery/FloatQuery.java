@@ -1,5 +1,7 @@
 package com.github.standobyte.jojo.client.render.entity.model.animnew.floatquery;
 
+import com.github.standobyte.jojo.util.general.MathUtil;
+
 public class FloatQuery implements IFloatSupplier {
     private final QueryType queryType;
     private float value;
@@ -52,7 +54,7 @@ public class FloatQuery implements IFloatSupplier {
         case HEAD_X_ROTATION:
             return animContext.xRotRad;
         case HEAD_Y_ROTATION:
-            return animContext.yRotOffsetRad;
+            return MathUtil.wrapRadians(animContext.yRotOffsetRad);
         }
         throw new AssertionError();
     }
