@@ -163,6 +163,11 @@ public class MRFlameEntity extends ModdedProjectileEntity {
     }
     
     @Override
+    public boolean canBeEvaded(@Nullable Entity context) {
+        return false;
+    }
+    
+    @Override
     protected float getMaxHardnessBreakable() {
         return 0;
     }

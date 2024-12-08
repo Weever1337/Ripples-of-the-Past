@@ -15,6 +15,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.projectile.ProjectileEntity;
+import net.minecraft.util.DamageSource;
 import net.minecraft.util.EntityDamageSource;
 import net.minecraft.world.World;
 import net.minecraftforge.event.entity.living.LivingAttackEvent;
@@ -42,21 +43,22 @@ public class PillarmanUnnaturalAgility extends PillarmanAction {
     
     public static boolean onUserAttacked(LivingAttackEvent event) {
         Entity attacker = event.getSource().getDirectEntity();
+        DamageSource source = event.getSource();
         if ((attacker instanceof LivingEntity && !attacker.isOnFire() && !DamageUtil.isImmuneToCold(attacker)) 
-        		|| attacker instanceof StandEntity || attacker instanceof ProjectileEntity) {
+        		|| attacker instanceof StandEntity || attacker instanceof ProjectileEntity || source.isExplosion()) {
             LivingEntity targetLiving = event.getEntityLiving();
             return INonStandPower.getNonStandPowerOptional(targetLiving).map(power -> {
                 if (power.getHeldAction(true) == ModPillarmanActions.PILLARMAN_UNNATURAL_AGILITY.get() 
                 		|| power.getHeldAction(true) == ModPillarmanActions.PILLARMAN_EVASION.get()) {
                     World world = attacker.level;
                     if (attacker instanceof ModdedProjectileEntity) {
-                		if (!(((ModdedProjectileEntity) attacker).canBeDeflected(attacker)) 
+                		if (!(((ModdedProjectileEntity) attacker).canBeEvaded(attacker)) 
                 				|| ((ModdedProjectileEntity) attacker).standDamage() && !canSeeStands(targetLiving)) {
                 			return false;
                 		}
                 		return true;
                 	}
-                    if (attacker instanceof StandEntity && !canSeeStands(targetLiving)) {
+                    if (attacker instanceof StandEntity && !canSeeStands(targetLiving) || source.isExplosion()) {
                     	return false;
                     }
                     if (power.getHeldAction(true) == ModPillarmanActions.PILLARMAN_UNNATURAL_AGILITY.get() 

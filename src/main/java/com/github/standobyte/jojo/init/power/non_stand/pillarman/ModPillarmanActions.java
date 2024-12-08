@@ -57,7 +57,7 @@ public class ModPillarmanActions {
             () -> new PillarmanEnhancedSenses(new NonStandAction.Builder().holdEnergyCost(0.05F).heldWalkSpeed(0.5F).ignoresPerformerStun()));
 
     public static final RegistryObject<PillarmanAction> PILLARMAN_EVASION = ACTIONS.register("pillarman_evasion", 
-            () -> new PillarmanEvasion(new NonStandAction.Builder().holdType(40).holdEnergyCost(1.5F).heldWalkSpeed(5.0F).cooldown(40)));
+            () -> new PillarmanEvasion(new NonStandAction.Builder().holdType(50).holdEnergyCost(1.5F).heldWalkSpeed(5.0F).cooldown(50)));
     
     public static final RegistryObject<PillarmanAction> PILLARMAN_UNNATURAL_AGILITY = ACTIONS.register("pillarman_unnatural_agility", 
             () -> new PillarmanUnnaturalAgility(new NonStandAction.Builder().holdEnergyCost(1F).heldWalkSpeed(0).shiftVariationOf(PILLARMAN_EVASION)));
@@ -81,7 +81,7 @@ public class ModPillarmanActions {
             () -> new PillarmanErraticBlazeKing(new NonStandAction.Builder().energyCost(20F).heldWalkSpeed(0.1F)));
 
     public static final RegistryObject<PillarmanAction> PILLARMAN_GIANT_CARTHWHEEL_PRISON = ACTIONS.register("pillarman_giant_carthwheel_prison", 
-            () -> new PillarmanGiantCarthwheelPrison(new NonStandAction.Builder().energyCost(125F).holdToFire(30, false).heldWalkSpeed(0).cooldown(60)));
+            () -> new PillarmanGiantCarthwheelPrison(new NonStandAction.Builder().energyCost(125F).holdToFire(30, false).heldWalkSpeed(0).cooldown(100)));
 
     public static final RegistryObject<PillarmanAction> PILLARMAN_SELF_DETONATION = ACTIONS.register("pillarman_self_detonation", 
             () -> new PillarmanSelfDetonation(new NonStandAction.Builder().energyCost(150F).holdToFire(60, false).heldWalkSpeed(0)));

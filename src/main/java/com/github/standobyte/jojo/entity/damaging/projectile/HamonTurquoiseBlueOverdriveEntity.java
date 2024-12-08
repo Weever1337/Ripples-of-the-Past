@@ -183,6 +183,11 @@ public class HamonTurquoiseBlueOverdriveEntity extends ModdedProjectileEntity {
     public boolean canBeDeflected(@Nullable Entity context) {
         return false;
     }
+    
+    @Override
+    public boolean canBeEvaded(@Nullable Entity context) {
+        return false;
+    }
 
     @Override
     protected void addAdditionalSaveData(CompoundNBT nbt) {

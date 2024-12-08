@@ -14,7 +14,7 @@ import net.minecraft.potion.Effects;
 import net.minecraft.util.math.vector.Vector2f;
 import net.minecraft.world.World;
 
-public class PillarmanGiantCarthwheelPrison extends PillarmanErraticBlazeKing {
+public class PillarmanGiantCarthwheelPrison extends PillarmanAction {
 
     public PillarmanGiantCarthwheelPrison(PillarmanAction.Builder builder) {
         super(builder.holdType());
@@ -34,10 +34,10 @@ public class PillarmanGiantCarthwheelPrison extends PillarmanErraticBlazeKing {
             int n = 8;
             for (int i = 0; i < n; i++) {
                 Vector2f rotOffsets2 = MathUtil.xRotYRotOffsets((double) i / (double) n * Math.PI * 2, 2);
-                addVeinProjectile(world, power, user, rotOffsets2.x, rotOffsets2.y, 0, -0.5D, 0);
-                addVeinProjectile(world, power, user, rotOffsets2.x, rotOffsets2.y + 180, 0, -0.5D, 0);
-                addVeinProjectile(world, power, user, rotOffsets2.x, rotOffsets2.y + 90, 0, -0.5D, 0);
-                addVeinProjectile(world, power, user, rotOffsets2.x, rotOffsets2.y - 90, 0, -0.5D, 0);
+                PillarmanErraticBlazeKing.addVeinProjectile(world, power, user, rotOffsets2.x, rotOffsets2.y, 0, -0.5D, 0);
+                PillarmanErraticBlazeKing.addVeinProjectile(world, power, user, rotOffsets2.x, rotOffsets2.y + 180, 0, -0.5D, 0);
+                PillarmanErraticBlazeKing.addVeinProjectile(world, power, user, rotOffsets2.x, rotOffsets2.y + 90, 0, -0.5D, 0);
+                PillarmanErraticBlazeKing.addVeinProjectile(world, power, user, rotOffsets2.x, rotOffsets2.y - 90, 0, -0.5D, 0);
             }
             user.addEffect(new EffectInstance(Effects.FIRE_RESISTANCE, 600, 0, false, false));
         }
