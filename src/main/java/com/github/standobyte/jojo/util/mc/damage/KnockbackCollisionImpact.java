@@ -32,11 +32,16 @@ import net.minecraft.block.material.Material;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.StringNBT;
+import net.minecraft.particles.BasicParticleType;
+import net.minecraft.particles.IParticleData;
+import net.minecraft.particles.ParticleType;
 import net.minecraft.util.AxisRotation;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.Direction;
 import net.minecraft.util.EntityDamageSource;
 import net.minecraft.util.EntityPredicates;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.ReuseableStream;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
@@ -50,6 +55,7 @@ import net.minecraft.world.Explosion;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.util.INBTSerializable;
+import net.minecraftforge.registries.ForgeRegistries;
 
 public class KnockbackCollisionImpact implements INBTSerializable<CompoundNBT> {
     private final Entity entity;
@@ -65,6 +71,10 @@ public class KnockbackCollisionImpact implements INBTSerializable<CompoundNBT> {
     private float explosionRadius = 0;
     private DamageSource explosionDmgSource;
     private float explosionDamage;
+    
+    private float syoPunchBaseDamage = 0;
+    private int scarletOverdriveFireTicks = 0;
+    private IParticleData hamonParticles;
     
     public KnockbackCollisionImpact(Entity entity) {
         this.entity = entity;
@@ -101,6 +111,13 @@ public class KnockbackCollisionImpact implements INBTSerializable<CompoundNBT> {
         if (aoeDamageSource != null) aoeDamageSource.setExplosion();
         this.explosionDmgSource = aoeDamageSource;
         this.explosionDamage = aoeDamage;
+        return this;
+    }
+    
+    public KnockbackCollisionImpact hamonDamage(float punchBaseDamage, int fireTicks, IParticleData sparkParticles) {
+        this.syoPunchBaseDamage = punchBaseDamage;
+        this.scarletOverdriveFireTicks = fireTicks;
+        this.hamonParticles = sparkParticles;
         return this;
     }
     
@@ -161,6 +178,11 @@ public class KnockbackCollisionImpact implements INBTSerializable<CompoundNBT> {
             nbt.putBoolean("HadBlockImpact", hadImpactWithBlock);
             nbt.putFloat("ExplosionRadius", explosionRadius);
             nbt.putFloat("ExplosionDamage", explosionDamage);
+            nbt.putFloat("HamonPunchDmg", syoPunchBaseDamage);
+            nbt.putInt("HamonFireTicks", scarletOverdriveFireTicks);
+            if (hamonParticles instanceof ParticleType) {
+                nbt.putString("HamonSparks", ((ParticleType<?>) hamonParticles).getRegistryName().toString());
+            }
         }
         return nbt;
     }
@@ -173,6 +195,19 @@ public class KnockbackCollisionImpact implements INBTSerializable<CompoundNBT> {
             hadImpactWithBlock = nbt.getBoolean("HadBlockImpact");
             explosionRadius = nbt.getFloat("ExplosionRadius");
             explosionDamage = nbt.getFloat("ExplosionDamage");
+            syoPunchBaseDamage = nbt.getFloat("HamonPunchDmg");
+            scarletOverdriveFireTicks = nbt.getInt("HamonFireTicks");
+            hamonParticles = MCUtil.getNbtElement(nbt, "HamonSparks", StringNBT.class)
+                    .map(StringNBT::getAsString).map(ResourceLocation::new)
+                    .map(particleId -> {
+                        if (ForgeRegistries.PARTICLE_TYPES.containsKey(particleId)) {
+                            ParticleType<?> type = ForgeRegistries.PARTICLE_TYPES.getValue(particleId);
+                            if (type instanceof BasicParticleType) {
+                                return (BasicParticleType) type;
+                            }
+                        }
+                        return null;
+                    }).orElse(null);
         }
     }
     
@@ -205,11 +240,26 @@ public class KnockbackCollisionImpact implements INBTSerializable<CompoundNBT> {
             Vector3d vec = entity.getDeltaMovement();
 
             entitiesCollided.forEach(targetEntity -> {
-                DamageUtil.hurtThroughInvulTicks(targetEntity, new EntityDamageSource("entityFlewInto", entity), 
-                        (float) getKnockbackImpactStrength() * 5);
-                if (targetEntity instanceof LivingEntity) {
-                    LivingEntity living = (LivingEntity) targetEntity;
-                    living.knockback((float) getKnockbackImpactStrength(), -vec.x, -vec.z);
+                LivingEntity asLiving = targetEntity instanceof LivingEntity ? (LivingEntity) targetEntity : null;
+                if (asLiving != null && syoPunchBaseDamage > 0) {
+                    DamageUtil.dealHamonDamage(asLiving, syoPunchBaseDamage * 0.5f, entity, attacker, attack -> {
+                        if (hamonParticles != null) {
+                            attack.hamonParticle(hamonParticles);
+                        }
+                    });
+                }
+                if (scarletOverdriveFireTicks > 0) {
+                    DamageUtil.dealDamageAndSetOnFire(targetEntity, 
+                            e -> DamageUtil.hurtThroughInvulTicks(e, new EntityDamageSource("entityFlewInto", entity), 
+                                    (float) getKnockbackImpactStrength() * 5), 
+                            scarletOverdriveFireTicks / 20, false);
+                }
+                else {
+                    DamageUtil.hurtThroughInvulTicks(targetEntity, new EntityDamageSource("entityFlewInto", entity), 
+                            (float) getKnockbackImpactStrength() * 5);
+                }
+                if (asLiving != null) {
+                    asLiving.knockback((float) getKnockbackImpactStrength(), -vec.x, -vec.z);
                 }
             });
         }
@@ -275,18 +325,18 @@ public class KnockbackCollisionImpact implements INBTSerializable<CompoundNBT> {
                 setKnockbackImpactStrength(0);
                 
                 Vector3d collisionDir = new Vector3d(collision.movementX - collision.x, collision.movementY - collision.y, collision.movementZ - collision.z);
-                Direction faceHit = Direction.getNearest(collisionDir.x, collisionDir.y, collisionDir.z).getOpposite();
-                if (faceHit.getAxis() != Direction.Axis.Y) {
+                Direction faceHit = Direction.getNearest(collisionDir.x, collisionDir.y, collisionDir.z);
+                if (faceHit != Direction.DOWN) {
                     if (breakBlocks) {
                         if (explosionRadius > 0) {
                             AxisAlignedBB entityBB = entity.getBoundingBox();
                             Vector3d hitPos = new Vector3d(
-                                    MathHelper.lerp(-faceHit.getStepX() * 0.5 + 0.5, entityBB.minX, entityBB.maxX), 
-                                    MathHelper.lerp(-faceHit.getStepY() * 0.5 + 0.5, entityBB.minY, entityBB.maxY), 
-                                    MathHelper.lerp(-faceHit.getStepZ() * 0.5 + 0.5, entityBB.minZ, entityBB.maxZ));
-                            BlockPos hitBlockPos = new BlockPos(hitPos.add(Vector3d.atBottomCenterOf(faceHit.getNormal()).scale(-0.5)));
+                                    MathHelper.lerp(faceHit.getStepX() * 0.5 + 0.5, entityBB.minX, entityBB.maxX), 
+                                    MathHelper.lerp(faceHit.getStepY() * 0.5 + 0.5, entityBB.minY, entityBB.maxY), 
+                                    MathHelper.lerp(faceHit.getStepZ() * 0.5 + 0.5, entityBB.minZ, entityBB.maxZ));
+                            BlockPos hitBlockPos = new BlockPos(hitPos.add(Vector3d.atBottomCenterOf(faceHit.getNormal()).scale(0.5)));
                             
-                            HeavyPunchExplosion explosion = new HeavyPunchExplosion(world, attacker, new ActionTarget(hitBlockPos, faceHit), 
+                            HeavyPunchExplosion explosion = new HeavyPunchExplosion(world, attacker, new ActionTarget(hitBlockPos, faceHit.getOpposite()), 
                                     movementVec, explosionDmgSource, null, 
                                     hitPos.x, hitPos.y, hitPos.z, 
                                     explosionRadius, false, Explosion.Mode.BREAK)

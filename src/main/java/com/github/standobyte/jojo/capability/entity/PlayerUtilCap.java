@@ -268,7 +268,7 @@ public class PlayerUtilCap {
     
     
     public void setContinuousAction(@Nullable ContinuousActionInstance<?, ?> action) {
-        continuousAction.ifPresent(ContinuousActionInstance::onStop);
+        continuousAction.ifPresent(ContinuousActionInstance::stopAction);
         if (action != null) {
             action.onStart();
         }
@@ -299,7 +299,7 @@ public class PlayerUtilCap {
         return continuousAction;
     }
     
-    public <T extends ContinuousActionInstance<T, P>, P extends IPower<P, ?>> Optional<T> getContinuousActionIfItIs(IPlayerAction<T, P> action) {
+    public <T extends ContinuousActionInstance<?, P>, P extends IPower<P, ?>> Optional<T> getContinuousActionIfItIs(IPlayerAction<T, P> action) {
         if (GeneralUtil.orElseFalse(continuousAction.map(ContinuousActionInstance::getAction), currentAction -> currentAction == action)) {
             return (Optional<T>) continuousAction;
         }

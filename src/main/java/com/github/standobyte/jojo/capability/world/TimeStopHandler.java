@@ -71,12 +71,13 @@ public class TimeStopHandler {
         this.world = world;
     }
     
+    @SuppressWarnings("deprecation")
     public void tick() {
         Iterator<Entity> entityIter = stoppedInTime.iterator();
         
         while (entityIter.hasNext()) {
             Entity entity = entityIter.next();
-            if (!entity.isAlive()) {
+            if (entity.removed) {
                 entityIter.remove();
             }
 

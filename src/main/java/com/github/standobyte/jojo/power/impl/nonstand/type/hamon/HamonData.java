@@ -1,5 +1,6 @@
 package com.github.standobyte.jojo.power.impl.nonstand.type.hamon;
 
+import java.text.DecimalFormat;
 import java.util.Collection;
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -20,6 +21,8 @@ import com.github.standobyte.jojo.JojoMod;
 import com.github.standobyte.jojo.JojoModConfig;
 import com.github.standobyte.jojo.action.Action;
 import com.github.standobyte.jojo.action.ActionConditionResult;
+import com.github.standobyte.jojo.action.ActionTarget;
+import com.github.standobyte.jojo.action.non_stand.HamonSunlightYellowOverdrive;
 import com.github.standobyte.jojo.action.non_stand.HamonWallClimbing2;
 import com.github.standobyte.jojo.action.player.ContinuousActionInstance;
 import com.github.standobyte.jojo.advancements.ModCriteriaTriggers;
@@ -48,6 +51,7 @@ import com.github.standobyte.jojo.network.packets.fromserver.HamonSkillAddPacket
 import com.github.standobyte.jojo.network.packets.fromserver.HamonSkillRemovePacket;
 import com.github.standobyte.jojo.network.packets.fromserver.HamonSyncOnLoadPacket;
 import com.github.standobyte.jojo.network.packets.fromserver.HamonUiEffectPacket;
+import com.github.standobyte.jojo.network.packets.fromserver.MultiLineOverlayMsgPacket;
 import com.github.standobyte.jojo.network.packets.fromserver.TrHamonAuraColorPacket;
 import com.github.standobyte.jojo.network.packets.fromserver.TrHamonAuraColorPacket.HamonAuraColor;
 import com.github.standobyte.jojo.network.packets.fromserver.TrHamonBreathStabilityPacket;
@@ -71,6 +75,7 @@ import com.github.standobyte.jojo.util.general.GeneralUtil;
 import com.github.standobyte.jojo.util.general.MathUtil;
 import com.github.standobyte.jojo.util.mc.MCUtil;
 import com.github.standobyte.jojo.util.mod.JojoModUtil;
+import com.google.common.collect.ImmutableList;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntitySize;
@@ -89,6 +94,9 @@ import net.minecraft.server.management.PlayerInteractionManager;
 import net.minecraft.util.Util;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.util.text.ChatType;
+import net.minecraft.util.text.IFormattableTextComponent;
+import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.GameRules;
 import net.minecraft.world.World;
@@ -215,7 +223,7 @@ public class HamonData extends TypeSpecificData {
             return power.getEnergy() + tickHamonBreath(ModHamonActions.HAMON_BREATH.get());
         }
         else {
-            if (isUserWearingBreathMask()) {
+            if (isUserWearingBreathMask() && !isMeditating()) {
                 ticksMaskWithNoHamonBreath++;
             }
             else {
@@ -294,7 +302,11 @@ public class HamonData extends TypeSpecificData {
         boolean maskNoBreath = false;
         
         if (isUserWearingBreathMask()) {
-            float breathMaskHandicap = MathHelper.clamp((400f - ticksMaskWithNoHamonBreath) / 200f, -1, 1);
+            float ticksCanBreatheWithMask = 400 + breathingTrainingLevel * 16;
+            float breathMaskHandicap = 0;
+            if (breathingTrainingLevel < MAX_BREATHING_LEVEL) {
+                breathMaskHandicap = MathHelper.clamp((ticksCanBreatheWithMask - ticksMaskWithNoHamonBreath) / (ticksCanBreatheWithMask / 2), -1, 1);
+            }
             boolean canIndicateInHud = user.level.isClientSide() && ClientUtil.getClientPlayer() == user;
             if (canIndicateInHud && breathMaskHandicap == 0) {
                 BarsRenderer.getBarEffects(BarType.ENERGY_HAMON).triggerRedHighlight(4);
@@ -308,11 +320,13 @@ public class HamonData extends TypeSpecificData {
                 inc = maxStability / 1200 * breathMaskHandicap;
                 maskNoBreath = true;
                 
-                if (canIndicateInHud && (breathStability + inc) / maxStability < 0.2F) {
-                    if (breathStability / maxStability > 0.2F) {
-                        BarsRenderer.getBarEffects(BarType.ENERGY_HAMON).triggerRedHighlight(999999);
+                if (canIndicateInHud) {
+                    BarsRenderer.getBarEffects(BarType.ENERGY_HAMON).triggerRedHighlight(999999);
+                    if ((ticksMaskWithNoHamonBreath - ticksCanBreatheWithMask > 400 || (breathStability + inc) / maxStability < 0.2F)
+                            && breathStability + inc > 0
+                            && ModHamonActions.HAMON_BREATH.get().checkConditions(user, power, ActionTarget.EMPTY).isPositive()) {
+                        ClientUtil.setOverlayMessage(new TranslationTextComponent("hamon.breath_control_mask.restore_stab"));
                     }
-                    ClientUtil.setOverlayMessage(new TranslationTextComponent("hamon.breath_control_mask.restore_stab"));
                 }
             }
         }
@@ -337,8 +351,8 @@ public class HamonData extends TypeSpecificData {
         breathStability = MathHelper.clamp(breathStability + inc, 0, getMaxBreathStability());
         int air = user.getAirSupply();
         if (!user.level.isClientSide()) {
-            if (breathStability == 0 && (prevBreathStability > 0 || prevAir > air && air > 0)) {
-                outOfBreath(maskNoBreath);
+            if (breathStability == 0 && prevBreathStability > 0 || air == 0 && prevAir > 0) {
+                outOfBreath(maskNoBreath && air > 0);
             }
         }
         else if (user == ClientUtil.getClientPlayer()) {
@@ -383,9 +397,13 @@ public class HamonData extends TypeSpecificData {
         noEnergyDecayTicks = 50 + MathUtil.fractionRandomInc(150F * getBreathingLevel() / HamonData.MAX_BREATHING_LEVEL);
     }
     
+    public float getEnergyRatio() {
+        return power.getEnergy() / getMaxBreathStability();
+    }
     
     
-    public static final float ALL_EXERCISES_EFFICIENCY_MULTIPLIER = 1.05F;
+    
+    public static final float ALL_EXERCISES_EFFICIENCY_ADD_MULTIPLIER = 0.05F;
     @Deprecated
     public float getActionEfficiency(float energyCost, boolean handSwingTimer) {
         return getActionEfficiency(energyCost, handSwingTimer, null);
@@ -395,12 +413,20 @@ public class HamonData extends TypeSpecificData {
         float efficiency = getHamonEnergyUsageEfficiency(energyCost, false) * getBloodstreamEfficiency();
         
         if (efficiency > 0) {
-            if (allExercisesCompleted) {
-                efficiency *= ALL_EXERCISES_EFFICIENCY_MULTIPLIER;
+            float multiplier = 1;
+            if (exercisesCompleted >= MAX_EXERCISES_NEEDED) {
+                multiplier += ALL_EXERCISES_EFFICIENCY_ADD_MULTIPLIER;
             }
+            if (hamonSkill != null) {
+                CharacterHamonTechnique technique = getCharacterTechnique();
+                if (technique != null) {
+                    multiplier += technique.getAddSkillEfficiency(hamonSkill);
+                }
+            }
+            efficiency *= multiplier;
             
             if (handSwingTimer && power.getUser() instanceof PlayerEntity) {
-                float swingStrengthScale = ((PlayerEntity) power.getUser()).getAttackStrengthScale(0.5F);
+                float swingStrengthScale = ((PlayerEntity) power.getUser()).getAttackStrengthScale(1);
                 efficiency *= (0.2F + swingStrengthScale * swingStrengthScale * 0.8F);
             }
             
@@ -788,12 +814,13 @@ public class HamonData extends TypeSpecificData {
     public static final float MEDITATION_COMPLETED_ENERGY_REGEN_TIME_REDUCTION = 20;
     private boolean swimmingCompleted = false;
     private boolean meditationCompleted = false;
-    private boolean allExercisesCompleted = false;
+    private int exercisesCompleted = 0;
     
     private void updateExerciseAttributes(LivingEntity entity) {
-        boolean allComplete = true;
+        exercisesCompleted = 0;
         for (Exercise exercise : Exercise.values()) {
             if (isExerciseComplete(exercise)) {
+                ++exercisesCompleted;
                 switch (exercise) {
                 case RUNNING:
                     if (!entity.level.isClientSide()) {
@@ -812,11 +839,12 @@ public class HamonData extends TypeSpecificData {
                 case MEDITATION:
                     meditationCompleted = true;            
                     break;
+                default:
+                    break;
                 }
             }
             
             else {
-                allComplete = false;
                 switch (exercise) {
                 case RUNNING:
                     if (!entity.level.isClientSide()) {
@@ -840,15 +868,15 @@ public class HamonData extends TypeSpecificData {
                 case MEDITATION:
                     meditationCompleted = false;
                     break;
+                default:
+                    break;
                 }
             }
         }
-        
-        allExercisesCompleted = allComplete;
     }
     
     public int getExerciseTicks(Exercise exercise) {
-        return exerciseTicks.get(exercise);
+        return Math.min(exerciseTicks.get(exercise), exercise.getMaxTicks(this));
     }
     
     public boolean isExerciseComplete(Exercise exercise) {
@@ -856,9 +884,7 @@ public class HamonData extends TypeSpecificData {
     }
     
     public int getCompleteExercisesCount() {
-        return (int) exerciseTicks.entrySet().stream()
-                .filter(entry -> entry.getValue() >= entry.getKey().getMaxTicks(this))
-                .count();
+        return exercisesCompleted;
     }
     
     public float getMaxIncompleteExercise() {
@@ -868,8 +894,8 @@ public class HamonData extends TypeSpecificData {
                 .max(Float::compare).orElse(0F);
     }
     
-    public boolean allExercisesCompleted() {
-        return allExercisesCompleted;
+    public boolean has4ExercisesBonus() {
+        return exercisesCompleted >= MAX_EXERCISES_NEEDED;
     }
     
     private boolean incExerciseLastTick;
@@ -884,8 +910,6 @@ public class HamonData extends TypeSpecificData {
         this.prevPos = pos;
         incExerciseThisTick = false;
         exerciseCompleted = false;
-        
-        float multiplier = user.getItemBySlot(EquipmentSlotType.HEAD).getItem() == ModItems.BREATH_CONTROL_MASK.get() ? 2F : 1;
         
         boolean isMining;
         if (!user.level.isClientSide()) {
@@ -904,20 +928,20 @@ public class HamonData extends TypeSpecificData {
             isMining = blocksMiningDelay-- > 0;
         }
         if (isMining) {
-            incExerciseTicks(Exercise.MINING, multiplier, user.level.isClientSide());
+            incExerciseTicks(Exercise.MINING, 1, user.level.isClientSide());
         }
         
         if (positionChanged && user.isSwimming() && JojoModUtil.playerHasClientInput(user)) {
-            incExerciseTicks(Exercise.SWIMMING, multiplier, user.level.isClientSide());
+            incExerciseTicks(Exercise.SWIMMING, 1, user.level.isClientSide());
         }
         
         else if (positionChanged && user.isSprinting() && user.isOnGround() && !user.isSwimming()) {
-            incExerciseTicks(Exercise.RUNNING, multiplier, user.level.isClientSide());
+            incExerciseTicks(Exercise.RUNNING, 1, user.level.isClientSide());
         }
         
         if (isMeditating()) {
             if (++meditationTicks >= MEDITATION_INC_START) {
-                incExerciseTicks(Exercise.MEDITATION, multiplier, user.level.isClientSide());
+                incExerciseTicks(Exercise.MEDITATION, 1, user.level.isClientSide());
                 breathStabilityIncTicks++;
             }
             updateBbHeight(user);
@@ -934,11 +958,36 @@ public class HamonData extends TypeSpecificData {
                 PacketManager.sendToClient(HamonExercisesPacket.exercisesOnly(this), player);
             });
         }
-        if (exerciseCompleted) {
+        if (breathingTrainingLevel < MAX_BREATHING_LEVEL && exerciseCompleted && exercisesCompleted <= MAX_EXERCISES_NEEDED) {
             updateExerciseAttributes(user);
+            serverPlayer.ifPresent(player -> {
+                IFormattableTextComponent message1 = new TranslationTextComponent("hamon.exercise.all.count.message" + (exercisesCompleted >= 4 ? ".4" : ""), 
+                        exercisesCompleted, MAX_EXERCISES_NEEDED);
+                IFormattableTextComponent message2 = null;
+                switch (exercisesCompleted) {
+                case 3:
+                    message2 = new TranslationTextComponent("hamon.exercise.all.count.message2.3", 
+                            new DecimalFormat("#.##").format(getBreathingIncrease(player, false)));
+                    break;
+                case 4:
+                    message2 = new TranslationTextComponent("hamon.exercise.all.count.message2.4", 
+                            CAN_SKIP_DAYS);
+                    break;
+                }
+                
+                if (message2 == null) {
+                    player.sendMessage(message1, ChatType.GAME_INFO, Util.NIL_UUID);
+                }
+                else {
+                    PacketManager.sendToClient(new MultiLineOverlayMsgPacket(ImmutableList.of(message1, message2)), player);
+                }
+            });
         }
         incExerciseLastTick = incExerciseThisTick;
     }
+    
+    public static final int MAX_EXERCISES_NEEDED = 4;
+    public static final int CAN_SKIP_DAYS = 2;
     
     private static final int MEDITATION_INC_START = 40;
     private float bbHeightMult = 1;
@@ -1011,11 +1060,11 @@ public class HamonData extends TypeSpecificData {
         }
     }
     
-    public void setExerciseTicks(int mining, int running, int swimming, int meditation, boolean clientSide) {
-        setExerciseValue(Exercise.MINING, mining, clientSide);
-        setExerciseValue(Exercise.RUNNING, running, clientSide);
-        setExerciseValue(Exercise.SWIMMING, swimming, clientSide);
-        setExerciseValue(Exercise.MEDITATION, meditation, clientSide);
+    public void setExerciseTicks(int[] ticks, boolean clientSide) {
+        Exercise[] exercises = Exercise.values();
+        for (int i = 0; i < exercises.length; i++) {
+            setExerciseValue(exercises[i], ticks[i], clientSide);
+        }
         updateExerciseAttributes(power.getUser());
     }
     
@@ -1051,6 +1100,9 @@ public class HamonData extends TypeSpecificData {
     }
     
     public float getTrainingBonus(boolean perksAndConfigMult) {
+        if (!isUserWearingBreathMask()) {
+            return 0;
+        }
         return perksAndConfigMult ? multiplyPositiveBreathingTraining(breathingTrainingDayBonus) : breathingTrainingDayBonus;
     }
     
@@ -1101,6 +1153,7 @@ public class HamonData extends TypeSpecificData {
         /* at least 2 exercises to get positive increase, 
            >= 3 exercises give max increase */
         float lvlInc = MathHelper.clamp(completedExercises - 2, -1, 1);
+        float bonusIncrease = lvlInc * 0.25f;
         boolean keepLvlThisDay = canSkipTrainingDays > 0;
         
         if (lvlInc <= 0) {
@@ -1110,23 +1163,23 @@ public class HamonData extends TypeSpecificData {
             else {
                 lvlInc *= 0.25F;
             }
-            
-            if (newTrainingDay && !keepLvlThisDay) {
-                breathingTrainingDayBonus = 0;
-            }
+            bonusIncrease = 0;
+        }
+        else {
+            lvlInc = multiplyPositiveBreathingTraining(lvlInc + getTrainingBonus(false));
         }
         
-        else {
-            float bonus = breathingTrainingDayBonus;
-            if (newTrainingDay) {
-                breathingTrainingDayBonus += lvlInc * 0.25F;
-            }
-            lvlInc = multiplyPositiveBreathingTraining(lvlInc + bonus);
-        }
         if (newTrainingDay) {
+            if (lvlInc <= 0 && !keepLvlThisDay) {
+                breathingTrainingDayBonus = 0;
+            }
+            else if (isUserWearingBreathMask()) {
+                breathingTrainingDayBonus += bonusIncrease;
+            }
+            
             if (canSkipTrainingDays > 0) --canSkipTrainingDays;
-            if (completedExercises >= 4) {
-                canSkipTrainingDays = Math.max(canSkipTrainingDays, 2);
+            if (completedExercises >= MAX_EXERCISES_NEEDED) {
+                canSkipTrainingDays = Math.max(canSkipTrainingDays, CAN_SKIP_DAYS);
             }
         }
         
@@ -1183,9 +1236,7 @@ public class HamonData extends TypeSpecificData {
     }
     
     public static boolean canResetTab(PlayerEntity user, HamonSkillsTab type) {
-        return user.abilities.instabuild
-                // FIXME tmp
-                || type == HamonSkillsTab.TECHNIQUE;
+        return user.abilities.instabuild;
     }
 
     public void resetHamonSkills(LivingEntity user, HamonSkillsTab type) {
@@ -1331,15 +1382,15 @@ public class HamonData extends TypeSpecificData {
             }
         }
         if (user.level.isClientSide()) {
-            float energyRatio;
-            if (power.getHeldAction() == ModHamonActions.HAMON_SUNLIGHT_YELLOW_OVERDRIVE.get()
-                    || power.getHeldAction() == ModHamonActions.JONATHAN_SCARLET_OVERDRIVE.get()) {
-                energyRatio = 1;
+            float energy = power.getEnergy();
+            Action<?> heldAction = power.getHeldAction();
+            if (heldAction instanceof HamonSunlightYellowOverdrive) {
+                if (!power.isUserCreative()) {
+                    energy += ((HamonSunlightYellowOverdrive) heldAction).getSpentEnergy(power);
+                }
+                energy *= 2;
             }
-            else {
-                energyRatio = power.getEnergy() / getMaxBreathStability();
-            }
-            float particlesPerTick = energyRatio * getHamonDamageMultiplier();
+            float particlesPerTick = energy / getMaxBreathStability() * getHamonDamageMultiplier();
             boolean isUserTheCameraEntity = user == ClientUtil.getCameraEntity();
             IParticleData particleType = PARTICLE_TYPE.get(auraColor).get();
             
@@ -1471,18 +1522,13 @@ public class HamonData extends TypeSpecificData {
         recalcHamonDamage();
         hamonSkills.fromNbt(nbt.getCompound("Skills"));
         CompoundNBT exercises = nbt.getCompound("Exercises");
-        int[] exercisesNbt = new int[4];
+        int[] exercisesNbt = new int[Exercise.values().length];
         for (Exercise exercise : Exercise.values()) {
             exercisesNbt[exercise.ordinal()] = exercises.getInt(exercise.toString());
         }
-        setExerciseTicks(exercisesNbt[0], exercisesNbt[1], exercisesNbt[2], exercisesNbt[3], false);
+        setExerciseTicks(exercisesNbt, false);
         breathingTrainingDayBonus = nbt.getFloat("TrainingBonus");
-        if (nbt.getFloat("PrevDayExercises") >= 4) { // TODO legacy support, remove later
-            canSkipTrainingDays = 2;
-        }
-        else {
-            canSkipTrainingDays = nbt.getInt("CanSkipDays");
-        }
+        canSkipTrainingDays = nbt.getInt("CanSkipDays");
         breathStability = nbt.contains("BreathStability") ? nbt.getFloat("BreathStability") : getMaxBreathStability();
         prevBreathStability = breathStability;
         noEnergyDecayTicks = nbt.getInt("EnergyTicks");
@@ -1518,10 +1564,14 @@ public class HamonData extends TypeSpecificData {
     }
     
     public enum Exercise {
-        MINING(150),
-        RUNNING(135),
-        SWIMMING(120),
-        MEDITATION(75);
+        MINING(75),
+        RUNNING(67.5f),
+        SWIMMING(60),
+        MEDITATION(37.5f),
+        PLACEHOLDER_1(60),
+        PLACEHOLDER_2(60);
+        
+        public static final boolean TMP_HAS_PLACEHOLDERS = true;
         
         private final float maxTicks;
         
@@ -1544,8 +1594,17 @@ public class HamonData extends TypeSpecificData {
                 return (HamonData.SWIMMING_COMPLETED_MAX_ENERGY_MULTIPLIER - 1) * 100; 
             case MEDITATION:
                 return HamonData.MEDITATION_COMPLETED_ENERGY_REGEN_TIME_REDUCTION / 20;
+            default:
+                return 0;
             }
-            throw new IllegalArgumentException();
+        }
+        
+        private ITextComponent tlName;
+        public ITextComponent getName() {
+            if (tlName == null) {
+                tlName = new TranslationTextComponent("hamon." + name().toLowerCase() + "_exercise");
+            }
+            return tlName;
         }
     }
     

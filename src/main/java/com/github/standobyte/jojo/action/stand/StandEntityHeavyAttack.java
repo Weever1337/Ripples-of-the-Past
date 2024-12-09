@@ -47,12 +47,12 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.fluid.FluidState;
-import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.Explosion;
 import net.minecraft.world.ExplosionContext;
@@ -271,23 +271,6 @@ public class StandEntityHeavyAttack extends StandEntityAction implements IHasSta
         return true;
     }
     
-//    @Override
-//    public StandAction[] getExtraUnlockable() {
-//        StandAction[] actions = new StandAction[2];
-//        int i = 0;
-//        if (finisherVariation.get() != null) {
-//            actions[i++] = finisherVariation.get();
-//        }
-//        if (recoveryAction.get() != null) {
-//            actions[i++] = recoveryAction.get();
-//        }
-//        actions = Arrays.copyOfRange(actions, 0, i);
-//        for (int j = 0; j < i; j++) {
-//            actions = ArrayUtils.addAll(actions, actions[j].getExtraUnlockable());
-//        }
-//        return actions;
-//    }
-    
     
     
     public static final float DEFAULT_STAMINA_COST = 50;
@@ -493,16 +476,6 @@ public class StandEntityHeavyAttack extends StandEntityAction implements IHasSta
                 super(pLevel, pToBlowX, pToBlowY, pToBlowZ, pRadius);
             }
             
-            @Override
-            public void toBuf(PacketBuffer buf) {
-                
-            }
-            
-            @Override
-            public void fromBuf(PacketBuffer buf) {
-                
-            }
-            
             
             @Override
             protected ExplosionContext makeDamageCalculator(@Nullable Entity pEntity) {
@@ -539,9 +512,11 @@ public class StandEntityHeavyAttack extends StandEntityAction implements IHasSta
                     Map<BlockPos, BlockShardEntity[]> blockShardEntities = new HashMap<>();
                     if (createBlockShards) {
                         Random random = attacker.getRandom();
-                        Vector3d entityLook = attacker.getLookAngle();
                         float shardsVelocity = 0.5f + (float) strength * 0.05f;
-                        float shardsInaccuracy = Math.max(100 - (float) precision * 4.5f, 0);
+                        double shardsInaccuracy = Math.max(100 - precision * 4.5, 0);
+                        
+                        shardsInaccuracy = Math.min(shardsInaccuracy * 0.0075, 1);
+                        Vector3d vecMaxAccuracy = explosionDirection.normalize();
                         
                         for (BlockPos blockPos : toBlow) {
                             BlockState blockState = level.getBlockState(blockPos);
@@ -554,7 +529,13 @@ public class StandEntityHeavyAttack extends StandEntityAction implements IHasSta
                                             blockPos.getY() + random.nextDouble(),
                                             blockPos.getZ() + random.nextDouble());
                                     
-                                    blockShard.shoot(entityLook.x, entityLook.y, entityLook.z, shardsVelocity, shardsInaccuracy);
+                                    Vector3d vecMinAccuracy = blockShard.position().subtract(this.getPosition()).normalize();
+                                    Vector3d shootVec = new Vector3d(
+                                            MathHelper.lerp(shardsInaccuracy, vecMaxAccuracy.x, vecMinAccuracy.x),
+                                            MathHelper.lerp(shardsInaccuracy, vecMaxAccuracy.y, vecMinAccuracy.y),
+                                            MathHelper.lerp(shardsInaccuracy, vecMaxAccuracy.z, vecMinAccuracy.z));
+                                    
+                                    blockShard.shoot(shootVec.x, shootVec.y, shootVec.z, shardsVelocity, 4);
                                     shards[i] = blockShard;
                                 }
                                 blockShardEntities.put(blockPos, shards);
@@ -580,7 +561,7 @@ public class StandEntityHeavyAttack extends StandEntityAction implements IHasSta
                                 ((Chunk) chunk).getCapability(ChunkCapProvider.CAPABILITY).ifPresent(cap -> {
                                     PrevBlockInfo brokenBlock = cap.getBrokenBlockAt(pos);
                                     if (brokenBlock != null) {
-                                        brokenBlock.withBlockShards(shards);
+                                        brokenBlock.withEntities(shards);
                                     }
                                 });
                             }

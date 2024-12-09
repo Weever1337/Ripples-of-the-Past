@@ -16,7 +16,6 @@ import com.github.standobyte.jojo.JojoModConfig;
 import com.github.standobyte.jojo.action.ActionConditionResult;
 import com.github.standobyte.jojo.action.ActionTarget;
 import com.github.standobyte.jojo.action.ActionTarget.TargetType;
-import com.github.standobyte.jojo.action.stand.CrazyDiamondRestoreTerrain;
 import com.github.standobyte.jojo.action.stand.IHasStandPunch;
 import com.github.standobyte.jojo.action.stand.StandEntityAction;
 import com.github.standobyte.jojo.action.stand.punch.IPunch;
@@ -154,6 +153,8 @@ public class StandEntity extends LivingEntity implements IStandManifestation, IE
     
     private static final DataParameter<Float> FINISHER_VALUE = EntityDataManager.defineId(StandEntity.class, DataSerializers.FLOAT);
     private static final DataParameter<Float> LAST_HEAVY_FINISHER_VALUE = EntityDataManager.defineId(StandEntity.class, DataSerializers.FLOAT);
+    private float lastTickFinisherVal;
+    private float finisherVal;
     private int noFinisherDecayTicks;
     public static final int FINISHER_NO_DECAY_TICKS = 40;
     private static final float FINISHER_DECAY = 0.025F;
@@ -1174,6 +1175,8 @@ public class StandEntity extends LivingEntity implements IStandManifestation, IE
                 entityData.set(NO_BLOCKING_TICKS, noBlockingTicks - 1);
             }
         }
+        lastTickFinisherVal = finisherVal;
+        finisherVal = entityData.get(FINISHER_VALUE);
         
         if (barrageHandler.clashOpponent.map(stand -> {
             return !stand.isAlive() || !this.isTargetInReach(new ActionTarget(stand));
@@ -1892,6 +1895,13 @@ public class StandEntity extends LivingEntity implements IStandManifestation, IE
         return entityData.get(FINISHER_VALUE);
     }
     
+    public float getFinisherMeter(float partialTick) {
+        if (userPower != null && !StandUtil.isFinisherMechanicUnlocked(userPower)) {
+            return 0;
+        }
+        return MathHelper.clamp(partialTick, lastTickFinisherVal, finisherVal);
+    }
+    
     public void addFinisherMeter(float value, int noDecayTicks) {
         if (value > 0 && getUser() != null && getUser().hasEffect(ModStatusEffects.RESOLVE.get())) {
             value *= 2F;
@@ -1901,7 +1911,9 @@ public class StandEntity extends LivingEntity implements IStandManifestation, IE
     }
     
     protected void setFinisherMeter(float value) {
-        entityData.set(FINISHER_VALUE, MathHelper.clamp(value, 0F, 1F));
+        if (!level.isClientSide()) {
+            entityData.set(FINISHER_VALUE, MathHelper.clamp(value, 0F, 1F));
+        }
     }
     
     public void setHeavyPunchFinisher() {
@@ -1960,12 +1972,7 @@ public class StandEntity extends LivingEntity implements IStandManifestation, IE
                 blockState.getBlock().playerWillDestroy(level, blockPos, blockState, playerUser);
                 dropItem &= !playerUser.abilities.instabuild;
             }
-            if (!dropItem) {
-                CrazyDiamondRestoreTerrain.rememberBrokenBlock(level, blockPos, blockState, 
-                        Optional.ofNullable(level.getBlockEntity(blockPos)), 
-                        createdDrops != null ? createdDrops : Collections.emptyList());
-            }
-            if (level.destroyBlock(blockPos, dropItem, this)) {
+            if (MCUtil.destroyBlock(level, blockPos, dropItem, this)) {
                 blockState.getBlock().destroy(level, blockPos, blockState);
                 return true;
             }

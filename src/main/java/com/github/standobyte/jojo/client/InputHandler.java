@@ -78,6 +78,7 @@ import com.github.standobyte.jojo.util.mod.JojoModUtil.Direction2D;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.audio.SimpleSound;
 import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.client.util.InputMappings;
@@ -87,6 +88,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.Hand;
 import net.minecraft.util.MovementInput;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.SoundEvents;
 import net.minecraft.util.Util;
 import net.minecraft.util.math.EntityRayTraceResult;
 import net.minecraft.util.math.MathHelper;
@@ -100,6 +102,7 @@ import net.minecraftforge.client.event.InputEvent.ClickInputEvent;
 import net.minecraftforge.client.event.InputEvent.MouseScrollEvent;
 import net.minecraftforge.client.event.InputUpdateEvent;
 import net.minecraftforge.client.settings.KeyBindingMap;
+import net.minecraftforge.client.settings.KeyModifier;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.TickEvent.ClientTickEvent;
@@ -126,6 +129,7 @@ public class InputHandler {
     public KeyBinding nonStandMode;
     public KeyBinding standMode;
     public KeyBinding jojoStuffMenu;
+    public KeyBinding jojoLmbRmbKeybind;
     public KeyBinding disableHotbars;
     public KeyBinding attackHotbar;
     public KeyBinding abilityHotbar;
@@ -173,6 +177,48 @@ public class InputHandler {
         ClientRegistry.registerKeyBinding(toggleStand = new KeyBinding(JojoMod.MOD_ID + ".key.toggle_stand", GLFW_KEY_M, MAIN_CATEGORY));
         ClientRegistry.registerKeyBinding(standRemoteControl = new KeyBinding(JojoMod.MOD_ID + ".key.stand_remote_control", GLFW_KEY_O, MAIN_CATEGORY));
         ClientRegistry.registerKeyBinding(hamonSkillsWindow = new KeyBinding(JojoMod.MOD_ID + ".key.hamon_skills_window", GLFW_KEY_H, MAIN_CATEGORY));
+        ClientRegistry.registerKeyBinding(jojoLmbRmbKeybind = new KeyBinding(JojoMod.MOD_ID + ".key.jojo_test", GLFW_KEY_UNKNOWN, MAIN_CATEGORY) {
+            private boolean wasJustReset = false;
+            @Override
+            public void setToDefault() {
+                super.setToDefault();
+                ClientModSettings.getInstance().editSettings(settings -> settings.poseOnLmbRmb = true);
+                wasJustReset = true;
+            }
+
+            @Override
+            public void setKeyModifierAndCode(KeyModifier keyModifier, InputMappings.Input keyCode) {
+                if (!keyCode.equals(this.getKey()) || !keyCode.equals(this.getDefaultKey())) {
+                    ClientModSettings.getInstance().editSettings(settings -> settings.poseOnLmbRmb = false);
+                }
+                super.setKeyModifierAndCode(keyModifier, keyCode);
+            }
+            
+            @Override
+            public void setKey(InputMappings.Input pInput) {
+                if (wasJustReset) {
+                    wasJustReset = false;
+                }
+                else {
+                    ClientModSettings.getInstance().editSettings(settings -> settings.poseOnLmbRmb = false);
+                }
+                super.setKey(pInput);
+            }
+            
+            @Override
+            public boolean isDefault() {
+                return super.isDefault() && ClientModSettings.getSettingsReadOnly().poseOnLmbRmb;
+            }
+            
+            @Override
+            public ITextComponent getTranslatedKeyMessage() {
+                if (isDefault()) {
+                    return new TranslationTextComponent("key.mouse.lmb_and_rmb");
+                }
+                return super.getTranslatedKeyMessage();
+            }
+        });
+        
         ClientRegistry.registerKeyBinding(jojoStuffMenu = new KeyBinding(JojoMod.MOD_ID + ".key.jojo_menu", GLFW_KEY_BACKSLASH, HUD_CATEGORY));
         
         ClientRegistry.registerKeyBinding(nonStandMode = new KeyBinding(JojoMod.MOD_ID + ".key.non_stand_mode", GLFW_KEY_J, HUD_CATEGORY));
@@ -288,7 +334,15 @@ public class InputHandler {
             }
             actionsOverlay.setHotbarsEnabled(!areHotbarsDisabled());
             tickHeldKeybindTimers();
-
+            
+            if (jojoLmbRmbKeybind.isDefault() && mc.options.keyAttack.clickCount > 0 && mc.options.keyUse.clickCount > 0
+                    && doTheThing()) {
+                mc.options.keyAttack.clickCount = 0;
+                mc.options.keyUse.clickCount = 0;
+                mc.options.keyAttack.setDown(false);
+                mc.options.keyUse.setDown(false);
+            }
+            
             if (actionsOverlay.isActive()) {
                 boolean chooseAttack = controlsAreOnHotbar(ControlScheme.Hotbar.LEFT_CLICK);
                 boolean chooseAbility = controlsAreOnHotbar(ControlScheme.Hotbar.RIGHT_CLICK);
@@ -430,6 +484,10 @@ public class InputHandler {
             
             if (jojoStuffMenu.consumeClick()) {
                 IJojoScreen.onScreenKeyPress();
+            }
+            
+            while (jojoLmbRmbKeybind.consumeClick()) {
+                doTheThing();
             }
             
             if (!mc.options.keyAttack.isDown()) {
@@ -620,6 +678,15 @@ public class InputHandler {
     }
     
     
+    private boolean doTheThing() {
+        if (actionsOverlay.getCurrentMode() == PowerClassification.STAND) {
+            mc.getSoundManager().play(SimpleSound.forUI(SoundEvents.ARROW_HIT_PLAYER, 1.0F));
+            return true;
+        }
+        return false;
+    }
+    
+    
     private static final Random RANDOM = new Random();
     public void setRandomStandSkin() {
         if (standPower.hasPower()) {
@@ -690,7 +757,7 @@ public class InputHandler {
         PowerClassification powerClass = power.getPowerClassification();
         
         if (!keyHeld && power.getHeldAction() != null) {
-            stopHeldAction(power, powerClass == actionsOverlay.getCurrentMode());
+            stopHeldAction(power);
         }
         
         boolean targetUpdatePrevTick = prevTargetUpdateTick.contains(powerClass);
@@ -703,9 +770,16 @@ public class InputHandler {
         }
     }
     
-    public void stopHeldAction(IPower<?, ?> power, boolean shouldFire) {
-        if (power.getHeldAction() != null) {
-            power.stopHeldAction(shouldFire);
+    public <P extends IPower<P, ?>> void stopHeldAction(IPower<?, ?> p) {
+        P power = (P) p;
+        Action<P> heldAction = power.getHeldAction();
+        if (heldAction != null) {
+            boolean shouldFire = false;
+            if (!heldAction.holdOnly(power)) {
+                int heldForTicks = power.getHeldActionTicks();
+                int ticksToFire = heldAction.getHoldDurationToFire(power);
+                shouldFire = heldForTicks >= ticksToFire;
+            }
             PacketManager.sendToServer(new ClStopHeldActionPacket(power.getPowerClassification(), shouldFire));
         }
     }
@@ -735,7 +809,7 @@ public class InputHandler {
     public void modActionClick(ClickInputEvent event) {
         doubleShift.reset();
         
-        if (mc.player.isSpectator() || event.getHand() == Hand.OFF_HAND || areHotbarsDisabled()) {
+        if (mc.player.isSpectator() || event.getHand() == Hand.OFF_HAND) {
             return;
         }
 
@@ -826,7 +900,7 @@ public class InputHandler {
     
     private <P extends IPower<P, ?>> HudClickResult handleMouseClickPowerHud(ActionKey key, KeyBinding keyBinding) {
         HudClickResult result = new HudClickResult();
-        if (!actionsOverlay.areHotbarsEnabled() || mc.player.isSpectator()) {
+        if (mc.player.isSpectator()) {
             return result;
         }
 
@@ -834,13 +908,13 @@ public class InputHandler {
 
         ControlScheme.Hotbar hotbar = key.getHotbar();
         boolean actionClick = false;
-        if (power != null) {
+        if (power != null && actionsOverlay.areHotbarsEnabled()) {
             actionClick = !actionsOverlay.noActionSelected(hotbar);
         }
         
         if (!actionClick) {
             // cancel vanilla click
-            if (shouldVanillaInputStun()) {
+            if (shouldVanillaInputStun() || ContinuousActionInstance.getCurrentAction(mc.player).isPresent()) {
                 result.cancelVanillaInput();
             }
             return result;

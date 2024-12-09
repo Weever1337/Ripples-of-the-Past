@@ -457,7 +457,7 @@
   "hamon.max_level": "最高レベル",
   "hamon.breathing_stat.desc": "息を深く吸う能力や身体の状態を向上させます。",
   "hamon.breathing_stat.desc.gap": "波紋を学ぶために最も重要な統計値です。",
-  "hamon.breathing_stat.desc2": "To train your breathing, you have to complete these exercises daily. Complete at least 3 out of 4 of them each day for maximum results. It is also recommended to craft and wear a %s in the early stages of Hamon training.",
+  "hamon.breathing_stat.desc2": "To train your breathing, you have to complete these exercises daily. Complete at least 3 of them each day for maximum results. It is also recommended to craft and wear a %s if you want to commit to your Hamon training.",
   "hamon.breathing_stat.desc2.mask": "呼吸法矯正マスク",
   "hamon.breathing_stat.desc3": "訓練を放棄すると徐々に下がります！",
   "hamon.breathing_stat.desc4": "You won't be able to increase your Hamon Strength/Hamon Control %s or more levels above the breathing training level.",
@@ -465,7 +465,7 @@
   "hamon.mining_exercise": "採掘",
   "hamon.running_exercise": "ランニング",
   "hamon.swimming_exercise": "水泳",
-  "hamon.meditation": "瞑想",
+  "hamon.meditation_exercise": "瞑想",
   
   "hamon.next_point.strength": "次のスキルポイントは波紋強度レベル%sにあります",
   "hamon.next_point.control": "次のスキルポイントは波紋コントロールレベル%sにあります",
@@ -544,7 +544,7 @@
 
   "hamonSkill.natural_talent.name": "天賦の才能",
   "hamonSkill.scarlet_overdrive.name": "緋色の波紋疾走（スカーレットオーバードライブ）",
-  "hamonSkill.scarlet_overdrive.desc": "追加ダメージを与え、対象を炎上させる特殊な波紋。",
+  "hamonSkill.scarlet_overdrive.desc": "対象を炎上させる特殊な波紋。",
   "hamonSkill.metal_silver_overdrive.name": "銀色の波紋疾走（メタルシルバーオーバードライブ）",
   "hamonSkill.metal_silver_overdrive.desc": "武器や道具を使って波紋攻撃を行うことができるようになる。\nWithout a weapon, the regular Overdrive deals more damage to targets with armor or an equipped melee weapon.",
   "hamonSkill.hamon_cutter.name": "波紋カッター",

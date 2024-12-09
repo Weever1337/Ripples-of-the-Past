@@ -37,7 +37,6 @@ import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.Hand;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
@@ -235,15 +234,7 @@ public abstract class PowerBaseImpl<P extends IPower<P, T>, T extends IPowerType
     }
     
     private void sendMessage(Action<P> action, ActionConditionResult result) {
-        if (!user.level.isClientSide() && action.sendsConditionMessage()) {
-            ITextComponent message = result.getWarning();
-            
-            if (message != null) {
-                serverPlayerUser.ifPresent(player -> {
-                    player.displayClientMessage(message, true);
-                });
-            }
-        }
+        ActionConditionResult.sendActionFailedMessage(action, result, user);
     }
 
     @Override
@@ -338,6 +329,7 @@ public abstract class PowerBaseImpl<P extends IPower<P, T>, T extends IPowerType
 
     @Override
     public void setHeldAction(Action<P> action, ActionTarget target) {
+        stopHeldAction(false);
         this.heldActionData = new HeldActionData<P>(action);
         setMouseTarget(target);
         if (!user.level.isClientSide()) {
@@ -410,6 +402,8 @@ public abstract class PowerBaseImpl<P extends IPower<P, T>, T extends IPowerType
     public void stopHeldAction(boolean shouldFire) {
         if (heldActionData != null) {
             Action<P> heldAction = heldActionData.action;
+//            int ticks = heldActionData.getTicks();
+            
             ActionTarget target = getMouseTarget();
             int ticksHeld = getHeldActionTicks();
             
@@ -423,22 +417,25 @@ public abstract class PowerBaseImpl<P extends IPower<P, T>, T extends IPowerType
             }
             else {
                 ObjectWrapper<ActionTarget> targetContainer = new ObjectWrapper<>(target);
-                boolean fire = shouldFire && heldActionData.getTicks() >= heldAction.getHoldDurationToFire(getThis()) && 
-                        checkRequirements(heldAction, targetContainer, true).isPositive();
-
-                heldAction.stoppedHolding(user.level, user, getThis(), ticksHeld, fire);
-                if (fire && heldAction.swingHand()) {
+                if (!user.level.isClientSide()) {
+                    shouldFire &= checkRequirements(heldAction, targetContainer, true).isPositive();
+                }
+                
+                heldAction.stoppedHolding(user.level, user, getThis(), ticksHeld, shouldFire);
+                if (shouldFire && heldAction.swingHand()) {
                     user.swing(Hand.MAIN_HAND);
                 }
                 
-                if (fire) {
+                if (shouldFire) {
                     target = targetContainer.get();
                     performAction(heldAction, target, null);
                 }
             }
+            
             heldActionData = null;
+            
             if (!user.level.isClientSide()) {
-                TrHeldActionPacket packet = TrHeldActionPacket.actionStopped(user.getId(), getPowerClassification());
+                TrHeldActionPacket packet = TrHeldActionPacket.actionStopped(user.getId(), getPowerClassification(), shouldFire);
                 PacketManager.sendToClientsTrackingAndSelf(packet, user);
             }
         }

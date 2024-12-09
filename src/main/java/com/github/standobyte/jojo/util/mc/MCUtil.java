@@ -69,6 +69,8 @@ import net.minecraft.entity.projectile.PotionEntity;
 import net.minecraft.fluid.FluidState;
 import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.inventory.IInventory;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.TieredItem;
 import net.minecraft.nbt.ByteArrayNBT;
@@ -443,6 +445,15 @@ public class MCUtil {
         }
     }
     
+    
+    
+    // i ain't using access transformers for this, this is ridiculous
+    public static boolean itemAllowedIn(Item item, ItemGroup creativeTab) {
+        if (item.getCreativeTabs().stream().anyMatch(tab -> tab == creativeTab)) return true;
+        ItemGroup itemCategory = item.getItemCategory();
+        return itemCategory != null && (creativeTab == ItemGroup.TAB_SEARCH || creativeTab == itemCategory);
+    }
+    
 
     
     public static Vector3d collide(Entity entity, Vector3d offsetVec) {
@@ -708,6 +719,17 @@ public class MCUtil {
         }
     }
     
+    public static boolean destroyBlock(World world, BlockPos blockPos, boolean dropBlock, @Nullable Entity entity) {
+        BlockState oldState = dropBlock ? null /*no need to call it in this case*/ : world.getBlockState(blockPos);
+        boolean res = world.destroyBlock(blockPos, dropBlock, entity);
+        if (!dropBlock) {
+            CrazyDiamondRestoreTerrain.rememberBrokenBlock(world, blockPos, oldState, 
+                    Optional.ofNullable(world.getBlockEntity(blockPos)), 
+                    Collections.emptyList());
+        }
+        return res;
+    }
+    
     
     
     
@@ -929,13 +951,23 @@ public class MCUtil {
         }
     }
     
-    
+
     
     public static boolean isHandFree(LivingEntity entity, Hand hand) {
+        return areHandsFree(entity, hand);
+    }
+    
+    // TODO areBothHandsFree method?
+    public static boolean areHandsFree(LivingEntity entity, Hand... hands) {
         if (entity.level.isClientSide() && entity.is(ClientUtil.getClientPlayer()) && ClientUtil.arePlayerHandsBusy()) {
             return false;
         }
-        return itemHandFree(entity.getItemInHand(hand));
+        for (Hand hand : hands) {
+            if (!itemHandFree(entity.getItemInHand(hand))) {
+                return false;
+            }
+        }
+        return true;
     }
     
     public static boolean itemHandFree(ItemStack item) {

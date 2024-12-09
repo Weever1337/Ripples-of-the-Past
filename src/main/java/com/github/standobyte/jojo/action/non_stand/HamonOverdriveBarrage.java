@@ -31,7 +31,7 @@ public class HamonOverdriveBarrage extends HamonAction {
     
     @Override
     protected ActionConditionResult checkHeldItems(LivingEntity user, INonStandPower power) {
-        if (!(MCUtil.isHandFree(user, Hand.MAIN_HAND) && MCUtil.isHandFree(user, Hand.OFF_HAND))) {
+        if (!MCUtil.areHandsFree(user, Hand.MAIN_HAND, Hand.OFF_HAND)) {
             return conditionMessage("hands");
         }
         return ActionConditionResult.POSITIVE;
@@ -61,7 +61,7 @@ public class HamonOverdriveBarrage extends HamonAction {
                             }
                         }
                         if (digDuration >= 0 && digDuration <= 2.5F * Math.sqrt(user.getAttributeValue(Attributes.ATTACK_DAMAGE))) {
-                            world.destroyBlock(pos, dropItem);
+                            MCUtil.destroyBlock(world, pos, dropItem, user);
                             power.getTypeSpecificData(ModPowers.HAMON.get()).get().hamonPointsFromAction(HamonStat.STRENGTH, getHeldTickEnergyCost(power));
                         }
                         else {

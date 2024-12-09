@@ -1,7 +1,9 @@
 package com.github.standobyte.jojo.util.mc;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import com.github.standobyte.jojo.JojoMod;
 
@@ -28,10 +30,18 @@ public class EntityTypeToInstance {
     }
     
     private final Map<EntityType<?>, Entity> entityMap;
+    private final Set<EntityType<?>> tryLazyInit = new HashSet<>();
     private EntityTypeToInstance(Iterable<EntityType<?>> entityTypes, World world) {
         entityMap = new HashMap<>();
         for (EntityType<?> type : entityTypes) {
-            entityMap.put(type, createInstance(type, world));
+            try {
+                Entity entity = createInstance(type, world);
+                entityMap.put(type, entity);
+            }
+            catch (Exception e) {
+                tryLazyInit.add(type);
+                JojoMod.getLogger().warn("Failed to initialize an entity of type {} on world load. Will try lazy initialization.", type.getRegistryName());
+            }
         }
     }
     
@@ -41,7 +51,17 @@ public class EntityTypeToInstance {
             JojoMod.getLogger().error("An operation with {} entity type needed an Entity instance, but the map for them hasn't been created yet!", type.getRegistryName());
             return null;
         }
-        return (T) instance.entityMap.computeIfAbsent(type, t -> createInstance(t, world));
+        Entity entity = null;
+        if (!instance.entityMap.containsKey(type) && instance.tryLazyInit.remove(type)) {
+            entity = createInstance(type, world);
+            if (entity != null) {
+                instance.entityMap.put(type, entity);
+            }
+        }
+        else {
+            entity = instance.entityMap.get(type);
+        }
+        return (T) entity;
     }
     
     private static <T extends Entity> T createInstance(EntityType<T> type, World world) {

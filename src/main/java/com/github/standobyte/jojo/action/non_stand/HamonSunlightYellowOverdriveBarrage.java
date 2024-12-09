@@ -45,7 +45,7 @@ public class HamonSunlightYellowOverdriveBarrage extends HamonAction implements 
     
     @Override
     protected ActionConditionResult checkHeldItems(LivingEntity user, INonStandPower power) {
-        if (!(MCUtil.isHandFree(user, Hand.MAIN_HAND) && MCUtil.isHandFree(user, Hand.OFF_HAND))) {
+        if (!MCUtil.areHandsFree(user, Hand.MAIN_HAND, Hand.OFF_HAND)) {
             return conditionMessage("hands");
         }
         return ActionConditionResult.POSITIVE;
@@ -98,17 +98,12 @@ public class HamonSunlightYellowOverdriveBarrage extends HamonAction implements 
     
     
     
-    public static class Instance extends ContinuousActionInstance<Instance, INonStandPower> {
+    public static class Instance extends ContinuousActionInstance<HamonSunlightYellowOverdriveBarrage, INonStandPower> {
         private boolean finishingPunch = false;
 
         public Instance(LivingEntity user, PlayerUtilCap userCap, 
                 INonStandPower playerPower, HamonSunlightYellowOverdriveBarrage action) {
             super(user, userCap, playerPower, action);
-        }
-
-        @Override
-        protected Instance getThis() {
-            return this;
         }
 
         private static final int MAX_BARRAGE_DURATION = 70;
@@ -202,7 +197,7 @@ public class HamonSunlightYellowOverdriveBarrage extends HamonAction implements 
                                 }
                             }
                             if (digDuration >= 0 && digDuration <= 2.5F * Math.sqrt(user.getAttributeValue(Attributes.ATTACK_DAMAGE))) {
-                                world.destroyBlock(pos, dropItem);
+                                MCUtil.destroyBlock(world, pos, dropItem, user);
                             }
                             else {
                                 SoundType soundType = blockState.getSoundType(world, pos, user);
