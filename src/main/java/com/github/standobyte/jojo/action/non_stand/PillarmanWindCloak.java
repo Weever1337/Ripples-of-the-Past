@@ -5,6 +5,7 @@ import com.github.standobyte.jojo.init.ModParticles;
 import com.github.standobyte.jojo.init.ModStatusEffects;
 import com.github.standobyte.jojo.power.impl.nonstand.INonStandPower;
 import com.github.standobyte.jojo.power.impl.nonstand.type.pillarman.PillarmanData.Mode;
+
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.particles.IParticleData;
 import net.minecraft.potion.EffectInstance;
@@ -20,12 +21,10 @@ public class PillarmanWindCloak extends PillarmanAction {
     }
     
     public static void windEffect(LivingEntity user, IParticleData particles, int intensity) {
-        if (user.isInvisible() || user.hasEffect(Effects.INVISIBILITY) || user.hasEffect(ModStatusEffects.FULL_INVISIBILITY.get()))
-            return;
         for (int i = 0; i < intensity; i++) {
             Vector3d particlePos = user.position().add(
-                    (Math.random() - 0.5) * (user.getBbWidth() + 0.5),
-                    Math.random() * (user.getBbHeight()),
+                    (Math.random() - 0.5) * (user.getBbWidth() + 0.5), 
+                    Math.random() * (user.getBbHeight()), 
                     (Math.random() - 0.5) * (user.getBbWidth() + 0.5));
             user.level.addParticle(particles, particlePos.x, particlePos.y, particlePos.z, Math.random() - 0.5, Math.random(), Math.random() - 0.5);
         }
@@ -37,17 +36,17 @@ public class PillarmanWindCloak extends PillarmanAction {
     		windEffect(user, ModParticles.SANDSTORM.get(), 15);
     	}
     }
-
-    @Override
-    public void stoppedHolding(World world, LivingEntity user, INonStandPower power, int ticksHeld, boolean willFire) {
-    	windEffect(user, ModParticles.SANDSTORM.get(), 15);
-    }
     
     @Override
     public void holdTick(World world, LivingEntity user, INonStandPower power, int ticksHeld, ActionTarget target, boolean requirementsFulfilled) {
         if (!world.isClientSide() && requirementsFulfilled) {
-            user.addEffect(new EffectInstance(ModStatusEffects.FULL_INVISIBILITY.get(), 5, 0, false, false));
+        	user.addEffect(new EffectInstance(Effects.INVISIBILITY, 5, 0, false, false));
             user.addEffect(new EffectInstance(ModStatusEffects.SUN_RESISTANCE.get(), 5, 0, false, false));
         }
+    }
+
+    @Override
+    public void stoppedHolding(World world, LivingEntity user, INonStandPower power, int ticksHeld, boolean willFire) {
+    	windEffect(user, ModParticles.SANDSTORM.get(), 15);
     }
 }
