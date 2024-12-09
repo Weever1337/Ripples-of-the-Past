@@ -41,6 +41,9 @@ import net.minecraft.client.renderer.entity.LivingRenderer;
 import net.minecraft.client.renderer.entity.layers.LayerRenderer;
 import net.minecraft.client.renderer.entity.model.AgeableModel;
 import net.minecraft.client.renderer.entity.model.EntityModel;
+import net.minecraft.client.renderer.model.IBakedModel;
+import net.minecraft.client.renderer.model.ItemOverride;
+import net.minecraft.client.renderer.model.ItemOverrideList;
 import net.minecraft.client.renderer.model.ModelBakery;
 import net.minecraft.client.renderer.model.ModelRenderer;
 import net.minecraft.client.renderer.model.RenderMaterial;
@@ -353,5 +356,16 @@ public class ClientReflection {
     private static final Field SOUND_ENGINE_SOUND_BUFFERS = ObfuscationReflectionHelper.findField(SoundEngine.class, "field_217939_i");
     public static AudioStreamManager getSoundBuffers(SoundEngine soundEngine) {
         return ReflectionUtil.getFieldValue(SOUND_ENGINE_SOUND_BUFFERS, soundEngine);
+    }
+    
+    
+    private static final Field ITEM_OVERRIDE_LIST_OVERRIDES = ObfuscationReflectionHelper.findField(ItemOverrideList.class, "field_188023_b");
+    public static List<ItemOverride> getOverrides(ItemOverrideList itemOverrideList) {
+        return ReflectionUtil.getFieldValue(ITEM_OVERRIDE_LIST_OVERRIDES, itemOverrideList);
+    }
+    
+    private static final Field ITEM_OVERRIDE_LIST_OVERRIDE_MODELS = ObfuscationReflectionHelper.findField(ItemOverrideList.class, "field_209582_c");
+    public static List<IBakedModel> getOverrideModels(ItemOverrideList itemOverrideList) {
+        return ReflectionUtil.getFieldValue(ITEM_OVERRIDE_LIST_OVERRIDE_MODELS, itemOverrideList);
     }
 }
