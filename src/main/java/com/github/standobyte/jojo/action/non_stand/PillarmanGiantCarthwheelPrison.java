@@ -20,10 +20,10 @@ public class PillarmanGiantCarthwheelPrison extends PillarmanAction {
         super(builder.holdType());
         mode = Mode.HEAT;
     }
- 
+    
     @Override
-    public void onHoldTick(World world, LivingEntity user, INonStandPower power, int ticksHeld, ActionTarget target, boolean requirementsFulfilled) {
-        if (requirementsFulfilled && world.isClientSide()) {
+    public void onHoldTickClientEffect(LivingEntity user, INonStandPower power, int ticksHeld, boolean reqFulfilled, boolean reqStateChanged) {
+        if (reqFulfilled) {
             PillarmanDivineSandstorm.auraEffect(user, ModParticles.HAMON_AURA_RED.get(), 12);
         }
     }
