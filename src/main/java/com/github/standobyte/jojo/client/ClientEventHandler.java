@@ -315,15 +315,18 @@ public class ClientEventHandler {
     @SubscribeEvent(priority = EventPriority.HIGH)
     public void onRenderPlayer(RenderPlayerEvent.Pre event) {
         if (mc.player != event.getPlayer()) {
+            float partialTick = event.getPartialRenderTick();
             event.getPlayer().getCapability(LivingUtilCapProvider.CAPABILITY).ifPresent(cap -> {
                 cap.limitPlayerHeadRot();
             });
+            ContinuousActionInstance.getCurrentAction(event.getPlayer()).ifPresent(action -> action.onPreRender(partialTick));
         }
     }
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void onRenderTick(RenderTickEvent event) {
         if (mc.level != null) {
+            float partialTick = ClientUtil.getPartialTick();
             switch (event.phase) {
             case START:
                 ClientUtil.canSeeStands = StandUtil.playerCanSeeStands(mc.player);
@@ -339,12 +342,13 @@ public class ClientEventHandler {
                     mc.player.getCapability(ClientPlayerUtilCapProvider.CAPABILITY).ifPresent(cap -> {
                         cap.applyLockedRotation();
                     });
+                    ContinuousActionInstance.getCurrentAction(mc.player).ifPresent(action -> action.onPreRender(partialTick));
                 }
                 
-                PlayerAnimationHandler.getPlayerAnimator().onRenderFrameStart(ClientUtil.getPartialTick());
+                PlayerAnimationHandler.getPlayerAnimator().onRenderFrameStart(partialTick);
                 break;
             case END:
-                PlayerAnimationHandler.getPlayerAnimator().onRenderFrameEnd(ClientUtil.getPartialTick());
+                PlayerAnimationHandler.getPlayerAnimator().onRenderFrameEnd(partialTick);
                 break;
             }
         }

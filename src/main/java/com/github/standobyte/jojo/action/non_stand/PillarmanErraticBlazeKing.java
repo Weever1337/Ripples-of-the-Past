@@ -88,6 +88,12 @@ public class PillarmanErraticBlazeKing extends PillarmanAction implements IPlaye
             }
         }
         
+        @Override
+        public void onPreRender(float partialTick) {
+            user.yBodyRot = user.yRot;
+            user.yBodyRotO = user.yRotO;
+        }
+        
     }
 
     public static void addVeinProjectile(World world, INonStandPower power, LivingEntity user, float xRotDelta, float yRotDelta, double offsetX, double offsetY, double offsetZ) {
