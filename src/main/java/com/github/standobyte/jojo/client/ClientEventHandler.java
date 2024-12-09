@@ -61,6 +61,7 @@ import com.github.standobyte.jojo.init.ModItems;
 import com.github.standobyte.jojo.init.ModStatusEffects;
 import com.github.standobyte.jojo.init.power.non_stand.ModPowers;
 import com.github.standobyte.jojo.init.power.non_stand.hamon.ModHamonActions;
+import com.github.standobyte.jojo.init.power.non_stand.pillarman.ModPillarmanActions;
 import com.github.standobyte.jojo.init.power.stand.ModStands;
 import com.github.standobyte.jojo.init.power.stand.ModStandsInit;
 import com.github.standobyte.jojo.item.OilItem;
@@ -958,7 +959,9 @@ public class ClientEventHandler {
                 if (MCUtil.areHandsFree(player, Hand.MAIN_HAND, Hand.OFF_HAND) && hud.isActionSelectedAndEnabled(
                         ModHamonActions.JONATHAN_OVERDRIVE_BARRAGE.get(), 
                         ModHamonActions.JONATHAN_SUNLIGHT_YELLOW_OVERDRIVE_BARRAGE.get(),
-                        ModHamonActions.HAMON_WALL_CLIMBING.get())
+                        ModHamonActions.HAMON_WALL_CLIMBING.get(),
+                        ModPillarmanActions.PILLARMAN_ERRATIC_BLAZE_KING.get(),
+                        ModPillarmanActions.PILLARMAN_DIVINE_SANDSTORM.get())
                         || LivingWallClimbing.getHandler(player).map(cap -> cap.isWallClimbing()).orElse(false)) {
                     renderHand(Hand.OFF_HAND, event.getMatrixStack(), event.getBuffers(), event.getLight(), 
                             event.getPartialTicks(), event.getInterpolatedPitch(), player);
