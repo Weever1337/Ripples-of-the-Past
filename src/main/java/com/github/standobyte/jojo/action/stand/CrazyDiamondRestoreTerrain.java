@@ -198,7 +198,7 @@ public class CrazyDiamondRestoreTerrain extends StandEntityAction {
             }
         }
         if (blockCanBePlaced(world, blockPos, blockState) && blockState.canSurvive(world, blockPos)
-                && (isCreative || consumeNeededItems(restorationCost, userInventory, itemEntities))) {
+                && (consumeNeededItems(restorationCost, userInventory, itemEntities) || isCreative)) {
             if (!isCreative && playerWithXp != null && xpCost > 0) {
                 playerWithXp.giveExperiencePoints(-xpCost);
             }
