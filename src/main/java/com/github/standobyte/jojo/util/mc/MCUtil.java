@@ -69,6 +69,8 @@ import net.minecraft.entity.projectile.PotionEntity;
 import net.minecraft.fluid.FluidState;
 import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.inventory.IInventory;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.TieredItem;
 import net.minecraft.nbt.ByteArrayNBT;
@@ -443,6 +445,15 @@ public class MCUtil {
         }
     }
     
+    
+    
+    // i ain't using access transformers for this, this is ridiculous
+    public static boolean itemAllowedIn(Item item, ItemGroup creativeTab) {
+        if (item.getCreativeTabs().stream().anyMatch(tab -> tab == creativeTab)) return true;
+        ItemGroup itemCategory = item.getItemCategory();
+        return itemCategory != null && (creativeTab == ItemGroup.TAB_SEARCH || creativeTab == itemCategory);
+    }
+    
 
     
     public static Vector3d collide(Entity entity, Vector3d offsetVec) {
@@ -706,6 +717,17 @@ public class MCUtil {
                     Optional.ofNullable(world.getBlockEntity(blockPos)), Collections.emptyList());
             world.removeBlock(blockPos, false);
         }
+    }
+    
+    public static boolean destroyBlock(World world, BlockPos blockPos, boolean dropBlock, @Nullable Entity entity) {
+        BlockState oldState = dropBlock ? null /*no need to call it in this case*/ : world.getBlockState(blockPos);
+        boolean res = world.destroyBlock(blockPos, dropBlock, entity);
+        if (!dropBlock) {
+            CrazyDiamondRestoreTerrain.rememberBrokenBlock(world, blockPos, oldState, 
+                    Optional.ofNullable(world.getBlockEntity(blockPos)), 
+                    Collections.emptyList());
+        }
+        return res;
     }
     
     

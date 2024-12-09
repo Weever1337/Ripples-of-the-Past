@@ -13,7 +13,6 @@ import com.github.standobyte.jojo.client.particle.AirStreamParticle;
 import com.github.standobyte.jojo.client.particle.BloodParticle;
 import com.github.standobyte.jojo.client.particle.CDRestorationParticle;
 import com.github.standobyte.jojo.client.particle.DivineSandstormParticle;
-import com.github.standobyte.jojo.client.particle.GunshotParticle;
 import com.github.standobyte.jojo.client.particle.HamonAuraParticle;
 import com.github.standobyte.jojo.client.particle.HamonSparkParticle;
 import com.github.standobyte.jojo.client.particle.MeteoriteVirusParticle;
@@ -167,6 +166,7 @@ import net.minecraftforge.client.event.ColorHandlerEvent;
 import net.minecraftforge.client.event.ModelBakeEvent;
 import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.client.event.ParticleFactoryRegisterEvent;
+import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.client.registry.RenderingRegistry;
@@ -399,17 +399,36 @@ public class ClientSetup {
         }, ModItems.CASSETTE_RECORDED.get());
     }
     
+    
+    private static boolean spritesAdded = false;
+    @SubscribeEvent
+    public static void addSprites(ModelRegistryEvent event) {
+        if (!spritesAdded) {
+            addUnreferencedBlockModels(BlockSprites.MR_FIRE_BLOCK_0, BlockSprites.MR_FIRE_BLOCK_1);
+            addUnreferencedBlockModels(MagiciansRedRenderer.MR_FIRE_0, MagiciansRedRenderer.MR_FIRE_1);
+            spritesAdded = true;
+        }
+        
+        ModelLoader.addSpecialModel(new ModelResourceLocation(new ResourceLocation(JojoMod.MOD_ID, "tommy_gun_flipped"), "inventory"));
+        StandDiscOverrideList.onModelRegistry();
+    }
+    
+    public static void addUnreferencedBlockModels(RenderMaterial... renderMaterials) {
+        Set<RenderMaterial> textures = ClientReflection.getModelBakeryUnreferencedTextures();
+        Collections.addAll(textures, renderMaterials);
+    }
+    
+    
     @SubscribeEvent
     public static void onModelBake(ModelBakeEvent event) {
-        registerCustomBakedModel(ModItems.ROAD_ROLLER.get().getRegistryName(), event.getModelRegistry(), 
-                model -> new RoadRollerBakedModel(model));
-        registerCustomBakedModel(ModItems.STAND_DISC.get().getRegistryName(), event.getModelRegistry(), 
-                model -> new StandDiscISTERModel(model));
-        registerCustomBakedModel(ModItems.POLAROID.get().getRegistryName(), event.getModelRegistry(), 
-                model -> new ItemISTERModelWrapper(model).setCaptureEntity());
-        registerCustomBakedModel(ModItems.CLACKERS.get().getRegistryName(), event.getModelRegistry(), 
-                model -> new ItemISTERModelWrapper(model).setCaptureEntity());
-        CustomIconItem.onModelBake(event.getModelRegistry());
+        Map<ResourceLocation, IBakedModel> registry = event.getModelRegistry();
+        registerCustomBakedModel(ModItems.ROAD_ROLLER.get().getRegistryName(), registry,                model -> new RoadRollerBakedModel(model));
+        registerCustomBakedModel(ModItems.STAND_DISC.get().getRegistryName(), registry,                 model -> new StandDiscISTERModel(model));
+        registerCustomBakedModel(ModItems.POLAROID.get().getRegistryName(), registry,                   model -> new ItemISTERModelWrapper(model).setCaptureEntity());
+        registerCustomBakedModel(new ResourceLocation(JojoMod.MOD_ID, "tommy_gun_flipped"), registry,   model -> new ItemISTERModelWrapper(model));
+        registerCustomBakedModel(ModItems.TOMMY_GUN.get().getRegistryName(), registry,                  model -> new ItemISTERModelWrapper(model).refreshOverrides(registry));
+        registerCustomBakedModel(ModItems.CLACKERS.get().getRegistryName(), registry,                   model -> new ItemISTERModelWrapper(model).setCaptureEntity());
+        CustomIconItem.onModelBake(registry);
     }
     
     public static void registerCustomBakedModel(ResourceLocation resLoc, 
@@ -427,28 +446,11 @@ public class ClientSetup {
         }
     }
     
-    private static boolean spritesAdded = false;
-    @SubscribeEvent
-    public static void addSprites(ModelRegistryEvent event) {
-        if (!spritesAdded) {
-            addUnreferencedBlockModels(BlockSprites.MR_FIRE_BLOCK_0, BlockSprites.MR_FIRE_BLOCK_1);
-            addUnreferencedBlockModels(MagiciansRedRenderer.MR_FIRE_0, MagiciansRedRenderer.MR_FIRE_1);
-            spritesAdded = true;
-        }
-        
-        StandDiscOverrideList.onModelRegistry();
-    }
     
-    public static void addUnreferencedBlockModels(RenderMaterial... renderMaterials) {
-        Set<RenderMaterial> textures = ClientReflection.getModelBakeryUnreferencedTextures();
-        Collections.addAll(textures, renderMaterials);
-    }
-
     @SubscribeEvent
     public static void onMcConstructor(ParticleFactoryRegisterEvent event) {
         Minecraft mc = Minecraft.getInstance();
         mc.particleEngine.register(ModParticles.BLOOD.get(),                BloodParticle.Factory::new);
-        mc.particleEngine.register(ModParticles.GUNSHOT.get(),              GunshotParticle.Factory::new);
         mc.particleEngine.register(ModParticles.HAMON_SPARK.get(),          HamonSparkParticle.HamonParticleFactory::new);
         mc.particleEngine.register(ModParticles.HAMON_SPARK_BLUE.get(),     HamonSparkParticle.HamonParticleFactory::new);
         mc.particleEngine.register(ModParticles.HAMON_SPARK_YELLOW.get(),   HamonSparkParticle.HamonParticleFactory::new);

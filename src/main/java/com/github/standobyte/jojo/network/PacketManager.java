@@ -49,6 +49,7 @@ import com.github.standobyte.jojo.network.packets.fromserver.BloodParticlesPacke
 import com.github.standobyte.jojo.network.packets.fromserver.BrokenChunkBlocksPacket;
 import com.github.standobyte.jojo.network.packets.fromserver.CommonConfigPacket;
 import com.github.standobyte.jojo.network.packets.fromserver.CustomExplosionPacket;
+import com.github.standobyte.jojo.network.packets.fromserver.DeflectedBulletPacket;
 import com.github.standobyte.jojo.network.packets.fromserver.HamonExercisesPacket;
 import com.github.standobyte.jojo.network.packets.fromserver.HamonSkillAddPacket;
 import com.github.standobyte.jojo.network.packets.fromserver.HamonSkillRemovePacket;
@@ -271,6 +272,7 @@ public class PacketManager {
         registerMessage(serverChannel, new TrPlayerContinuousActionPacket.Handler(),       Optional.of(NetworkDirection.PLAY_TO_CLIENT));
         registerMessage(serverChannel, new TrKnivesCountPacket.Handler(),                  Optional.of(NetworkDirection.PLAY_TO_CLIENT));
         registerMessage(serverChannel, new TrCosmeticItemsPacket.Handler(),                Optional.of(NetworkDirection.PLAY_TO_CLIENT));
+        registerMessage(serverChannel, new DeflectedBulletPacket.Handler(),                Optional.of(NetworkDirection.PLAY_TO_CLIENT));
         registerMessage(serverChannel, new TrWalkmanEarbudsPacket.Handler(),               Optional.of(NetworkDirection.PLAY_TO_CLIENT));
         registerMessage(serverChannel, new LeapCooldownPacket.Handler(),                   Optional.of(NetworkDirection.PLAY_TO_CLIENT));
         registerMessage(serverChannel, new NotificationSyncPacket.Handler(),               Optional.of(NetworkDirection.PLAY_TO_CLIENT));

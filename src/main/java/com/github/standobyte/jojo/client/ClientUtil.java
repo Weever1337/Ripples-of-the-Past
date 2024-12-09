@@ -24,7 +24,6 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.IVertexBuilder;
 
-import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.GameSettings;
 import net.minecraft.client.Minecraft;
@@ -565,12 +564,13 @@ public class ClientUtil {
         return rotVec;
     }
     
+    @Deprecated
     public static void clearCubes(ModelRenderer modelRenderer) {
-        ClientReflection.setCubes(modelRenderer, new ObjectArrayList<>());
+        modelRenderer.cubes.clear();
     }
     
     public static void editLatestCube(ModelRenderer modelRenderer, Consumer<ModelRenderer.ModelBox> edit) {
-        List<ModelRenderer.ModelBox> cubes = ClientReflection.getCubes(modelRenderer);
+        List<ModelRenderer.ModelBox> cubes = modelRenderer.cubes;
         if (cubes.isEmpty()) return;
         ModelRenderer.ModelBox box = cubes.get(cubes.size() - 1);
         edit.accept(box);
@@ -581,7 +581,7 @@ public class ClientUtil {
             faceDir = faceDir.getOpposite();
         }
         Vector3f faceNormal = faceDir.step();
-        Optional<ModelRenderer.TexturedQuad> faceOptional = Arrays.stream(ClientReflection.getPolygons(cube))
+        Optional<ModelRenderer.TexturedQuad> faceOptional = Arrays.stream(cube.polygons)
                 .filter(quad -> quad.normal.equals(faceNormal)).findFirst();
         if (faceOptional.isPresent()) {
             u0 /= model.texWidth;

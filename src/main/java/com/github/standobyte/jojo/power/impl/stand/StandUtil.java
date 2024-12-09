@@ -2,11 +2,13 @@ package com.github.standobyte.jojo.power.impl.stand;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import com.github.standobyte.jojo.JojoModConfig;
@@ -25,6 +27,7 @@ import com.github.standobyte.jojo.power.IPower.PowerClassification;
 import com.github.standobyte.jojo.power.impl.stand.type.StandType;
 import com.github.standobyte.jojo.power.impl.stand.type.StandType.StandSurvivalGameplayPool;
 import com.github.standobyte.jojo.util.general.MathUtil;
+import com.mojang.datafixers.util.Either;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
@@ -35,31 +38,49 @@ import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.monster.MonsterEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.server.ServerWorld;
 
 public class StandUtil {
     
+    @Deprecated
     @Nullable
     public static StandType<?> randomStand(PlayerEntity entity, Random random) {
+        return randomStandOrError(entity, random).left().orElse(null);
+    }
+    
+    @Nonnull
+    public static Either<StandType<?>, ITextComponent> randomStandOrError(PlayerEntity entity, Random random) {
         if (!entity.level.isClientSide()) {
             List<StandType<?>> stands = arrowStands(entity.level.isClientSide()).collect(Collectors.toList());
-
             if (stands.isEmpty()) {
-                return null;
+                return Either.right(new TranslationTextComponent("jojo.arrow.no_stands"));
             }
             
             stands = PlayerStandAssignmentConfig.getInstance().limitToAssignedStands(entity, stands);
-            
+            if (stands.isEmpty()) {
+                return Either.right(new TranslationTextComponent("jojo.arrow.assigned_banned", entity.getName()));
+            }
             
             stands = JojoModConfig.getCommonConfigInstance(false).standRandomPoolFilter.get().limitStandPool((ServerWorld) entity.level, stands);
-            
-            if (!stands.isEmpty()) {
-                stands = IStandPower.getStandPowerOptional(entity).resolve().get()
-                        .getPreviousStandsSet().rigForUnusedStands(stands);
-                return MathUtil.getRandomWeightedDouble(stands, stand -> stand.getStats().getRandomWeight(), random).orElse(null);
+            if (stands.isEmpty()) {
+                return Either.right(new TranslationTextComponent("jojo.arrow.all_stands_taken"));
             }
+            
+            stands = IStandPower.getStandPowerOptional(entity).resolve().get().getPreviousStandsSet().rigForUnusedStands(stands);
+            Optional<StandType<?>> stand = MathUtil.getRandomWeightedDouble(stands, s -> s.getStats().getRandomWeight(), random);
+            // fucking generics istg
+            Optional<Either<StandType<?>, ITextComponent>> wtf = stand.map(Either::left);
+            return wtf.orElse(Either.right(new TranslationTextComponent("jojo.arrow.no_stand_weights")));
+            /* 
+             * return stand.map(Either::left).orElse(Either.right(new TranslationTextComponent("jojo.arrow.no_stands")));
+             *   ^ doesn't work because fuck you that's why
+             */
         }
-        return null;
+        else {
+            throw new IllegalStateException("Can only use this function to get a random Stand on server side");
+        }
     }
     
     
