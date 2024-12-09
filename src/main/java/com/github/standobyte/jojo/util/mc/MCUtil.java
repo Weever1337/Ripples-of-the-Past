@@ -123,6 +123,7 @@ import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.GameRules;
+import net.minecraft.world.GameType;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ChunkManager;
 import net.minecraft.world.server.ServerWorld;
@@ -391,6 +392,17 @@ public class MCUtil {
         Int2ObjectMap<ChunkManager.EntityTracker> entityMap = chunkMap.entityMap;
         ChunkManager.EntityTracker tracker = entityMap.get(entity.getId());
         return tracker.seenBy;
+    }
+    
+    
+    
+    public static GameType getGameMode(PlayerEntity player) {
+        if (!player.level.isClientSide()) {
+            return ((ServerPlayerEntity) player).gameMode.getGameModeForPlayer();
+        }
+        else {
+            return ClientUtil.getPlayerGameMode(player);
+        }
     }
     
     

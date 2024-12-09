@@ -85,6 +85,7 @@ import com.github.standobyte.jojo.util.mc.damage.ModdedDamageSourceWrapper;
 import com.github.standobyte.jojo.util.mc.damage.NoKnockbackOnBlocking;
 import com.github.standobyte.jojo.util.mc.damage.StandLinkDamageSource;
 import com.github.standobyte.jojo.util.mc.reflection.CommonReflection;
+import com.github.standobyte.jojo.util.mod.IPlayerPossess;
 import com.github.standobyte.jojo.util.mod.JojoModUtil;
 import com.google.common.collect.Iterables;
 
@@ -159,9 +160,11 @@ import net.minecraftforge.event.ServerChatEvent;
 import net.minecraftforge.event.TickEvent.PlayerTickEvent;
 import net.minecraftforge.event.TickEvent.WorldTickEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
+import net.minecraftforge.event.entity.EntityTravelToDimensionEvent;
 import net.minecraftforge.event.entity.PlaySoundAtEntityEvent;
 import net.minecraftforge.event.entity.ProjectileImpactEvent;
 import net.minecraftforge.event.entity.item.ItemTossEvent;
+import net.minecraftforge.event.entity.living.EntityTeleportEvent;
 import net.minecraftforge.event.entity.living.LivingAttackEvent;
 import net.minecraftforge.event.entity.living.LivingConversionEvent;
 import net.minecraftforge.event.entity.living.LivingDamageEvent;
@@ -990,6 +993,15 @@ public class GameplayEventHandler {
         }
     }
     
+    @SubscribeEvent(priority = EventPriority.HIGH)
+    public static void cancelChestOpenWhenPossessing(PlayerInteractEvent.RightClickBlock event) {
+        PlayerEntity player = event.getPlayer();
+        if (MCUtil.getGameMode(player) == GameType.SPECTATOR && IPlayerPossess.getPossessedEntity(player) != null) {
+            event.setCanceled(true);
+            event.setCancellationResult(ActionResultType.FAIL);
+        }
+    }
+    
     @SubscribeEvent(priority = EventPriority.LOW, receiveCanceled = true)
     public static void tripwireInteract(PlayerInteractEvent.RightClickBlock event) {
         if (event.getHand() == Hand.MAIN_HAND && event.getUseBlock() != Event.Result.DENY) {
@@ -1052,6 +1064,14 @@ public class GameplayEventHandler {
         IStandPower.getStandPowerOptional(player).ifPresent(stand -> {
             stand.getContinuousEffects().onStandUserLogout((ServerPlayerEntity) player);
         });
+    }
+
+    @SubscribeEvent(priority = EventPriority.HIGH)
+    public static void beforeLivingDeath(LivingDeathEvent event) {
+        LivingEntity dead = event.getEntityLiving();
+        if (dead instanceof IPlayerPossess) {
+            ((IPlayerPossess) dead).jojoOnPossessingDead();
+        }
     }
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
@@ -1363,5 +1383,35 @@ public class GameplayEventHandler {
     @SubscribeEvent
     public static void anvilUnrepairableItems(AnvilUpdateEvent event) {
         GlovesItem.combineInAnvil(event);
+    }
+    
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
+    public static void cancelTeleport(EntityTeleportEvent event) {
+        Entity entity = event.getEntity();
+        if (IPlayerPossess.getPossessedEntity(entity) != null) {
+            event.setCanceled(true);
+        }
+    }
+    
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
+    public static void cancelOtherDimensionTeleport(EntityTravelToDimensionEvent event) {
+        Entity entity = event.getEntity();
+        if (IPlayerPossess.getPossessedEntity(entity) != null) {
+            event.setCanceled(true);
+        }
+    }
+    
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
+    public static void cancelGameModeChange(PlayerEvent.PlayerChangeGameModeEvent event) {
+        if (event.getCurrentGameMode() == GameType.SPECTATOR || event.getNewGameMode() != GameType.SPECTATOR) {
+            Entity entity = event.getEntity();
+            if (entity instanceof IPlayerPossess) {
+                IPlayerPossess player = (IPlayerPossess) entity;
+                if (player.jojoGetPossessedEntity() != null) {
+                    player.jojoSetPrePossessGameMode(Optional.of(event.getNewGameMode()));
+                    event.setCanceled(true);
+                }
+            }
+        }
     }
 }
