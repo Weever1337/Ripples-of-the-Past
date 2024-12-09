@@ -77,7 +77,7 @@ public class TommyGunItem extends Item {
 //                    for (int i = 0; i < bulletsPerTickForLulz; i++) {
                         TommyGunBulletEntity bullet = new TommyGunBulletEntity(entity, world);
                         Vector3d pos = entity.getEyePosition(1).subtract(0, bullet.getBbHeight() / 2, 0).add(entity.getLookAngle());
-                        bullet.shootFromRotation(entity, 2, 0);
+                        bullet.shootFromRotation(entity, 2f, 0);
 //                        pos = pos.add(bullet.getDeltaMovement().scale((double) i / bulletsPerTickForLulz));
                         bullet.setPos(pos.x, pos.y, pos.z);
                         world.addFreshEntity(bullet);

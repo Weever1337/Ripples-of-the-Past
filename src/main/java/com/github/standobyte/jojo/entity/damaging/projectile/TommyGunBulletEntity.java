@@ -11,7 +11,6 @@ import net.minecraft.block.SoundType;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.util.math.RayTraceResult;
@@ -57,7 +56,15 @@ public class TommyGunBulletEntity extends ModdedProjectileEntity {
             setNoGravity(false);
         }
         if (level.isClientSide()) {
-            tracePos.add(position());
+            Vector3d pos = position();
+            boolean addPos = true;
+            if (tracePos.size() > 1) {
+                Vector3d lastPos = tracePos.get(tracePos.size() - 1);
+                addPos &= pos.distanceToSqr(lastPos) >= 0.0625;
+            }
+            if (addPos) {
+                tracePos.add(pos);
+            }
         }
     }
 

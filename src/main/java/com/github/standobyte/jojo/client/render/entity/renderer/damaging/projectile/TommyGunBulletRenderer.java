@@ -9,6 +9,8 @@ import com.github.standobyte.jojo.util.general.MathUtil;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.vertex.IVertexBuilder;
 
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.ActiveRenderInfo;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.culling.ClippingHelper;
@@ -62,6 +64,15 @@ public class TommyGunBulletRenderer extends EntityRenderer<TommyGunBulletEntity>
             
             Vector3d diffBack = posPrev.subtract(posCur);
             double len = diffBack.length();
+            
+            // render the bullet if there is no trail long enough yet
+            double BULLET_START = maxTrailLen * 0.984375;
+            if (i == 1 && len < traceLen - BULLET_START) {
+                double ratio = (traceLen - BULLET_START) / len;
+                len = traceLen - BULLET_START;
+                posPrev = posCur.add(diffBack.scale(ratio));
+            }
+            
             if (len > traceLen) {
                 posPrev = posCur.add(diffBack.normalize().scale(traceLen));
                 traceLen = 0;
@@ -89,10 +100,12 @@ public class TommyGunBulletRenderer extends EntityRenderer<TommyGunBulletEntity>
         matrixStack.mulPose(Vector3f.YP.rotationDegrees(-90.0F - yRot));
         matrixStack.mulPose(Vector3f.ZP.rotationDegrees(-xRot));
         matrixStack.scale(1.0F, BEAM_WIDTH, BEAM_WIDTH);
-        matrixStack.last().normal().setIdentity();
+        Matrix3f lighting = matrixStack.last().normal();
+        lighting.setIdentity();
+        ActiveRenderInfo camera = Minecraft.getInstance().gameRenderer.getMainCamera();
+        lighting.mul(Vector3f.XP.rotationDegrees(camera.getXRot()));
         float length = (float) trailSegmentVec.length();
         
-        // FIXME light is off when looking down
         if (first) {
             renderFront(matrixStack, new Vector3f(0, 0, 1), vertexBuilder);
         }
