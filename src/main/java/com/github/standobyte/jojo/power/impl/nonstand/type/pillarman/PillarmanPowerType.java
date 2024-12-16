@@ -119,7 +119,6 @@ public class PillarmanPowerType extends NonStandPowerType<PillarmanData> {
     public static void initPillarmanEffects() {
         Collections.addAll(EFFECTS, 
                 Effects.REGENERATION,
-                Effects.DAMAGE_RESISTANCE,
                 Effects.NIGHT_VISION);
     }
     
@@ -127,7 +126,6 @@ public class PillarmanPowerType extends NonStandPowerType<PillarmanData> {
     protected void initPassiveEffects() {
         initAllPossibleEffects(
                 () -> Effects.REGENERATION,
-                () -> Effects.DAMAGE_RESISTANCE,
                 () -> Effects.NIGHT_VISION);
     }*/
     

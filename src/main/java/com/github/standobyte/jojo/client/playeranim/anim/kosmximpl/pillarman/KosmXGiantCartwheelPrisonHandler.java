@@ -16,20 +16,20 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.HandSide;
 import net.minecraft.util.ResourceLocation;
 
-public class KosmXPillarmanEvasionLayer extends AnimLayerHandler<ModifierLayer<IAnimation>> implements BasicToggleAnim {
-	private static final float SPEED = 2F;
+public class KosmXGiantCartwheelPrisonHandler extends AnimLayerHandler<ModifierLayer<IAnimation>> implements BasicToggleAnim {
 
-    public KosmXPillarmanEvasionLayer(ResourceLocation id) {
+
+    public KosmXGiantCartwheelPrisonHandler(ResourceLocation id) {
         super(id);
     }
 
     @Override
     protected ModifierLayer<IAnimation> createAnimLayer(AbstractClientPlayerEntity player) {
-        return new ModifierLayer<>(null, new SpeedModifier(SPEED));
+        return new ModifierLayer<>(null);
     }
     
     
-    private static final ResourceLocation ANIM = new ResourceLocation(JojoMod.MOD_ID, "evasion");
+    private static final ResourceLocation ANIM = new ResourceLocation(JojoMod.MOD_ID, "giant_cartwheel_prison");
     @Override
     public boolean setAnimEnabled(PlayerEntity player, boolean enabled) {
         enabled &= !player.isPassenger();

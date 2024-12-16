@@ -97,6 +97,7 @@ public class PillarmanData extends TypeSpecificData {
         LivingEntity user = power.getUser();
         if (!user.isAlive()) {
             stoneForm = false;
+            bladesVisible = false;
         }
         if (!user.level.isClientSide()) {
             if (isStoneFormEnabled()) {
@@ -226,12 +227,17 @@ public class PillarmanData extends TypeSpecificData {
         	    case WIND:
         	        // TODO make a single trigger with a mod predicate for that
         	        ModCriteriaTriggers.PILLARMAN_WIND_MODE.get().trigger(player);
+        	        user.level.playSound(null, user, ModSounds.PILLAR_MAN_WIND_MODE.get(), user.getSoundSource(), 1.0F, 1.0F);
+        	        bladesVisible = false;
         	        break;
         	    case HEAT:
         	        ModCriteriaTriggers.PILLARMAN_HEAT_MODE.get().trigger(player);
+        	        user.level.playSound(null, user, ModSounds.PILLAR_MAN_HEAT_MODE.get(), user.getSoundSource(), 1.0F, 1.0F);
+        	        bladesVisible = false;
         	        break;
         	    case LIGHT:
         	        ModCriteriaTriggers.PILLARMAN_LIGHT_MODE.get().trigger(player);
+        	        user.level.playSound(null, user, ModSounds.PILLAR_MAN_LIGHT_MODE.get(), user.getSoundSource(), 1.0F, 1.0F);
         	        break;
     	        default:
     	            break;

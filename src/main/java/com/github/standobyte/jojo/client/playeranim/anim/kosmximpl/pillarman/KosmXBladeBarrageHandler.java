@@ -16,20 +16,22 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.HandSide;
 import net.minecraft.util.ResourceLocation;
 
-public class KosmXGiantCartwheelPrisonLayer extends AnimLayerHandler<ModifierLayer<IAnimation>> implements BasicToggleAnim {
+public class KosmXBladeBarrageHandler extends AnimLayerHandler<ModifierLayer<IAnimation>> implements BasicToggleAnim {
+	private static final float SPEED = 3.5F;
 
-
-    public KosmXGiantCartwheelPrisonLayer(ResourceLocation id) {
+    public KosmXBladeBarrageHandler(ResourceLocation id) {
         super(id);
     }
 
     @Override
     protected ModifierLayer<IAnimation> createAnimLayer(AbstractClientPlayerEntity player) {
-        return new ModifierLayer<>(null);
+        return new ModifierLayer<>(null, 
+        		new KosmXArmsRotationModifier(player, HandSide.LEFT, HandSide.RIGHT), 
+        		new SpeedModifier(SPEED));
     }
     
     
-    private static final ResourceLocation ANIM = new ResourceLocation(JojoMod.MOD_ID, "giant_cartwheel_prison");
+    private static final ResourceLocation ANIM = new ResourceLocation(JojoMod.MOD_ID, "blade_barrage");
     @Override
     public boolean setAnimEnabled(PlayerEntity player, boolean enabled) {
         enabled &= !player.isPassenger();

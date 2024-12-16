@@ -9,25 +9,26 @@ import com.github.standobyte.jojo.client.playeranim.kosmx.anim.modifier.KosmXHea
 
 import dev.kosmx.playerAnim.api.layered.IAnimation;
 import dev.kosmx.playerAnim.api.layered.ModifierLayer;
+import dev.kosmx.playerAnim.api.layered.modifier.SpeedModifier;
 import dev.kosmx.playerAnim.core.util.Ease;
 import net.minecraft.client.entity.player.AbstractClientPlayerEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.HandSide;
 import net.minecraft.util.ResourceLocation;
 
-public class KosmXBladeBarrageLayer extends AnimLayerHandler<ModifierLayer<IAnimation>> implements BasicToggleAnim {
+public class KosmXErraticBlazeKingHandler extends AnimLayerHandler<ModifierLayer<IAnimation>> implements BasicToggleAnim {
 
-    public KosmXBladeBarrageLayer(ResourceLocation id) {
+    public KosmXErraticBlazeKingHandler(ResourceLocation id) {
         super(id);
     }
 
     @Override
     protected ModifierLayer<IAnimation> createAnimLayer(AbstractClientPlayerEntity player) {
-        return new ModifierLayer<>(null, new KosmXHeadRotationModifier(), new KosmXArmsRotationModifier(player, HandSide.LEFT, HandSide.RIGHT));
+        return new ModifierLayer<>(null, new KosmXHeadRotationModifier());
     }
     
     
-    private static final ResourceLocation ANIM = new ResourceLocation(JojoMod.MOD_ID, "blade_barrage");
+    private static final ResourceLocation ANIM = new ResourceLocation(JojoMod.MOD_ID, "erratic_blaze_king");
     @Override
     public boolean setAnimEnabled(PlayerEntity player, boolean enabled) {
         enabled &= !player.isPassenger();

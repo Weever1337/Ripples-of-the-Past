@@ -1,11 +1,19 @@
 package com.github.standobyte.jojo.action.non_stand;
 
+import com.github.standobyte.jojo.action.Action;
 import com.github.standobyte.jojo.action.ActionConditionResult;
 import com.github.standobyte.jojo.action.ActionTarget;
 import com.github.standobyte.jojo.client.playeranim.anim.ModPlayerAnimations;
+import com.github.standobyte.jojo.entity.damaging.projectile.ModdedProjectileEntity;
+import com.github.standobyte.jojo.entity.stand.StandEntity;
+import com.github.standobyte.jojo.init.ModParticles;
 import com.github.standobyte.jojo.init.ModSounds;
+import com.github.standobyte.jojo.init.ModStatusEffects;
+import com.github.standobyte.jojo.init.power.non_stand.ModPowers;
+import com.github.standobyte.jojo.init.power.non_stand.pillarman.ModPillarmanActions;
 import com.github.standobyte.jojo.power.impl.nonstand.INonStandPower;
 import com.github.standobyte.jojo.power.impl.nonstand.type.pillarman.PillarmanData.Mode;
+import com.github.standobyte.jojo.util.general.MathUtil;
 import com.github.standobyte.jojo.util.mc.MCUtil;
 import com.github.standobyte.jojo.util.mc.damage.DamageUtil;
 import com.github.standobyte.jojo.util.mod.JojoModUtil;
@@ -16,14 +24,21 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.projectile.ProjectileEntity;
 import net.minecraft.particles.ParticleTypes;
+import net.minecraft.potion.EffectInstance;
+import net.minecraft.potion.Effects;
+import net.minecraft.util.DamageSource;
 import net.minecraft.util.EntityDamageSource;
 import net.minecraft.util.Hand;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.ForgeHooks;
+import net.minecraftforge.common.ForgeMod;
+import net.minecraftforge.event.entity.living.LivingAttackEvent;
 
 public class PillarmanBladeBarrage extends PillarmanAction {
 
@@ -38,6 +53,34 @@ public class PillarmanBladeBarrage extends PillarmanAction {
             return conditionMessage("hands");
         }
         return ActionConditionResult.POSITIVE;
+    }
+    
+    public static boolean onUserAttacked(LivingAttackEvent event) {
+        DamageSource source = event.getSource();
+        Entity attacker = source.getDirectEntity();
+        if (attacker instanceof ProjectileEntity || attacker instanceof ModdedProjectileEntity) {
+            LivingEntity targetLiving = event.getEntityLiving();
+            return INonStandPower.getNonStandPowerOptional(targetLiving).map(power -> {
+                Action<?> heldAction = power.getHeldAction(true);
+                if (heldAction == ModPillarmanActions.PILLARMAN_BLADE_BARRAGE.get()) {
+                    World world = attacker.level;
+                    if (attacker instanceof ModdedProjectileEntity) {
+                        ModdedProjectileEntity projectile = (ModdedProjectileEntity) attacker;
+                        return projectile.canBeEvaded(targetLiving) && (!projectile.standDamage());
+                	}
+                    world.getEntitiesOfClass(ProjectileEntity.class, targetLiving.getBoundingBox().inflate(targetLiving.getAttributeValue(ForgeMod.REACH_DISTANCE.get())), 
+                            entity -> entity.isAlive() && !entity.isPickable()).forEach(projectile -> {
+                                if (targetLiving.getLookAngle().dot(projectile.getDeltaMovement().reverse().normalize())
+                                        >= MathHelper.cos((float) (30.0 + MathHelper.clamp(10F, 0, 16) * 30.0 / 16.0) * MathUtil.DEG_TO_RAD)) {
+                                	event.setCanceled(true);
+                                }
+                            });
+                    return false;
+                }
+                return false;
+            }).orElse(false);
+        }
+        return false;
     }
     
     @Override
@@ -90,8 +133,7 @@ public class PillarmanBladeBarrage extends PillarmanAction {
             default:
                 break;
             }
-            world.playSound(null, user.getX(), user.getY(), user.getZ(), ModSounds.SILVER_CHARIOT_BARRAGE_SWIPE.get(), user.getSoundSource(), 1.0F, 1.0F);
-            PillarmanDivineSandstorm.auraEffect(user, ParticleTypes.SWEEP_ATTACK, 1);
+            world.playSound(null, user.getX(), user.getY(), user.getZ(), ModSounds.SILVER_CHARIOT_BARRAGE_SWIPE.get(), user.getSoundSource(), 0.75F, 1.0F);
         }
     }
     
@@ -103,6 +145,18 @@ public class PillarmanBladeBarrage extends PillarmanAction {
                 user.swing(ticksHeld % 4 == 0 ? Hand.MAIN_HAND : Hand.OFF_HAND);
             }
         }
+    }
+    
+    @Override
+    public void startedHolding(World world, LivingEntity user, INonStandPower power, ActionTarget target, boolean requirementsFulfilled) {
+    	if (requirementsFulfilled) {
+        	power.getTypeSpecificData(ModPowers.PILLAR_MAN.get()).get().setBladesVisible(true);
+    	}
+    }
+
+    @Override
+    public void stoppedHolding(World world, LivingEntity user, INonStandPower power, int ticksHeld, boolean willFire) {
+    	power.getTypeSpecificData(ModPowers.PILLAR_MAN.get()).get().setBladesVisible(false);
     }
     
     @Override

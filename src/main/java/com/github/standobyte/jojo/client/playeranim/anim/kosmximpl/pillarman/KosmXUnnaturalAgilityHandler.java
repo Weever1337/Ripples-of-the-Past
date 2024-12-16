@@ -16,19 +16,20 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.HandSide;
 import net.minecraft.util.ResourceLocation;
 
-public class KosmXSelfDetonationLayer extends AnimLayerHandler<ModifierLayer<IAnimation>> implements BasicToggleAnim {
+public class KosmXUnnaturalAgilityHandler extends AnimLayerHandler<ModifierLayer<IAnimation>> implements BasicToggleAnim {
+	private static final float SPEED = 1.25F;
 
-    public KosmXSelfDetonationLayer(ResourceLocation id) {
+    public KosmXUnnaturalAgilityHandler(ResourceLocation id) {
         super(id);
     }
 
     @Override
     protected ModifierLayer<IAnimation> createAnimLayer(AbstractClientPlayerEntity player) {
-        return new ModifierLayer<>(null);
+        return new ModifierLayer<>(null, new SpeedModifier(SPEED));
     }
     
     
-    private static final ResourceLocation ANIM = new ResourceLocation(JojoMod.MOD_ID, "self_detonation");
+    private static final ResourceLocation ANIM = new ResourceLocation(JojoMod.MOD_ID, "unnatural_agility");
     @Override
     public boolean setAnimEnabled(PlayerEntity player, boolean enabled) {
         enabled &= !player.isPassenger();
