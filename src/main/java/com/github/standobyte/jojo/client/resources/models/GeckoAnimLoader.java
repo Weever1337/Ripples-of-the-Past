@@ -9,8 +9,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.annotation.Nullable;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -18,7 +16,6 @@ import com.github.standobyte.jojo.JojoMod;
 import com.github.standobyte.jojo.client.render.entity.model.animnew.ParseGeckoAnims;
 import com.github.standobyte.jojo.client.render.entity.model.animnew.mojang.Animation;
 import com.github.standobyte.jojo.client.render.entity.model.animnew.stand.GeckoStandAnimator;
-import com.github.standobyte.jojo.client.render.entity.model.animnew.stand.StandActionAnimation;
 import com.github.standobyte.jojo.client.render.entity.model.stand.StandModelRegistry;
 import com.github.standobyte.jojo.client.render.entity.model.stand.StandModelRegistry.StandModelRegistryObj;
 import com.google.common.collect.Maps;
@@ -96,8 +93,8 @@ public class GeckoAnimLoader extends ReloadListener<Map<ResourceLocation, JsonEl
                     standModelAnims.animFromJson(animation, animJson, animJsonEntry.getKey());
                 }
                 catch (Exception e) {
-                    LOGGER.error("Failed to load animation {} from {}", animJsonEntry.getKey(), rawModelEntry.getKey());
-                    e.printStackTrace();
+                    LOGGER.error("Failed to load animation {} from {}", animJsonEntry.getKey(), rawModelEntry.getKey(), e);
+                    continue;
                 }
             }
             loadedAnims.put(key, standModelAnims);

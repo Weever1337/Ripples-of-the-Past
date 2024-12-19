@@ -37,8 +37,7 @@ import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.World;
 
 public class TimeStop extends StandAction {
-    public static final StandPose CHARGE_UP_ANIM = new StandPose("timeStopCharge");
-    public static final StandPose PERFORM_ANIM = new StandPose("timeStop");
+    public static final StandPose ANIM = new StandPose("timeStop");
     
     @ActionConfigField private final int timeStopMaxTicks;
     @ActionConfigField private final int timeStopMaxTicksVampire;
