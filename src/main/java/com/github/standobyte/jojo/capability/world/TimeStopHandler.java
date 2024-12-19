@@ -37,12 +37,14 @@ import com.google.common.collect.HashBiMap;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.network.play.server.SPlayEntityEffectPacket;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraft.world.GameType;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.event.TickEvent;
@@ -70,12 +72,13 @@ public class TimeStopHandler {
         this.world = world;
     }
     
+    @SuppressWarnings("deprecation")
     public void tick() {
         Iterator<Entity> entityIter = stoppedInTime.iterator();
         
         while (entityIter.hasNext()) {
             Entity entity = entityIter.next();
-            if (!entity.isAlive()) {
+            if (entity.removed) {
                 entityIter.remove();
             }
 
@@ -144,6 +147,12 @@ public class TimeStopHandler {
                     entity.invulnerableTime--;
                 }
                 entity.getCapability(LivingUtilCapProvider.CAPABILITY).ifPresent(cap -> cap.lastHurtByStandTick());
+            }
+            else if (entity instanceof ItemEntity) {
+                ItemEntity itemEntity = (ItemEntity) entity;
+                if (itemEntity.pickupDelay > 0 && itemEntity.pickupDelay != 32767) {
+                    --itemEntity.pickupDelay;
+                }
             }
         }
         entity.tickCount--;
@@ -340,8 +349,14 @@ public class TimeStopHandler {
     }
     
     public static boolean canPlayerMoveInStoppedTime(PlayerEntity player, boolean checkEffect) {
-        return checkEffect && player.hasEffect(ModStatusEffects.TIME_STOP.get()) || player.isCreative() || player.isSpectator() || 
+        return checkEffect && player.hasEffect(ModStatusEffects.TIME_STOP.get()) || gamemodeIgnoresTimeStop(player) || 
                 player instanceof ServerPlayerEntity && ((ServerPlayerEntity) player).server.isSingleplayerOwner(player.getGameProfile());
+    }
+    
+    public static boolean gamemodeIgnoresTimeStop(PlayerEntity player) {
+        return JojoModUtil.getActualGameModeWhilePossessing(player)
+                .map(gameMode -> gameMode == GameType.CREATIVE || gameMode == GameType.SPECTATOR)
+                .orElseGet(() -> player.isCreative() || player.isSpectator());
     }
     
     public static boolean hasTimeStopAbility(LivingEntity entity) {

@@ -35,6 +35,7 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.boss.WitherEntity;
 import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.item.TNTEntity;
+import net.minecraft.entity.item.minecart.TNTMinecartEntity;
 import net.minecraft.entity.monster.CreeperEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
@@ -78,7 +79,7 @@ public class CrazyDiamondPreviousState extends StandEntityAction {
 //                return ActionConditionResult.noMessage(convertTo(blockItem, user.level, recipe -> {
 //                    ItemStack[] ingredients = getIngredients(recipe);
 //                    return ingredients.length == 1 && !ingredients[0].isEmpty() && ingredients[0].getItem() instanceof BlockItem;
-//                }, user.getRandom()).isPresent());
+//                }, user.getRandom(), false).isPresent());
 //            }
             return ActionConditionResult.NEGATIVE;
         case ENTITY:
@@ -87,7 +88,8 @@ public class CrazyDiamondPreviousState extends StandEntityAction {
             int resolveLevel = standPower.getResolveLevel();
             if (resolveLevel >= 3) {
                 if (
-                        targetEntity instanceof TNTEntity ||
+                        targetEntity instanceof TNTEntity || 
+                        targetEntity instanceof TNTMinecartEntity ||
                         targetEntity.getType() == EntityType.SNOW_GOLEM ||
                         targetEntity instanceof CreeperEntity && ((CreeperEntity) targetEntity).isPowered()) {
                     return ActionConditionResult.POSITIVE;
@@ -108,7 +110,8 @@ public class CrazyDiamondPreviousState extends StandEntityAction {
     
     @Override
     public ActionConditionResult checkStandTarget(ActionTarget target, StandEntity standEntity, IStandPower standPower) {
-        if (target.getEntity() instanceof TNTEntity) {
+        Entity targetEntity = target.getEntity();
+        if (targetEntity instanceof TNTEntity || targetEntity instanceof TNTMinecartEntity) {
             return ActionConditionResult.POSITIVE;
         }
         return super.checkStandTarget(target, standEntity, standPower);
@@ -138,77 +141,86 @@ public class CrazyDiamondPreviousState extends StandEntityAction {
 
                 if (targetEntity instanceof TNTEntity) {
                     TNTEntity tnt = (TNTEntity) targetEntity;
-                    if (!CrazyDiamondHeal.heal(world, tnt, tnt, (e, clientSide) -> {
-                        if (!clientSide) {
-                            e.setFuse(e.getLife() + 2);
+                    if (task.getTick() == 0 || tnt.getFuse() < 80) {
+                        if (!world.isClientSide()) {
+                            tnt.setFuse(tnt.getLife() + 2);
                         }
-                    }, e -> task.getTick() == 0 || e.getFuse() < 80)) {
-                        CrazyDiamondHeal.heal(world, tnt, tnt, 
-                                (e, clientSide) -> {
-                                    if (!clientSide) {
-                                        Block tntBlock = ForgeRegistries.BLOCKS.getValue(e.getType().getRegistryName());
-                                        if (tntBlock == null || tntBlock.getRegistryName().equals(ForgeRegistries.BLOCKS.getDefaultKey())) {
-                                            tntBlock = Blocks.TNT;
-                                        }
-                                        BlockPos blockPos = e.blockPosition();
-                                        e.remove();
-                                        if (!e.isAlive()) {
-                                            replaceOrDropBlock(world, blockPos, tntBlock.defaultBlockState());
-                                        }
-                                    }
-                                }, e -> true);
                     }
+                    else {
+                        if (!world.isClientSide()) {
+                            Block tntBlock = ForgeRegistries.BLOCKS.getValue(tnt.getType().getRegistryName());
+                            if (tntBlock == null || tntBlock.getRegistryName().equals(ForgeRegistries.BLOCKS.getDefaultKey())) {
+                                tntBlock = Blocks.TNT;
+                            }
+                            BlockPos blockPos = tnt.blockPosition();
+                            tnt.remove();
+                            if (!tnt.isAlive()) {
+                                replaceOrDropBlock(world, blockPos, tntBlock.defaultBlockState());
+                            }
+                        }
+                    }
+                    CrazyDiamondHeal.addParticlesAround(targetEntity);
                     healTick = true;
                 }
 
-                else if (targetEntity.getType() == EntityType.SNOW_GOLEM) {
-                    if (!CrazyDiamondHeal.healLivingEntity(world, (LivingEntity) targetEntity, standEntity)) {
-                        CrazyDiamondHeal.heal(world, targetEntity, targetEntity, 
-                                (e, clientSide) -> {
-                                    if (!clientSide && standEntity.getRandom().nextFloat() < 0.1F) {
-                                        BlockPos blockPos = e.blockPosition();
-                                        e.remove();
-                                        if (!e.isAlive()) {
-                                            replaceOrDropBlock(world, blockPos.offset(0, 2, 0), Blocks.CARVED_PUMPKIN.defaultBlockState());
-                                            replaceOrDropBlock(world, blockPos, Blocks.SNOW_BLOCK.defaultBlockState());
-                                            replaceOrDropBlock(world, blockPos.offset(0, 1, 0), Blocks.SNOW_BLOCK.defaultBlockState());
-                                        }
-                                    }
-                                }, e -> true);
+                else if (targetEntity instanceof TNTMinecartEntity) {
+                    TNTMinecartEntity tntMinecart = (TNTMinecartEntity) targetEntity;
+                    int fuse = CommonReflection.getFuse(tntMinecart);
+                    if (fuse >= 80) {
+                        CommonReflection.setFuse(tntMinecart, -1);
+                        healTick = true;
                     }
+                    else if (fuse > -1) {
+                        CommonReflection.setFuse(tntMinecart, fuse + 2);
+                        healTick = true;
+                    }
+                    if (healTick) {
+                        CrazyDiamondHeal.addParticlesAround(targetEntity);
+                    }
+                }
+
+                else if (targetEntity.getType() == EntityType.SNOW_GOLEM) {
+                    if (!CrazyDiamondHeal.healLivingEntity(world, (LivingEntity) targetEntity, standEntity, task)) {
+                        if (!world.isClientSide() && standEntity.getRandom().nextFloat() < 0.1F) {
+                            BlockPos blockPos = targetEntity.blockPosition();
+                            targetEntity.remove();
+                            if (!targetEntity.isAlive()) {
+                                replaceOrDropBlock(world, blockPos.offset(0, 2, 0), Blocks.CARVED_PUMPKIN.defaultBlockState());
+                                replaceOrDropBlock(world, blockPos, Blocks.SNOW_BLOCK.defaultBlockState());
+                                replaceOrDropBlock(world, blockPos.offset(0, 1, 0), Blocks.SNOW_BLOCK.defaultBlockState());
+                            }
+                        }
+                    }
+                    CrazyDiamondHeal.addParticlesAround(targetEntity);
                     healTick = true;
                 }
                 
                 else if (targetEntity instanceof CreeperEntity) {
                     CreeperEntity creeper = (CreeperEntity) targetEntity;
-                    if (creeper.isPowered() && !CrazyDiamondHeal.healLivingEntity(world, (LivingEntity) targetEntity, standEntity)) {
-                        CrazyDiamondHeal.heal(world, targetEntity, targetEntity, 
-                                (e, clientSide) -> {
-                                    if (!clientSide && standEntity.getRandom().nextFloat() < 0.05F) {
-                                        creeper.getEntityData().set(CommonReflection.getCreeperPoweredParameter(), false);
-                                    }
-                                }, e -> true);
+                    if (creeper.isPowered() && !CrazyDiamondHeal.healLivingEntity(world, (LivingEntity) targetEntity, standEntity, task)) {
+                        if (!world.isClientSide() && standEntity.getRandom().nextFloat() < 0.05F) {
+                            creeper.getEntityData().set(CommonReflection.getCreeperPoweredParameter(), false);
+                        }
+                        CrazyDiamondHeal.addParticlesAround(targetEntity);
                     }
                     healTick = true;
                 }
 
                 else if (userPower.getResolveLevel() >= 4) {
                     if (targetEntity.getType() == EntityType.IRON_GOLEM) {
-                        if (!CrazyDiamondHeal.healLivingEntity(world, (LivingEntity) targetEntity, standEntity)) {
-                            CrazyDiamondHeal.heal(world, targetEntity, targetEntity, 
-                                    (e, clientSide) -> {
-                                        if (!clientSide && standEntity.getRandom().nextFloat() < 0.05F) {
-                                            BlockPos blockPos = e.blockPosition();
-                                            e.remove();
-                                            if (!e.isAlive()) {
-                                                replaceOrDropBlock(world, blockPos, Blocks.IRON_BLOCK.defaultBlockState());
-                                                replaceOrDropBlock(world, blockPos.offset(0, 2, 0), Blocks.CARVED_PUMPKIN.defaultBlockState());
-                                                replaceOrDropBlock(world, blockPos.offset(0, 1, 0), Blocks.IRON_BLOCK.defaultBlockState());
-                                                replaceOrDropBlock(world, blockPos.offset(1, 1, 0), Blocks.IRON_BLOCK.defaultBlockState());
-                                                replaceOrDropBlock(world, blockPos.offset(-1, 1, 0), Blocks.IRON_BLOCK.defaultBlockState());
-                                            }
-                                        }
-                                    }, e -> true);
+                        if (!CrazyDiamondHeal.healLivingEntity(world, (LivingEntity) targetEntity, standEntity, task)) {
+                            if (!world.isClientSide() && standEntity.getRandom().nextFloat() < 0.05F) {
+                                BlockPos blockPos = targetEntity.blockPosition();
+                                targetEntity.remove();
+                                if (!targetEntity.isAlive()) {
+                                    replaceOrDropBlock(world, blockPos, Blocks.IRON_BLOCK.defaultBlockState());
+                                    replaceOrDropBlock(world, blockPos.offset(0, 2, 0), Blocks.CARVED_PUMPKIN.defaultBlockState());
+                                    replaceOrDropBlock(world, blockPos.offset(0, 1, 0), Blocks.IRON_BLOCK.defaultBlockState());
+                                    replaceOrDropBlock(world, blockPos.offset(1, 1, 0), Blocks.IRON_BLOCK.defaultBlockState());
+                                    replaceOrDropBlock(world, blockPos.offset(-1, 1, 0), Blocks.IRON_BLOCK.defaultBlockState());
+                                }
+                            }
+                            CrazyDiamondHeal.addParticlesAround(targetEntity);
                         }
                         healTick = true;
                     }
@@ -217,37 +229,30 @@ public class CrazyDiamondPreviousState extends StandEntityAction {
                         WitherEntity wither = (WitherEntity) targetEntity;
                         int spawnTicks = wither.getInvulnerableTicks();
                         if (spawnTicks > 0) {
-                            if (!CrazyDiamondHeal.heal(world, wither, wither, 
-                                    (e, clientSide) -> {
-                                        if (!clientSide) {
-                                            e.setInvulnerableTicks(Math.min(spawnTicks + 5, 220));
-                                        }
-                                    }, 
-                                    e -> spawnTicks < 215)) {
-                                CrazyDiamondHeal.heal(world, targetEntity, targetEntity, 
-                                        (w, clientSide) -> {
-                                            if (!clientSide && standEntity.getRandom().nextFloat() < 0.005F) {
-                                                BlockPos blockPos = w.blockPosition();
-                                                w.remove();
-                                                if (!w.isAlive()) {
-                                                    replaceOrDropBlock(world, blockPos.offset(0, 2, 0), Blocks.WITHER_SKELETON_SKULL.defaultBlockState());
-                                                    replaceOrDropBlock(world, blockPos.offset(1, 2, 0), Blocks.WITHER_SKELETON_SKULL.defaultBlockState());
-                                                    replaceOrDropBlock(world, blockPos.offset(-1, 2, 0), Blocks.WITHER_SKELETON_SKULL.defaultBlockState());
-                                                    replaceOrDropBlock(world, blockPos, Blocks.SOUL_SAND.defaultBlockState());
-                                                    replaceOrDropBlock(world, blockPos.offset(0, 1, 0), Blocks.SOUL_SAND.defaultBlockState());
-                                                    replaceOrDropBlock(world, blockPos.offset(1, 1, 0), Blocks.SOUL_SAND.defaultBlockState());
-                                                    replaceOrDropBlock(world, blockPos.offset(-1, 1, 0), Blocks.SOUL_SAND.defaultBlockState());
-                                                }
-                                            }
-                                        }, e -> true);
+                            wither.setInvulnerableTicks(Math.min(spawnTicks + 5, 220));
+                            if (spawnTicks >= 215) {
+                                if (!world.isClientSide() && standEntity.getRandom().nextFloat() < 0.005F) {
+                                    BlockPos blockPos = wither.blockPosition();
+                                    wither.remove();
+                                    if (!wither.isAlive()) {
+                                        replaceOrDropBlock(world, blockPos.offset(0, 2, 0), Blocks.WITHER_SKELETON_SKULL.defaultBlockState());
+                                        replaceOrDropBlock(world, blockPos.offset(1, 2, 0), Blocks.WITHER_SKELETON_SKULL.defaultBlockState());
+                                        replaceOrDropBlock(world, blockPos.offset(-1, 2, 0), Blocks.WITHER_SKELETON_SKULL.defaultBlockState());
+                                        replaceOrDropBlock(world, blockPos, Blocks.SOUL_SAND.defaultBlockState());
+                                        replaceOrDropBlock(world, blockPos.offset(0, 1, 0), Blocks.SOUL_SAND.defaultBlockState());
+                                        replaceOrDropBlock(world, blockPos.offset(1, 1, 0), Blocks.SOUL_SAND.defaultBlockState());
+                                        replaceOrDropBlock(world, blockPos.offset(-1, 1, 0), Blocks.SOUL_SAND.defaultBlockState());
+                                    }
+                                }
                             }
                         }
+                        CrazyDiamondHeal.addParticlesAround(targetEntity);
                         healTick = true;
                     }
                 }
                 
                 if (!world.isClientSide()) {
-                    barrageVisualsTick(standEntity, healTick, targetEntity != null ? targetEntity.getBoundingBox().getCenter() : null);
+                    barrageVisualsTick(standEntity, targetEntity != null, targetEntity != null ? targetEntity.getBoundingBox().getCenter() : null);
                 }
             }
             break;
@@ -260,7 +265,7 @@ public class CrazyDiamondPreviousState extends StandEntityAction {
 //                    ItemStack[] ingredients = getIngredients(recipe);
 //                    return ingredients.length == 1 && !ingredients[0].isEmpty() && ingredients[0].getItem() instanceof BlockItem
 //                            && ingredients[0].getCount() == recipe.getResultItem().getCount();
-//                }, standEntity.getRandom()).ifPresent(oneItemArray -> {
+//                }, standEntity.getRandom(), true).ifPresent(oneItemArray -> {
 //                    BlockItem item = (BlockItem) oneItemArray.getLeft()[0].getItem();
 //                    world.setBlockAndUpdate(blockPos, item.getBlock().defaultBlockState());
 //                });
@@ -303,7 +308,7 @@ public class CrazyDiamondPreviousState extends StandEntityAction {
         if (item.isEmpty()) return Optional.empty();
         
         if (item.getItem() == Items.ENCHANTED_BOOK)     return createItems ? Optional.of(Pair.of(new ItemStack[]{new ItemStack(Items.BOOK)}, 1)) : EXISTS;
-        // FIXME free up the map id
+        // TODO free up the map id
 //        if (item.getItem() == Items.FILLED_MAP)         return createItems ? Optional.of(Pair.of(new ItemStack[]{new ItemStack(Items.MAP)}, 1))  : EXISTS;
         
         if (item.getItem() == Items.WRITTEN_BOOK) {
@@ -316,10 +321,10 @@ public class CrazyDiamondPreviousState extends StandEntityAction {
             }
         }
 
-        // FIXME revert brewing recipes
+        // TODO revert brewing recipes
         return GeneralUtil.groupByPredicatesOrdered(
                 world.getRecipeManager().getRecipes().stream(), Util.make(new ArrayList<>(), list -> {
-                    // FIXME revert nbt recipes (including netherite armor)
+                    // TODO revert nbt recipes (including netherite armor)
                     list.add(recipe -> recipe instanceof SmithingRecipe);
                     list.add(recipe -> recipe instanceof AbstractCookingRecipe);
                     list.add(recipe -> recipe instanceof StonecuttingRecipe);

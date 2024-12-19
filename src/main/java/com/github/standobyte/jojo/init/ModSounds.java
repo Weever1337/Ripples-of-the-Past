@@ -30,12 +30,20 @@ public class ModSounds {
     
     public static final RegistryObject<SoundEvent> PILLAR_MAN_AWAKENING = register("pillar_man_awakening");
     
+    public static final RegistryObject<SoundEvent> PILLAR_MAN_HEAT_MODE = register("pillar_man_heat_mode");
+    
+    public static final RegistryObject<SoundEvent> PILLAR_MAN_WIND_MODE = register("pillar_man_wind_mode");
+    
+    public static final RegistryObject<SoundEvent> PILLAR_MAN_LIGHT_MODE = register("pillar_man_light_mode");
+    
     public static final RegistryObject<SoundEvent> AJA_STONE_CHARGING = register("aja_stone_charging");
     
     public static final RegistryObject<SoundEvent> AJA_STONE_BEAM = register("aja_stone_beam");
     
     public static final RegistryObject<SoundEvent> CLACKERS = register("clackers");
-    
+
+    public static final RegistryObject<SoundEvent> TOMMY_GUN_LOOP = register("tommy_gun_loop");
+    @Deprecated
     public static final RegistryObject<SoundEvent> TOMMY_GUN_SHOT = register("tommy_gun_shot");
     
     public static final RegistryObject<SoundEvent> TOMMY_GUN_NO_AMMO = register("tommy_gun_no_ammo");
@@ -75,6 +83,10 @@ public class ModSounds {
 
     public static final RegistryObject<SoundEvent> VAMPIRE_BLOOD_DRAIN = register("vampire_blood_drain");
     
+    public static final RegistryObject<SoundEvent> VAMPIRE_SWIPE = register("vampire_swipe");
+    
+    public static final RegistryObject<SoundEvent> VAMPIRE_CLAW_LACERATE = register("vampire_claw_lacerate");
+    
     public static final RegistryObject<SoundEvent> VAMPIRE_FREEZE = register("vampire_freeze");
 
     public static final RegistryObject<SoundEvent> VAMPIRE_EVIL_ATMOSPHERE = register("vampire_dark_aura");
@@ -83,11 +95,26 @@ public class ModSounds {
 
     public static final RegistryObject<SoundEvent> VAMPIRE_CURE_END = register("vampire_cure_end");
     
+    public static final RegistryObject<SoundEvent> ZOMBIE_DEVOUR = register("zombie_devour");
+    
+    public static final RegistryObject<SoundEvent> ZOMBIE_SWIPE = register("zombie_swipe");
+    
+    public static final RegistryObject<SoundEvent> ZOMBIE_CLAW_LACERATE = register("zombie_claw_lacerate");
+    
+    public static final RegistryObject<SoundEvent> PILLAR_MAN_SWING = register("pillar_man_swing");
+    
+    public static final RegistryObject<SoundEvent> PILLAR_MAN_PUNCH = register("pillar_man_punch");
+
+    public static final RegistryObject<SoundEvent> PILLAR_MAN_STRONG_REGEN = register("pillar_man_strong_regen");
+
+    public static final RegistryObject<SoundEvent> PILLAR_MAN_EVASION = register("pillar_man_evasion");
     
     public static final RegistryObject<SoundEvent> BUCKET_FILL_BOILING_BLOOD = register("bucket_fill_boiling_blood");
     public static final RegistryObject<SoundEvent> BUCKET_EMPTY_BOILING_BLOOD = register("bucket_empty_boiling_blood");
     public static final RegistryObject<SoundEvent> BOILING_BLOOD_POP = register("boiling_blood_pop");
     public static final RegistryObject<SoundEvent> BOILING_BLOOD_AMBIENT = register("boiling_blood_ambient");
+
+    public static final RegistryObject<SoundEvent> HEAVY_PUNCH = register("heavy_punch");
 
 
     public static final RegistryObject<SoundEvent> HAMON_PICK_JONATHAN = register("hamon_pick_jonathan");
@@ -104,6 +131,8 @@ public class ModSounds {
     
     public static final RegistryObject<SoundEvent> HAMON_CONCENTRATION = register("hamon_concentration");
     
+    public static final RegistryObject<SoundEvent> HAMON_HEALING = register("hamon_healing");
+    
     public static final RegistryObject<SoundEvent> HAMON_SYO_CHARGE = register("hamon_syo_charge");
     
     public static final RegistryObject<SoundEvent> HAMON_SYO_PUNCH = register("hamon_syo_punch");
@@ -113,6 +142,8 @@ public class ModSounds {
     public static final RegistryObject<SoundEvent> GLIDER_FLIGHT = register("glider_flight");
     
     public static final RegistryObject<SoundEvent> HAMON_DETECTOR = register("hamon_detector");
+    
+    public static final RegistryObject<SoundEvent> HAMON_REBUFF_PUNCH = register("hamon_rebuff_punch");
     
     public static final RegistryObject<SoundEvent> BREATH_DEFAULT = SOUNDS.register("player_breath", 
             () -> new SoundEvent(new ResourceLocation("entity.player.breath")));

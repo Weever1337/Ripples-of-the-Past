@@ -47,7 +47,7 @@ public class StandUserDummyEntity extends MobEntity implements IMobStandUser, IE
     @Override
     public void onSyncedDataUpdated(DataParameter<?> key) {
         super.onSyncedDataUpdated(key);
-        if (key == CommonReflection.getEntityCustomNameParameter() && !level.isClientSide()) {
+        if (CommonReflection.getEntityCustomNameParameter().equals(key) && !level.isClientSide()) {
             updateStandAction();
         }
     }
@@ -87,6 +87,7 @@ public class StandUserDummyEntity extends MobEntity implements IMobStandUser, IE
         stand.postTick();
     }
     
+    // TODO wear armor / hold items
     @Override
     protected ActionResultType mobInteract(PlayerEntity player, Hand hand) {
         ItemStack item = player.getItemInHand(hand);

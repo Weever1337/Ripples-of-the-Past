@@ -10,6 +10,7 @@ import com.github.standobyte.jojo.client.render.item.CustomIconItem;
 import com.github.standobyte.jojo.client.render.item.RoadRollerISTER;
 import com.github.standobyte.jojo.client.render.item.polaroid.PolaroidISTER;
 import com.github.standobyte.jojo.client.render.item.standdisc.StandDiscISTER;
+import com.github.standobyte.jojo.client.render.item.tommygun.TommyGunISTER;
 import com.github.standobyte.jojo.item.AjaStoneItem;
 import com.github.standobyte.jojo.item.BladeHatItem;
 import com.github.standobyte.jojo.item.BreathControlMaskItem;
@@ -76,6 +77,9 @@ public class ModItems {
     public static final RegistryObject<StoneMaskItem> STONE_MASK = ITEMS.register("stone_mask", 
             () -> new StoneMaskItem(ModArmorMaterials.STONE_MASK, EquipmentSlotType.HEAD, new Item.Properties().tab(MAIN_TAB).rarity(Rarity.RARE), ModBlocks.STONE_MASK.get()));
     
+    public static final RegistryObject<StoneMaskItem> AJA_STONE_MASK = ITEMS.register("aja_stone_mask", 
+            () -> new StoneMaskItem(ModArmorMaterials.STONE_MASK, EquipmentSlotType.HEAD, new Item.Properties().rarity(Rarity.RARE), ModBlocks.AJA_STONE_MASK.get()));
+    
     public static final Map<DyeColor, RegistryObject<BlockItem>> WOODEN_COFFIN_OAK = register16colorsItem("wooden_coffin_oak", 
             dye -> {
                 Item.Properties builder = new Item.Properties().stacksTo(1);
@@ -126,14 +130,12 @@ public class ModItems {
                     .setISTER(() -> ClackersISTER::new)));
 
     public static final RegistryObject<TommyGunItem> TOMMY_GUN = ITEMS.register("tommy_gun",
-            () -> new TommyGunItem(new Item.Properties().tab(MAIN_TAB).stacksTo(1)));
+            () -> new TommyGunItem(new Item.Properties().tab(MAIN_TAB).stacksTo(1)
+                    .setISTER(() -> TommyGunISTER::new)));
     
     public static final Supplier<Item> MOLOTOV = ITEMS.register("molotov",
-            () -> new MolotovItem(new Item.Properties().tab(MAIN_TAB).stacksTo(1)));
+            () -> new MolotovItem(new Item.Properties().tab(MAIN_TAB).stacksTo(16)));
 
-//    public static final RegistryObject<MolotovItem> MOLOTOV = ITEMS.register("molotov",
-//            () -> new MolotovItem(new Item.Properties().tab(MAIN_TAB).stacksTo(16)));
-//
 //    public static final RegistryObject<LargeCrossbowItem> LARGE_CROSSBOW = ITEMS.register("large_crossbow",
 //            () -> new LargeCrossbowItem(new Item.Properties().tab(MAIN_TAB).durability(652)));
 //
@@ -176,10 +178,10 @@ public class ModItems {
             () -> new Item(new Item.Properties().tab(MAIN_TAB).rarity(Rarity.UNCOMMON)));
 
     public static final RegistryObject<StandArrowItem> STAND_ARROW = ITEMS.register("stand_arrow", 
-            () -> new StandArrowItem(new Item.Properties().tab(MAIN_TAB).rarity(Rarity.UNCOMMON).durability(25), 10));
+            () -> new StandArrowItem(new Item.Properties().tab(MAIN_TAB).rarity(Rarity.UNCOMMON).durability(25), 10, false));
 
     public static final RegistryObject<StandArrowItem> STAND_ARROW_BEETLE = ITEMS.register("stand_arrow_beetle", 
-            () -> new StandArrowItem(new Item.Properties().tab(MAIN_TAB).rarity(Rarity.RARE).durability(250), 25));
+            () -> new StandArrowItem(new Item.Properties().tab(MAIN_TAB).rarity(Rarity.RARE).durability(250), 25, true));
 
 //    public static final RegistryObject<StandArrowShardItem> STAND_ARROW_SHARD = ITEMS.register("stand_arrow_shard", 
 //            () -> new StandArrowShardItem(new Item.Properties().tab(MAIN_TAB).rarity(Rarity.UNCOMMON)));

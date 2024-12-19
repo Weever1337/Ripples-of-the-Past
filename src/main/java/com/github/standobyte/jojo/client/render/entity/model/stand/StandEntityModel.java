@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -30,6 +31,7 @@ import com.github.standobyte.jojo.client.render.entity.pose.RotationAngle;
 import com.github.standobyte.jojo.client.render.entity.pose.anim.IActionAnimation;
 import com.github.standobyte.jojo.entity.stand.StandEntity;
 import com.github.standobyte.jojo.entity.stand.StandPose;
+import com.github.standobyte.jojo.entity.stand.TargetHitPart;
 import com.github.standobyte.jojo.power.impl.stand.IStandPower;
 import com.github.standobyte.jojo.power.impl.stand.StandInstance.StandPart;
 import com.github.standobyte.jojo.util.general.MathUtil;
@@ -49,7 +51,8 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.vector.Vector3f;
 
 public abstract class StandEntityModel<T extends StandEntity> extends AgeableModel<T> implements IHasArm, INamedModelParts {
-    ResourceLocation modelId;
+    protected static final Random RANDOM = new Random();
+    ResourceLocation modelId = null;
     StandModelRegistryObj registryObj;
     
     protected Map<String, ModelPartDefaultState> namedModelParts = new HashMap<>();
@@ -357,6 +360,12 @@ public abstract class StandEntityModel<T extends StandEntity> extends AgeableMod
     protected final BiMap<ModelRenderer, ModelRenderer> oppositeHandside = HashBiMap.create();
     public final ModelRenderer getOppositeHandside(ModelRenderer modelRenderer) {
         return oppositeHandside.computeIfAbsent(modelRenderer, k -> oppositeHandside.inverse().getOrDefault(modelRenderer, modelRenderer));
+    }
+    
+    
+    @Nullable
+    public ModelRenderer.ModelBox getRandomCubeAt(TargetHitPart entityPart) {
+        return null;
     }
     
     

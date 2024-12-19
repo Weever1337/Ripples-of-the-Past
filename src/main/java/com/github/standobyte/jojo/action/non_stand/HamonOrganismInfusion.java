@@ -8,14 +8,13 @@ import com.github.standobyte.jojo.action.ActionTarget;
 import com.github.standobyte.jojo.action.ActionTarget.TargetType;
 import com.github.standobyte.jojo.capability.entity.hamonutil.EntityHamonChargeCapProvider;
 import com.github.standobyte.jojo.entity.HamonBlockChargeEntity;
-import com.github.standobyte.jojo.entity.stand.StandEntity;
 import com.github.standobyte.jojo.init.power.non_stand.ModPowers;
 import com.github.standobyte.jojo.init.power.non_stand.hamon.ModHamonActions;
+import com.github.standobyte.jojo.init.power.non_stand.hamon.ModHamonSkills;
 import com.github.standobyte.jojo.power.impl.nonstand.INonStandPower;
 import com.github.standobyte.jojo.power.impl.nonstand.type.hamon.HamonData;
 import com.github.standobyte.jojo.power.impl.nonstand.type.hamon.HamonUtil;
 import com.github.standobyte.jojo.util.general.ObjectWrapper;
-import com.github.standobyte.jojo.util.mod.JojoModUtil;
 import com.google.common.collect.ImmutableSet;
 
 import net.minecraft.block.Block;
@@ -26,11 +25,10 @@ import net.minecraft.block.SnowyDirtBlock;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.item.ArmorStandEntity;
 import net.minecraft.entity.passive.AmbientEntity;
 import net.minecraft.entity.passive.AnimalEntity;
-import net.minecraft.entity.passive.GolemEntity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.Direction;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
@@ -52,9 +50,7 @@ public class HamonOrganismInfusion extends HamonAction {
             boolean isLiving;
             if (entity instanceof LivingEntity) {
                 LivingEntity targetLiving = (LivingEntity) entity;
-                // not the best way to determine living mobs in other mods
-                isLiving = !(targetLiving instanceof StandEntity || targetLiving instanceof ArmorStandEntity || targetLiving instanceof GolemEntity)
-                        && !JojoModUtil.isUndeadOrVampiric(targetLiving);
+                isLiving = HamonUtil.isLiving(targetLiving);
             }
             else {
                 isLiving = false;
@@ -62,29 +58,32 @@ public class HamonOrganismInfusion extends HamonAction {
             if (!isLiving) {
                 return conditionMessage("living_mob");
             }
-            break;
+            return ActionConditionResult.POSITIVE;
         case BLOCK:
             BlockPos blockPos = target.getBlockPos();
             BlockState blockState = user.level.getBlockState(blockPos);
-            Block block = blockState.getBlock();
-            boolean isLivingBlock;
-            if (isBlockLiving(blockState)) {
-                isLivingBlock = true;
-            }
-            else if (block instanceof FlowerPotBlock && blockState.getBlock() != Blocks.FLOWER_POT) {
-                FlowerPotBlock flowerPot = (FlowerPotBlock) block;
-                ItemStack flowerPotContents = flowerPot.getCloneItemStack(user.level, blockPos, blockState);
-                isLivingBlock = HamonUtil.isItemLivingMatter(flowerPotContents);
-            }
-            else {
-                isLivingBlock = false;
-            }
-            if (!isLivingBlock) {
-                return conditionMessage("living_plant");
-            }
-            break;
+            return canChargeBlock(blockPos, blockState, user.level);
         default:
-            break;
+            return ActionConditionResult.NEGATIVE;
+        }
+    }
+    
+    private ActionConditionResult canChargeBlock(BlockPos blockPos, BlockState blockState, World world) {
+        Block block = blockState.getBlock();
+        boolean isLivingBlock;
+        if (isBlockLiving(blockState)) {
+            isLivingBlock = true;
+        }
+        else if (block instanceof FlowerPotBlock && blockState.getBlock() != Blocks.FLOWER_POT) {
+            FlowerPotBlock flowerPot = (FlowerPotBlock) block;
+            ItemStack flowerPotContents = flowerPot.getCloneItemStack(world, blockPos, blockState);
+            isLivingBlock = HamonUtil.isItemLivingMatter(flowerPotContents);
+        }
+        else {
+            isLivingBlock = false;
+        }
+        if (!isLivingBlock) {
+            return conditionMessage("living_plant");
         }
         return ActionConditionResult.POSITIVE;
     }
@@ -126,27 +125,47 @@ public class HamonOrganismInfusion extends HamonAction {
     protected void perform(World world, LivingEntity user, INonStandPower power, ActionTarget target) {
         if (!world.isClientSide()) {
             HamonData hamon = power.getTypeSpecificData(ModPowers.HAMON.get()).get();
-            float hamonEfficiency = hamon.getActionEfficiency(getEnergyCost(power, target), true);
+            
+            float hamonEfficiency = hamon.getActionEfficiency(getEnergyCost(power, target), true, getUnlockingSkill());
             int chargeTicks = 100 + MathHelper.floor((float) (1100 * hamon.getHamonStrengthLevel())
                     / (float) HamonData.MAX_STAT_LEVEL * hamonEfficiency * hamonEfficiency);
-            switch(target.getType()) {
+            switch (target.getType()) {
             case BLOCK:
                 BlockPos blockPos = target.getBlockPos();
-                world.getEntitiesOfClass(HamonBlockChargeEntity.class, 
-                        new AxisAlignedBB(Vector3d.atCenterOf(blockPos), Vector3d.atCenterOf(blockPos))).forEach(Entity::remove);
-                HamonBlockChargeEntity charge = new HamonBlockChargeEntity(world, target.getBlockPos());
-                charge.setCharge(hamon.getHamonDamageMultiplier() * hamonEfficiency, chargeTicks, user, getEnergyCost(power, target));
-                world.addFreshEntity(charge);
+                addBlockCharge(user.level, blockPos, power, user, hamon, hamonEfficiency, chargeTicks);
+                if (hamon.isSkillLearned(ModHamonSkills.HAMON_SPREAD.get())) {
+                    addBlockCharge(user.level, blockPos.offset(-1,  0,  0), power, user, hamon, hamonEfficiency, chargeTicks);
+                    addBlockCharge(user.level, blockPos.offset( 1,  0,  0), power, user, hamon, hamonEfficiency, chargeTicks);
+                    addBlockCharge(user.level, blockPos.offset( 0, -1,  0), power, user, hamon, hamonEfficiency, chargeTicks);
+                    addBlockCharge(user.level, blockPos.offset( 0,  1,  0), power, user, hamon, hamonEfficiency, chargeTicks);
+                    addBlockCharge(user.level, blockPos.offset( 0,  0, -1), power, user, hamon, hamonEfficiency, chargeTicks);
+                    addBlockCharge(user.level, blockPos.offset( 0,  0,  1), power, user, hamon, hamonEfficiency, chargeTicks);
+                }
                 break;
             case ENTITY:
                 LivingEntity entity = (LivingEntity) target.getEntity();
-                entity.getCapability(EntityHamonChargeCapProvider.CAPABILITY).ifPresent(cap -> 
-                cap.setHamonCharge(hamon.getHamonDamageMultiplier() * hamonEfficiency, chargeTicks, user, getEnergyCost(power, target)));
+                entity.getCapability(EntityHamonChargeCapProvider.CAPABILITY).ifPresent(cap -> {
+	                if (!cap.hasHamonCharge()) {
+	                	cap.setHamonCharge(hamon.getHamonDamageMultiplier() * hamonEfficiency, chargeTicks, user, getEnergyCost(power, target));
+	                }
+                });
                 break;
             default:
                 break;
             }
         }
+    }
+    
+    private void addBlockCharge(World world, BlockPos blockPos, INonStandPower power, LivingEntity user, HamonData hamon, float hamonEfficiency, int chargeTicks) {
+        BlockState blockState = world.getBlockState(blockPos);
+        if (!canChargeBlock(blockPos, blockState, world).isPositive()) {
+            return;
+        }
+        world.getEntitiesOfClass(HamonBlockChargeEntity.class, 
+                new AxisAlignedBB(Vector3d.atCenterOf(blockPos), Vector3d.atCenterOf(blockPos))).forEach(Entity::remove);
+        HamonBlockChargeEntity charge = new HamonBlockChargeEntity(world, blockPos);
+        charge.setCharge(hamon.getHamonDamageMultiplier() * hamonEfficiency, chargeTicks, user, getEnergyCost(power, new ActionTarget(blockPos, Direction.UP)));
+        world.addFreshEntity(charge);
     }
 
     private static final Set<Material> LIVING_MATERIALS = ImmutableSet.<Material>builder().add(

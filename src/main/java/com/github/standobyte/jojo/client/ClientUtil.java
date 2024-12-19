@@ -24,7 +24,6 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.IVertexBuilder;
 
-import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.GameSettings;
 import net.minecraft.client.Minecraft;
@@ -35,6 +34,7 @@ import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.network.play.NetworkPlayerInfo;
 import net.minecraft.client.renderer.ActiveRenderInfo;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.ItemModelMesher;
@@ -50,10 +50,11 @@ import net.minecraft.client.renderer.model.SimpleBakedModel;
 import net.minecraft.client.renderer.texture.MissingTextureSprite;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.resources.I18n;
-import net.minecraft.client.settings.ParticleStatus;
 import net.minecraft.client.settings.PointOfView;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.PlayerModelPart;
 import net.minecraft.item.Item;
 import net.minecraft.util.ColorHelper;
 import net.minecraft.util.Direction;
@@ -78,6 +79,7 @@ import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.Style;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.world.GameType;
 import net.minecraft.world.IBlockDisplayReader;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.client.gui.GuiUtils;
@@ -141,6 +143,17 @@ public class ClientUtil {
     
     public static float getPartialTick() {
         return ClientEventHandler.getInstance().getPartialTick();
+    }
+    
+    public static GameType getPlayerGameMode(PlayerEntity player) {
+        if (player.isLocalPlayer()) {
+            return Minecraft.getInstance().gameMode.getPlayerMode();
+        }
+        NetworkPlayerInfo networkPlayerInfo = Minecraft.getInstance().getConnection().getPlayerInfo(player.getGameProfile().getId());
+        if (networkPlayerInfo != null) {
+            return networkPlayerInfo.getGameMode();
+        }
+        return null;
     }
     
     public static String getCurrentLanguageCode() {
@@ -353,6 +366,22 @@ public class ClientUtil {
         Tessellator.getInstance().end();
     }
     
+    public static void renderPlayerFace(MatrixStack matrixStack, int x, int y, AbstractClientPlayerEntity player) {
+        Minecraft mc = Minecraft.getInstance();
+        ResourceLocation playerFace = player.getSkinTextureLocation();
+        mc.getTextureManager().bind(playerFace);
+
+        AbstractGui.blit(matrixStack, x, y, 16, 16, 16, 16, 128, 128);
+        if (mc.options.getModelParts().contains(PlayerModelPart.HAT)) {
+            matrixStack.pushPose();
+            matrixStack.translate(x, y, 0);
+            matrixStack.scale(9F/8F, 9F/8F, 0);
+            matrixStack.translate(-1, -1, 0);
+            AbstractGui.blit(matrixStack, 0, 0, 80, 16, 16, 16, 128, 128);
+            matrixStack.popPose();
+        }
+    }
+    
     public static void drawBackdrop(MatrixStack matrixStack, int x, int y, int width, float alpha) {
         Minecraft mc = Minecraft.getInstance();
         int backdropColor = mc.options.getBackgroundColor(0.0F);
@@ -426,8 +455,8 @@ public class ClientUtil {
                 0, 0, 0, true));
     }
     
-    public static boolean decreasedParticlesSetting() {
-        return Minecraft.getInstance().options.particles == ParticleStatus.DECREASED;
+    public static int particlesSetting() {
+        return Minecraft.getInstance().options.particles.getId();
     }
     
     public static float[] rgb(int color) {
@@ -541,12 +570,32 @@ public class ClientUtil {
         return rotVec;
     }
     
+    @Deprecated
     public static void clearCubes(ModelRenderer modelRenderer) {
-        ClientReflection.setCubes(modelRenderer, new ObjectArrayList<>());
+        modelRenderer.cubes.clear();
+    }
+    
+    public static void clearBipedCubes(BipedModel<?> model) {
+        model.head.cubes.clear();
+        model.body.cubes.clear();
+        model.leftArm.cubes.clear();
+        model.rightArm.cubes.clear();
+        model.leftLeg.cubes.clear();
+        model.rightLeg.cubes.clear();
+    }
+    
+    public static void clearBipedCubes(PlayerModel<?> model) {
+        clearBipedCubes((BipedModel<?>) model);
+        model.hat.cubes.clear();
+        model.jacket.cubes.clear();
+        model.leftSleeve.cubes.clear();
+        model.rightSleeve.cubes.clear();
+        model.leftPants.cubes.clear();
+        model.rightPants.cubes.clear();
     }
     
     public static void editLatestCube(ModelRenderer modelRenderer, Consumer<ModelRenderer.ModelBox> edit) {
-        List<ModelRenderer.ModelBox> cubes = ClientReflection.getCubes(modelRenderer);
+        List<ModelRenderer.ModelBox> cubes = modelRenderer.cubes;
         if (cubes.isEmpty()) return;
         ModelRenderer.ModelBox box = cubes.get(cubes.size() - 1);
         edit.accept(box);
@@ -557,7 +606,7 @@ public class ClientUtil {
             faceDir = faceDir.getOpposite();
         }
         Vector3f faceNormal = faceDir.step();
-        Optional<ModelRenderer.TexturedQuad> faceOptional = Arrays.stream(ClientReflection.getPolygons(cube))
+        Optional<ModelRenderer.TexturedQuad> faceOptional = Arrays.stream(cube.polygons)
                 .filter(quad -> quad.normal.equals(faceNormal)).findFirst();
         if (faceOptional.isPresent()) {
             u0 /= model.texWidth;
@@ -590,7 +639,7 @@ public class ClientUtil {
         return side == HandSide.LEFT ? model.leftSleeve : model.rightSleeve;
     }
     
-    public static void setupForFirstPersonRender(PlayerModel<AbstractClientPlayerEntity> model, AbstractClientPlayerEntity player) {
+    public static <T extends LivingEntity> void setupForFirstPersonRender(BipedModel<T> model, T player) {
         model.rightArmPose = BipedModel.ArmPose.EMPTY;
         model.leftArmPose = BipedModel.ArmPose.EMPTY;
         model.attackTime = 0.0F;

@@ -15,6 +15,8 @@ import javax.annotation.Nullable;
 import com.github.standobyte.jojo.action.player.ContinuousActionInstance;
 import com.github.standobyte.jojo.action.player.IPlayerAction;
 import com.github.standobyte.jojo.block.WoodenCoffinBlock;
+import com.github.standobyte.jojo.capability.entity.player.PlayerClientBroadcastedSettings;
+import com.github.standobyte.jojo.capability.entity.player.PlayerMixinExtension;
 import com.github.standobyte.jojo.entity.mob.rps.RockPaperScissorsGame;
 import com.github.standobyte.jojo.network.PacketManager;
 import com.github.standobyte.jojo.network.packets.fromserver.NotificationSyncPacket;
@@ -51,6 +53,9 @@ import net.minecraft.util.text.TranslationTextComponent;
 
 public class PlayerUtilCap {
     private final PlayerEntity player;
+    private final PlayerMixinExtension playerMixin;
+    
+    private PlayerClientBroadcastedSettings broadcastedSettings = new PlayerClientBroadcastedSettings();
     
     public int knivesThrewTicks = 0;
     
@@ -94,6 +99,7 @@ public class PlayerUtilCap {
     
     public PlayerUtilCap(PlayerEntity player) {
         this.player = player;
+        this.playerMixin = player instanceof PlayerMixinExtension ? (PlayerMixinExtension) player : null;
     }
     
     
@@ -119,6 +125,7 @@ public class PlayerUtilCap {
     
     public void onClone(PlayerUtilCap old, boolean wasDeath) {
         this.notificationsSent = old.notificationsSent;
+        this.broadcastedSettings = old.broadcastedSettings;
         
         this.lastBedType = old.lastBedType;
         this.ticksNoSleep = old.ticksNoSleep;
@@ -138,6 +145,8 @@ public class PlayerUtilCap {
         nbt.put("RotpVersion", JojoModVersion.getCurrentVersion().toNBT());
         
         nbt.putBoolean("CoffinRespawn", coffinPreventDayTimeSkip);
+        
+        playerMixin.toNBT(nbt);
         return nbt;
     }
 
@@ -161,12 +170,16 @@ public class PlayerUtilCap {
         }
         
         coffinPreventDayTimeSkip = nbt.getBoolean("CoffinRespawn");
+        
+        playerMixin.fromNBT(nbt);
     }
     
     public void onTracking(ServerPlayerEntity tracking) {
+        broadcastedSettings.syncToTracking(player, tracking);
         PacketManager.sendToClient(new TrKnivesCountPacket(player.getId(), knives), tracking);
         PacketManager.sendToClient(new TrWalkmanEarbudsPacket(player.getId(), walkmanEarbuds), tracking);
         PacketManager.sendToClient(new TrPlayerVisualDetailPacket(player.getId(), ateInkPastaTicks), tracking);
+        playerMixin.syncToTracking(tracking);
     }
     
     public void syncWithClient() {
@@ -179,6 +192,7 @@ public class PlayerUtilCap {
         if (!metEntityTypesId.isEmpty()) {
             PacketManager.sendToClient(new MetEntityTypesPacket(metEntityTypesId), player);
         }
+        playerMixin.syncToClient(player);
     }
     
     
@@ -231,6 +245,10 @@ public class PlayerUtilCap {
     }
     
     
+    public PlayerClientBroadcastedSettings getBroadcastedSettings() {
+        return broadcastedSettings;
+    }
+    
     
     public void addDataForTSUnfreeze(Entity entity, Iterable<EntityDataManager.DataEntry<?>> newData) {
         Map<DataParameter<?>, EntityDataManager.DataEntry<?>> data = tsDelayedData.computeIfAbsent(entity, e -> new HashMap<>());
@@ -259,6 +277,10 @@ public class PlayerUtilCap {
     
     
     public void setContinuousAction(@Nullable ContinuousActionInstance<?, ?> action) {
+        continuousAction.ifPresent(ContinuousActionInstance::stopAction);
+        if (action != null) {
+            action.onStart();
+        }
         continuousAction = Optional.ofNullable(action);
         if (!player.level.isClientSide()) {
             PacketManager.sendToClientsTrackingAndSelf(new TrPlayerContinuousActionPacket(
@@ -286,7 +308,7 @@ public class PlayerUtilCap {
         return continuousAction;
     }
     
-    public <T extends ContinuousActionInstance<T, P>, P extends IPower<P, ?>> Optional<T> getContinuousActionIfItIs(IPlayerAction<T, P> action) {
+    public <T extends ContinuousActionInstance<?, P>, P extends IPower<P, ?>> Optional<T> getContinuousActionIfItIs(IPlayerAction<T, P> action) {
         if (GeneralUtil.orElseFalse(continuousAction.map(ContinuousActionInstance::getAction), currentAction -> currentAction == action)) {
             return (Optional<T>) continuousAction;
         }

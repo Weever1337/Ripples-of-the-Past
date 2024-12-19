@@ -19,6 +19,7 @@ import com.github.standobyte.jojo.client.ui.actionshud.ActionsOverlayGui;
 import com.github.standobyte.jojo.entity.stand.StandEntity;
 import com.github.standobyte.jojo.entity.stand.StandPose;
 import com.github.standobyte.jojo.power.impl.stand.IStandPower;
+import com.github.standobyte.jojo.util.mod.JojoModUtil;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.vertex.IVertexBuilder;
 
@@ -97,7 +98,7 @@ public class StandEntityRenderer<T extends StandEntity, M extends StandEntityMod
     }
     
     protected boolean visibleForSpectator(T entity) {
-        return entity.underInvisibilityEffect() && Minecraft.getInstance().player.isSpectator();
+        return entity.underInvisibilityEffect() && JojoModUtil.seesInvisibleAsSpectator(Minecraft.getInstance().player);
     }
 
     protected RenderType getRenderType(T entity, ResourceLocation modelTexture) {
@@ -133,7 +134,7 @@ public class StandEntityRenderer<T extends StandEntity, M extends StandEntityMod
     
     protected ViewObstructionPrevention obstructsView(T entity, float partialTick) {
         Minecraft mc = Minecraft.getInstance();
-        if (mc.options.getCameraType().isFirstPerson()) {
+        if (mc.options.getCameraType().isFirstPerson() && isBodyVisible(entity)) {
             Entity user = entity.getUser();
             if (mc.cameraEntity != null && mc.cameraEntity.is(user)) {
                 if (ClientEventHandler.getInstance().isZooming) {
@@ -172,7 +173,7 @@ public class StandEntityRenderer<T extends StandEntity, M extends StandEntityMod
         }
     }
 
-    private static final float PLAYER_RENDER_SCALE = 0.9375F;
+    public static final float PLAYER_RENDER_SCALE = 0.9375F;
     @Override
     protected void scale(T entity, MatrixStack matrixStack, float partialTick) {
         matrixStack.scale(
@@ -217,7 +218,7 @@ public class StandEntityRenderer<T extends StandEntity, M extends StandEntityMod
 
     public boolean firstPersonRender = false;
     private float alpha;
-    private ViewObstructionPrevention viewObstructionPrevention;
+    private ViewObstructionPrevention viewObstructionPrevention = ViewObstructionPrevention.NONE;
     private boolean isVisibilityInverted = false;
     @Override
     public void render(T entity, float yRotation, float partialTick, MatrixStack matrixStack, IRenderTypeBuffer buffer, int packedLight) {
@@ -295,14 +296,12 @@ public class StandEntityRenderer<T extends StandEntity, M extends StandEntityMod
             IVertexBuilder vertexBuilder = buffer.getBuffer(RenderType.outline(texture));
             
             model.render(entity, matrixStack, vertexBuilder, packedLight, packedOverlay, 1, 1, 1, 1);
-            if (!entity.isSpectator()) {
-                for (LayerRenderer<T, M> layerRenderer : this.layers) {
-                    if (layerRenderer instanceof StandModelLayerRenderer) {
-                        StandModelLayerRenderer<T, M> standLayerRenderer = (StandModelLayerRenderer<T, M>) layerRenderer;
-                        RenderType renderType = standLayerRenderer.getRenderType(entity, RenderType::outline);
-                        standLayerRenderer.render(matrixStack, buffer, renderType, packedLight, entity, 
-                                walkAnimPos, walkAnimSpeed, partialTick, ticks, yRotationOffset, xRotation);
-                    }
+            for (LayerRenderer<T, M> layerRenderer : this.layers) {
+                if (layerRenderer instanceof StandModelLayerRenderer) {
+                    StandModelLayerRenderer<T, M> standLayerRenderer = (StandModelLayerRenderer<T, M>) layerRenderer;
+                    RenderType renderType = standLayerRenderer.getRenderType(entity, RenderType::outline);
+                    standLayerRenderer.render(matrixStack, buffer, renderType, packedLight, entity, 
+                            walkAnimPos, walkAnimSpeed, partialTick, ticks, yRotationOffset, xRotation);
                 }
             }
         }
@@ -317,11 +316,9 @@ public class StandEntityRenderer<T extends StandEntity, M extends StandEntityMod
             IVertexBuilder vertexBuilder = buffer.getBuffer(renderType);
             model.render(entity, matrixStack, vertexBuilder, packedLight, packedOverlay, 1, 1, 1, alpha);
         }
-        if (!entity.isSpectator()) {
-            for (LayerRenderer<T, M> layerRenderer : this.layers) {
-                layerRenderer.render(matrixStack, buffer, packedLight, entity, 
-                        walkAnimPos, walkAnimSpeed, partialTick, ticks, yRotationOffset, xRotation);
-            }
+        for (LayerRenderer<T, M> layerRenderer : this.layers) {
+            layerRenderer.render(matrixStack, buffer, packedLight, entity, 
+                    walkAnimPos, walkAnimSpeed, partialTick, ticks, yRotationOffset, xRotation);
         }
 
         matrixStack.popPose();
@@ -467,7 +464,9 @@ public class StandEntityRenderer<T extends StandEntity, M extends StandEntityMod
                 LivingRenderer.getOverlayCoords(entity, getWhiteOverlayProgress(entity, partialTick)), 1.0F, 1.0F, 1.0F, entity.getAlpha(partialTick));
     }
     
-    
+    /**
+     * Used only in Stand skins UI
+     */
     public void renderIdleWithSkin(MatrixStack matrixStack, StandSkin standSkin, IRenderTypeBuffer buffer, float ticks) {
         matrixStack.pushPose();
         Optional<ResourceLocation> nonDefaultSkin = standSkin.getNonDefaultLocation();

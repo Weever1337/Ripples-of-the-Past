@@ -18,6 +18,7 @@ import com.github.standobyte.jojo.action.non_stand.HamonMetalSilverOverdriveWeap
 import com.github.standobyte.jojo.action.non_stand.HamonOrganismInfusion;
 import com.github.standobyte.jojo.action.non_stand.HamonOverdrive;
 import com.github.standobyte.jojo.action.non_stand.HamonOverdriveBarrage;
+import com.github.standobyte.jojo.action.non_stand.HamonOverdriveBeat;
 import com.github.standobyte.jojo.action.non_stand.HamonPlantInfusion;
 import com.github.standobyte.jojo.action.non_stand.HamonProjectileShield;
 import com.github.standobyte.jojo.action.non_stand.HamonProtection;
@@ -48,9 +49,8 @@ public class ModHamonActions {
                     .needsFreeMainHand().swingHand()));
     
     public static final RegistryObject<HamonAction> HAMON_BEAT = ACTIONS.register("hamon_overdrive_beat", 
-            () -> new HamonOverdrive(new HamonAction.Builder().energyCost(1500F)
-                    .needsFreeMainHand().swingHand().shiftVariationOf(HAMON_OVERDRIVE))
-            .setIsStrongVersion());
+            () -> new HamonOverdriveBeat(new HamonAction.Builder().energyCost(1500F).heldWalkSpeed(0.5f)
+                    .needsFreeOffHand().shiftVariationOf(HAMON_OVERDRIVE)));
    
    public static final RegistryObject<HamonAction> HAMON_SENDO_OVERDRIVE = ACTIONS.register("hamon_sendo_overdrive", 
            () -> new HamonSendoOverdrive(new HamonAction.Builder().energyCost(900F)
@@ -58,11 +58,11 @@ public class ModHamonActions {
                    .shout(ModHamonSkills.CHARACTER_JONATHAN, ModSounds.JONATHAN_SENDO_OVERDRIVE)));
 
     public static final RegistryObject<HamonAction> HAMON_TURQUOISE_BLUE_OVERDRIVE = ACTIONS.register("hamon_turquoise_blue_overdrive", 
-            () -> new HamonTurquoiseBlueOverdrive(new HamonAction.Builder().energyCost(250F).cooldown(30)
+            () -> new HamonTurquoiseBlueOverdrive(new HamonAction.Builder().energyCost(1000F).cooldown(10)
                     .needsFreeMainHand().swingHand()));
     
    public static final RegistryObject<HamonAction> HAMON_SUNLIGHT_YELLOW_OVERDRIVE = ACTIONS.register("hamon_sunlight_yellow_overdrive", 
-           () -> new HamonSunlightYellowOverdrive(new HamonAction.Builder().holdToFire(80, true).holdType(160).swingHand()
+           () -> new HamonSunlightYellowOverdrive(new HamonAction.Builder().holdToFire(10, true).holdType(40).heldWalkSpeed(0).needsFreeMainHand()
                    .shout(ModHamonSkills.CHARACTER_JONATHAN, ModSounds.JONATHAN_SUNLIGHT_YELLOW_OVERDRIVE)
                    .shout(ModHamonSkills.CHARACTER_ZEPPELI, ModSounds.ZEPPELI_SUNLIGHT_YELLOW_OVERDRIVE)
                    .shout(ModHamonSkills.CHARACTER_JOSEPH, ModSounds.JOSEPH_SUNLIGHT_YELLOW_OVERDRIVE)
@@ -95,7 +95,7 @@ public class ModHamonActions {
                     .shout(ModHamonSkills.CHARACTER_LISA_LISA, ModSounds.BREATH_LISA_LISA)));
     
     public static final RegistryObject<HamonAction> HAMON_HEALING = ACTIONS.register("hamon_healing", 
-            () -> new HamonHealing(new HamonAction.Builder().energyCost(750F)
+            () -> new HamonHealing(new HamonAction.Builder().holdType().holdEnergyCost(5f).heldWalkSpeed(0.9999f)
                     .needsFreeMainHand().swingHand()));
     
     public static final RegistryObject<HamonWallClimbing2> HAMON_WALL_CLIMBING = ACTIONS.register("hamon_wall_climbing", 
@@ -119,7 +119,7 @@ public class ModHamonActions {
             () -> new HamonHypnosis(new HamonAction.Builder().holdToFire(60, false).holdEnergyCost(15)));
     
     public static final RegistryObject<HamonAction> HAMON_SHOCK = ACTIONS.register("hamon_shock", 
-            () -> new HamonShock(new HamonAction.Builder().holdToFire(15, false).holdEnergyCost(180)));
+            () -> new HamonShock(new HamonAction.Builder().heldWalkSpeed(0)));
     
     
     
@@ -151,8 +151,8 @@ public class ModHamonActions {
     
     
     public static final RegistryObject<HamonAction> JONATHAN_SCARLET_OVERDRIVE = ACTIONS.register("jonathan_scarlet_overdrive", 
-            () -> new HamonScarletOverdrive(new HamonAction.Builder().needsFreeMainHand()
-                    .holdToFire(40, true).holdType(100).swingHand().shout(ModSounds.JONATHAN_SCARLET_OVERDRIVE)));
+            () -> new HamonScarletOverdrive(new HamonAction.Builder().holdToFire(8, true).holdType(32).heldWalkSpeed(0).needsFreeOffHand()
+                    .shout(ModSounds.JONATHAN_SCARLET_OVERDRIVE)));
     
     public static final RegistryObject<HamonAction> JONATHAN_METAL_SILVER_OVERDRIVE = ACTIONS.register("jonathan_metal_silver_overdrive", 
             () -> new HamonMetalSilverOverdrive(new HamonAction.Builder().energyCost(1000).swingHand().needsFreeMainHand()
@@ -178,7 +178,7 @@ public class ModHamonActions {
             () -> new HamonTornadoOverdrive(new HamonAction.Builder().holdEnergyCost(75F).shout(ModSounds.ZEPPELI_TORNADO_OVERDRIVE)));
     
     public static final RegistryObject<HamonAction> JOSEPH_REBUFF_OVERDRIVE = ACTIONS.register("joseph_rebuff_overdrive", 
-            () -> new HamonRebuffOverdrive(new HamonAction.Builder().cooldown(80).shout(ModSounds.JOSEPH_GIGGLE)));
+            () -> new HamonRebuffOverdrive(new HamonAction.Builder().energyCost(1200F).cooldown(100)));
     
     public static final RegistryObject<HamonAction> CAESAR_BUBBLE_LAUNCHER = ACTIONS.register("caesar_bubble_launcher", 
             () -> new HamonBubbleLauncher(new HamonAction.Builder().holdEnergyCost(50F).heldWalkSpeed(0.3F).shout(ModSounds.CAESAR_BUBBLE_LAUNCHER)));
@@ -188,10 +188,10 @@ public class ModHamonActions {
                     .shout(ModSounds.CAESAR_BUBBLE_BARRIER)));
     
     public static final RegistryObject<HamonAction> CAESAR_BUBBLE_CUTTER = ACTIONS.register("caesar_bubble_cutter", 
-            () -> new HamonBubbleCutter(new HamonAction.Builder().energyCost(500F).cooldown(20).swingHand().shout(ModSounds.CAESAR_BUBBLE_CUTTER)));
+            () -> new HamonBubbleCutter(new HamonAction.Builder().energyCost(500F).cooldown(10).swingHand().shout(ModSounds.CAESAR_BUBBLE_CUTTER)));
     
     public static final RegistryObject<HamonAction> CAESAR_BUBBLE_CUTTER_GLIDING = ACTIONS.register("caesar_bubble_cutter_gliding", 
-            () -> new HamonBubbleCutter(new HamonAction.Builder().energyCost(600F).cooldown(20).swingHand()
+            () -> new HamonBubbleCutter(new HamonAction.Builder().energyCost(600F).cooldown(10).swingHand()
                     .shout(ModSounds.CAESAR_BUBBLE_CUTTER_GLIDING).shiftVariationOf(CAESAR_BUBBLE_CUTTER)));
     
 }

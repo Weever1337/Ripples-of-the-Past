@@ -8,6 +8,7 @@ import com.github.standobyte.jojo.JojoMod;
 import com.github.standobyte.jojo.action.Action;
 import com.github.standobyte.jojo.action.stand.StandEntityAction;
 import com.github.standobyte.jojo.capability.entity.ClientPlayerUtilCapProvider;
+import com.github.standobyte.jojo.client.ClientModSettings;
 import com.github.standobyte.jojo.client.ClientUtil;
 import com.github.standobyte.jojo.entity.LeavesGliderEntity;
 import com.github.standobyte.jojo.entity.MRDetectorEntity;
@@ -42,6 +43,11 @@ public abstract class ClientTickingSoundsHelper {
     }
     
     public static boolean playVoiceLine(Entity entity, SoundEvent soundEvent, SoundCategory category, float volume, float pitch, boolean interrupt) {
+        if (soundEvent == null || !ClientModSettings.getSettingsReadOnly().characterVoiceLines) {
+            voiceLineNotTriggered(entity);
+            return false;
+        }
+        
         Minecraft mc = Minecraft.getInstance();
         
         PlaySoundAtEntityEvent event = ForgeEventFactory.onPlaySoundAtEntity(mc.player, soundEvent, category, volume, pitch);
@@ -123,21 +129,19 @@ public abstract class ClientTickingSoundsHelper {
         }
     }
     
-    public static void playStandEntitySound(StandEntity stand, SoundEvent sound, float volume, float pitch) {
-        Minecraft mc = Minecraft.getInstance();
-        if (!stand.isVisibleForAll() && !ClientUtil.canHearStands()) {
+    public static void playEntitySound(Entity entity, SoundEvent sound, float volume, float pitch) {
+        if (entity instanceof StandEntity && !((StandEntity) entity).isVisibleForAll() && !ClientUtil.canHearStands()) {
             return;
         }
-
-        SoundCategory category = stand.getSoundSource();
-        PlaySoundAtEntityEvent event = ForgeEventFactory.onPlaySoundAtEntity(stand, sound, category, volume, pitch);
+        
+        Minecraft mc = Minecraft.getInstance();
+        SoundCategory category = entity.getSoundSource();
+        PlaySoundAtEntityEvent event = ForgeEventFactory.onPlaySoundAtEntity(mc.player, sound, category, volume, pitch);
         if (event.isCanceled() || event.getSound() == null) return;
         sound = event.getSound();
         category = event.getCategory();
         volume = event.getVolume();
-        pitch = event.getPitch();
-        
-        mc.getSoundManager().play(new EntityTickableSound(sound, category, volume, pitch, stand));
+        mc.getSoundManager().play(new EntityTickableSound(sound, category, volume, pitch, entity));
     }
     
     public static void playHeldActionSound(SoundEvent sound, float volume, float pitch, boolean looping, 
@@ -163,8 +167,13 @@ public abstract class ClientTickingSoundsHelper {
     
     public static <T extends Entity> void playStoppableEntitySound(T entity, SoundEvent sound, 
             float volume, float pitch, boolean looping, Predicate<T> playWhile) {
+        playStoppableEntitySound(entity, sound, volume, pitch, looping, playWhile, 0);
+    }
+    
+    public static <T extends Entity> void playStoppableEntitySound(T entity, SoundEvent sound, 
+            float volume, float pitch, boolean looping, Predicate<T> playWhile, int fadeOut) {
         Minecraft.getInstance().getSoundManager().play(new StoppableEntityTickableSound<T>(sound, entity.getSoundSource(), 
-                volume, pitch, looping, entity, playWhile));
+                volume, pitch, looping, entity, playWhile).withFadeOut(fadeOut));
     }
     
     public static void playHamonSparksSound(Entity entity, float volume, float pitch) {
@@ -181,6 +190,10 @@ public abstract class ClientTickingSoundsHelper {
     
     public static void playBladeHatSound(BladeHatEntity entity) {
         Minecraft.getInstance().getSoundManager().play(new BladeHatSound(entity));
+    }
+    
+    public static void playTommyGunLoop(LivingEntity entity, SoundEvent sound, float volume, ItemStack stack) {
+        Minecraft.getInstance().getSoundManager().play(new TommyGunLoopSound(sound, entity.getSoundSource(), volume, entity, stack));
     }
     
     public static void playItemUseSound(LivingEntity entity, SoundEvent sound, float volume, float pitch, boolean looping, ItemStack stack) {

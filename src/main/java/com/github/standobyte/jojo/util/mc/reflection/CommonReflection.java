@@ -12,10 +12,12 @@ import com.mojang.serialization.Codec;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityPredicate;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.ai.goal.GoalSelector;
 import net.minecraft.entity.ai.goal.NearestAttackableTargetGoal;
 import net.minecraft.entity.ai.goal.PrioritizedGoal;
 import net.minecraft.entity.ai.goal.TargetGoal;
+import net.minecraft.entity.item.minecart.TNTMinecartEntity;
 import net.minecraft.entity.merchant.IMerchant;
 import net.minecraft.entity.monster.CreeperEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -31,6 +33,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.tileentity.AbstractFurnaceTileEntity;
+import net.minecraft.util.SoundEvent;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.world.Explosion;
 import net.minecraft.world.GameRules;
@@ -172,6 +175,17 @@ public class CommonReflection {
     
     
     
+    private static final Field TNT_MINECART_ENTITY_FUSE = ObfuscationReflectionHelper.findField(TNTMinecartEntity.class, "field_94106_a");
+    public static int getFuse(TNTMinecartEntity entity) {
+        return ReflectionUtil.getIntFieldValue(TNT_MINECART_ENTITY_FUSE, entity);
+    }
+    
+    public static void setFuse(TNTMinecartEntity entity, int fuse) {
+        ReflectionUtil.setIntFieldValue(TNT_MINECART_ENTITY_FUSE, entity, fuse);
+    }
+    
+    
+    
     private static final Field LIVING_ENTITY_ATTACK_STRENGTH_TICKER = ObfuscationReflectionHelper.findField(LivingEntity.class, "field_184617_aD");
     public static int getAttackStrengthTicker(LivingEntity entity) {
         return ReflectionUtil.getIntFieldValue(LIVING_ENTITY_ATTACK_STRENGTH_TICKER, entity);
@@ -183,9 +197,9 @@ public class CommonReflection {
     
     
     
-    private static final Field EFFECT_INSTANCE_AMPLIFIER = ObfuscationReflectionHelper.findField(EffectInstance.class, "field_76461_c");
-    public static void setEffectAmplifier(EffectInstance effect, int amplifier) {
-        ReflectionUtil.setIntFieldValue(EFFECT_INSTANCE_AMPLIFIER, effect, amplifier);
+    private static final Method LIVING_ENTITY_ON_EFFECT_UPDATED = ObfuscationReflectionHelper.findMethod(LivingEntity.class, "func_70695_b", EffectInstance.class, boolean.class);
+    public static void onEffectUpdated(LivingEntity entity, EffectInstance effect, boolean resetAttributes) {
+        ReflectionUtil.invokeMethod(LIVING_ENTITY_ON_EFFECT_UPDATED, entity, effect, resetAttributes);
     }
     
     
@@ -205,6 +219,13 @@ public class CommonReflection {
     private static final Field MERCHANT_INVENTORY_MERCHANT = ObfuscationReflectionHelper.findField(MerchantInventory.class, "field_70476_a");
     public static IMerchant getMerchant(MerchantInventory merchantContainer) {
         return ReflectionUtil.getFieldValue(MERCHANT_INVENTORY_MERCHANT, merchantContainer);
+    }
+    
+    
+    
+    private static final Method MOB_ENTITY_GET_AMBIENT_SOUND = ObfuscationReflectionHelper.findMethod(MobEntity.class, "func_184639_G");
+    public static SoundEvent getAmbientSound(MobEntity entity) {
+        return ReflectionUtil.invokeMethod(MOB_ENTITY_GET_AMBIENT_SOUND, entity);
     }
     
     

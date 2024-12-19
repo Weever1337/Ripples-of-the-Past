@@ -101,8 +101,8 @@ public class TimeStopInstant extends StandAction {
             user.teleportTo(blinkPos.x, blinkPos.y, blinkPos.z);
             
             TimeStop timeStop = getBaseTimeStop();
-            float learning = timeStop.timeStopLearningPerTick * impliedTicks;
-            power.addLearningProgressPoints(baseTimeStop.get(), learning);
+//            float learning = timeStop.timeStopLearningPerTick * impliedTicks;
+//            power.addLearningProgressPoints(baseTimeStop.get(), learning);
                 
             int cooldown = (int) (TimeStopInstance.getTimeStopCooldown(power, timeStop, impliedTicks) * COOLDOWN_RATIO);
             power.setCooldownTimer(this, cooldown);
@@ -262,6 +262,7 @@ public class TimeStopInstant extends StandAction {
     
     @Override
     public void onCommonSetup() {
+        super.onCommonSetup();
         getBaseTimeStop().setInstantTSVariation(this);
         if (getBaseTimeStop().getShiftVariationIfPresent() instanceof TimeResume) {
             ((TimeResume) getBaseTimeStop().getShiftVariationIfPresent()).setInstantTSAction(this);

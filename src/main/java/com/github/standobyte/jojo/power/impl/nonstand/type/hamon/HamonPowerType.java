@@ -110,7 +110,8 @@ public class HamonPowerType extends NonStandPowerType<HamonData> {
     
     @Override
     public void onClear(INonStandPower power) {
-        power.getTypeSpecificData(this).ifPresent(hamon -> hamon.setBreathingLevel(0));
+        super.onClear(power);
+        power.getTypeSpecificData(this).ifPresent(HamonData::onClear);
     }
 
     @Override
@@ -118,7 +119,6 @@ public class HamonPowerType extends NonStandPowerType<HamonData> {
         return 2;
     }
 
-    // FIXME !!!!! (breath stability) move all hasEnergy and consumeEnergy calls into actions?
     @Override
     public boolean hasEnergy(INonStandPower power, float amount) {
         return amount == 0 || power.getEnergy() > 0 || power.getTypeSpecificData(this).get().getBreathStability() > 0;
@@ -137,13 +137,12 @@ public class HamonPowerType extends NonStandPowerType<HamonData> {
     @Override
     public void onLeap(INonStandPower power) {
         power.getTypeSpecificData(this).get().hamonPointsFromAction(HamonStat.CONTROL, getLeapEnergyCost());
-//        createHamonSparkParticles(power.getUser().level, null, power.getUser().position(), getLeapStrength(power) * 0.15F);
     }
     
     @Override
     public float getLeapStrength(INonStandPower power) {
         HamonData hamon = power.getTypeSpecificData(this).get();
-        return hamon.isSkillLearned(ModHamonSkills.AFTERIMAGES.get()) ? 1.1F : 0.8F;
+        return hamon.isSkillLearned(ModHamonSkills.AFTERIMAGES.get()) ? 1.5F : 1.4F;
     }
     
     @Override
@@ -153,7 +152,7 @@ public class HamonPowerType extends NonStandPowerType<HamonData> {
     
     @Override
     public float getLeapEnergyCost() {
-        return 500;
+        return 250;
     }
     
     @Override
@@ -173,6 +172,7 @@ public class HamonPowerType extends NonStandPowerType<HamonData> {
 
     @Override
     public void tickUser(LivingEntity user, INonStandPower power) {
+        super.tickUser(user, power);
         HamonData hamon = power.getTypeSpecificData(this).get();
         World world = user.level;
         hamon.tick();

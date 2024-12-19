@@ -12,6 +12,7 @@ import com.github.standobyte.jojo.action.stand.punch.IPunch;
 import com.github.standobyte.jojo.action.stand.punch.StandBlockPunch;
 import com.github.standobyte.jojo.action.stand.punch.StandEntityPunch;
 import com.github.standobyte.jojo.action.stand.punch.StandMissedPunch;
+import com.github.standobyte.jojo.capability.entity.LivingUtilCapProvider;
 import com.github.standobyte.jojo.client.ClientUtil;
 import com.github.standobyte.jojo.entity.stand.StandEntity;
 import com.github.standobyte.jojo.entity.stand.StandEntityTask;
@@ -29,7 +30,9 @@ import com.github.standobyte.jojo.util.mc.damage.StandEntityDamageSource;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.MobEntity;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.Direction;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.vector.Vector3d;
@@ -104,8 +107,8 @@ public class StandEntityMeleeBarrage extends StandEntityAction implements IHasSt
     }
     
     @Override
-    public StandBlockPunch punchBlock(StandEntity stand, BlockPos pos, BlockState state) {
-        return IHasStandPunch.super.punchBlock(stand, pos, state).impactSound(hitSound);
+    public StandBlockPunch punchBlock(StandEntity stand, BlockPos pos, BlockState state, Direction face) {
+        return IHasStandPunch.super.punchBlock(stand, pos, state, face).impactSound(hitSound);
     }
     
     @Override
@@ -135,16 +138,23 @@ public class StandEntityMeleeBarrage extends StandEntityAction implements IHasSt
     public void playPunchImpactSound(IPunch punch, TargetType punchType, boolean canPlay, boolean playAlways) {
         StandEntity stand = punch.getStand();
         if (!stand.level.isClientSide()) {
+            boolean playSound = canPlay && (playAlways || punch.playImpactSound());
             SoundEvent sound = punch.getImpactSound();
             Vector3d pos = punch.getImpactSoundPos();
-            PacketManager.sendToClientsTracking(
-                    sound != null && pos != null && canPlay && (playAlways || punch.playImpactSound()) ? 
-                            new TrBarrageHitSoundPacket(stand.getId(), sound, pos)
-                            : TrBarrageHitSoundPacket.noSound(stand.getId()), 
-            stand);
+            tickBarrageSound(playSound, sound, pos, stand);
         }
     }
-
+    
+    public static void tickBarrageSound(boolean playSound, SoundEvent sound, Vector3d soundPos, StandEntity stand) {
+        if (!stand.level.isClientSide()) {
+            PacketManager.sendToClientsTracking(
+                    playSound && sound != null && soundPos != null ? 
+                            new TrBarrageHitSoundPacket(stand.getId(), sound, soundPos)
+                            : TrBarrageHitSoundPacket.noSound(stand.getId()), 
+                            stand);
+        }
+    }
+    
     @Override
     public StandRelativeOffset getOffsetFromUser(IStandPower standPower, StandEntity standEntity, StandEntityTask task) {
         double minOffset = Math.min(0.5, standEntity.getMaxEffectiveRange());
@@ -203,7 +213,7 @@ public class StandEntityMeleeBarrage extends StandEntityAction implements IHasSt
     }
     
     @Override
-    public boolean noFinisherDecay() {
+    public boolean noFinisherBarDecay() {
         return true;
     }
     
@@ -291,8 +301,20 @@ public class StandEntityMeleeBarrage extends StandEntityAction implements IHasSt
             if (barrageHits > 0) {
                 dmgSource.setBarrageHitsCount(barrageHits);
             }
+            boolean resolve = stand.getUser() != null && stand.getUser().hasEffect(ModStatusEffects.RESOLVE.get());
+            if (resolve) {
+                reduceKnockback(0);
+            }
+            
             boolean hit = super.doHit(task);
-//            target.setDeltaMovement(target.getDeltaMovement().multiply(1, 0, 1));
+            
+            if (hit && resolve && target instanceof LivingEntity) {
+                ((LivingEntity) target).getCapability(LivingUtilCapProvider.CAPABILITY).ifPresent(cap -> cap.setNoGravityFor(3));
+                if (target instanceof MobEntity) {
+                    MobEntity mob = ((MobEntity) target);
+                    mob.getNavigation().stop();
+                }
+            }
             return hit;
         }
 

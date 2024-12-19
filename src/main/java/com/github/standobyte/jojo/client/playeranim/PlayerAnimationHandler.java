@@ -7,16 +7,20 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 import com.github.standobyte.jojo.JojoMod;
+import com.github.standobyte.jojo.capability.entity.living.LivingWallClimbing;
+import com.github.standobyte.jojo.client.playeranim.anim.ModPlayerAnimations;
 import com.github.standobyte.jojo.client.playeranim.anim.interfaces.BasicToggleAnim;
 import com.github.standobyte.jojo.modcompat.OptionalDependencyHelper;
 import com.mojang.blaze3d.matrix.MatrixStack;
 
+import net.minecraft.client.entity.player.AbstractClientPlayerEntity;
 import net.minecraft.client.renderer.entity.layers.LayerRenderer;
 import net.minecraft.client.renderer.entity.model.BipedModel;
-import net.minecraft.client.renderer.entity.model.PlayerModel;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.HandSide;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.vector.Vector3d;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 
@@ -28,6 +32,10 @@ public class PlayerAnimationHandler {
     public static interface IPlayerAnimator {
         
         boolean kosmXAnimatorInstalled();
+        
+        public void onRenderFrameStart(float partialTick);
+        
+        public void onRenderFrameEnd(float partialTick);
         
         BasicToggleAnim registerBasicAnimLayer(String classNameWithKosmXMod, ResourceLocation id, int priority);
         
@@ -41,11 +49,25 @@ public class PlayerAnimationHandler {
         
         void setBend(BipedModel<?> model, BendablePart part, float axis, float angle);
         
+        Vector3d getBodyPos(AbstractClientPlayerEntity player, float partialTick);
+        
         <T extends LivingEntity, M extends BipedModel<T>> void heldItemLayerRender(LivingEntity livingEntity, MatrixStack matrices, HandSide arm);
         
         <T extends LivingEntity, M extends BipedModel<T>> void heldItemLayerChangeItemLocation(LivingEntity livingEntity, MatrixStack matrices, HandSide arm);
         
-        void setupLayerFirstPersonRender(PlayerModel<?> layerModel);
+        void setupLayerFirstPersonRender(BipedModel<?> layerModel);
+        
+        void onItemLikeLayerRender(MatrixStack matrixStack, LivingEntity entity, HandSide side);
+        
+        @Deprecated
+        default void setBarrageAnim(PlayerEntity player, boolean val) {
+            ModPlayerAnimations.playerBarrageAnim.setAnimEnabled(player, val);
+        }
+    }
+    
+    
+    public static boolean canAnimate(PlayerEntity player) {
+        return !player.isPassenger() && !LivingWallClimbing.getHandler(player).map(wallClimb -> wallClimb.isWallClimbing()).orElse(false);
     }
     
     
@@ -54,6 +76,12 @@ public class PlayerAnimationHandler {
         
         @Override
         public boolean kosmXAnimatorInstalled() { return false; }
+        
+        @Override
+        public void onRenderFrameStart(float partialTick) {}
+        
+        @Override
+        public void onRenderFrameEnd(float partialTick) {}
 
         @Override
         public BasicToggleAnim registerBasicAnimLayer(String classNameWithKosmXMod, ResourceLocation id, int priority) {
@@ -81,8 +109,7 @@ public class PlayerAnimationHandler {
                     registerWithAnimatorMod(animationHandler, id, priority);
                 } catch (InstantiationException | IllegalAccessException | IllegalArgumentException
                         | InvocationTargetException | ClassNotFoundException | NoSuchMethodException | SecurityException e) {
-                    JojoMod.getLogger().error("Failed to create player animation layer of class {}", classNameWithKosmXMod);
-                    e.printStackTrace();
+                    JojoMod.getLogger().error("Failed to create player animation layer of class " + classNameWithKosmXMod, e);
                 }
             }
             if (animationHandler == null) {
@@ -118,6 +145,11 @@ public class PlayerAnimationHandler {
         public void setBend(BipedModel<?> model, BendablePart part, float axis, float angle) {}
         
         @Override
+        public Vector3d getBodyPos(AbstractClientPlayerEntity player, float partialTick) {
+            return Vector3d.ZERO;
+        }
+        
+        @Override
         public <T extends LivingEntity, M extends BipedModel<T>> void heldItemLayerRender(
                 LivingEntity livingEntity, MatrixStack matrices, HandSide arm) {}
 
@@ -126,7 +158,10 @@ public class PlayerAnimationHandler {
                 LivingEntity livingEntity, MatrixStack matrices, HandSide arm) {}
 
         @Override
-        public void setupLayerFirstPersonRender(PlayerModel<?> layerModel) {}
+        public void setupLayerFirstPersonRender(BipedModel<?> layerModel) {}
+        
+        @Override
+        public void onItemLikeLayerRender(MatrixStack matrixStack, LivingEntity entity, HandSide side) {}
     }
     
     public static enum BendablePart {

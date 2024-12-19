@@ -13,6 +13,7 @@ import com.github.standobyte.jojo.action.Action;
 import com.github.standobyte.jojo.action.ActionTarget;
 import com.github.standobyte.jojo.action.ActionTarget.TargetType;
 import com.github.standobyte.jojo.action.stand.IStandPhasedAction;
+import com.github.standobyte.jojo.action.stand.StandAction;
 import com.github.standobyte.jojo.action.stand.StandEntityAction;
 import com.github.standobyte.jojo.action.stand.StandEntityActionModifier;
 import com.github.standobyte.jojo.client.ClientUtil;
@@ -93,6 +94,15 @@ public class StandEntityTask {
     
     public Stream<StandEntityActionModifier> getModifierActions() {
         return taskModifiers.stream();
+    }
+    
+    public boolean hasModifierAction(@Nullable StandAction standEntityActionModifier) {
+        if (standEntityActionModifier != null) {
+            return taskModifiers.stream()
+                    .filter(activated -> activated == standEntityActionModifier)
+                    .findAny().isPresent();
+        }
+        return !taskModifiers.isEmpty();
     }
     
     void tick(IStandPower standPower, StandEntity standEntity) {
@@ -282,7 +292,7 @@ public class StandEntityTask {
                 
                 task.target.writeToBuf(buf);
                 
-                NetworkUtil.writeCollection(buf, task.taskModifiers, action -> buf.writeRegistryId(action), false);
+                NetworkUtil.writeCollection(buf, task.taskModifiers, buf::writeRegistryId, false);
                 
                 task.action.taskWriteAdditional(task, buf);
             }

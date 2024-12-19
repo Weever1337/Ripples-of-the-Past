@@ -1,19 +1,16 @@
 package com.github.standobyte.jojo.client.playeranim.anim.kosmximpl.hamon;
 
 import com.github.standobyte.jojo.JojoMod;
-import com.github.standobyte.jojo.capability.entity.living.LivingWallClimbing;
-import com.github.standobyte.jojo.client.playeranim.anim.interfaces.BasicToggleAnim;
-import com.github.standobyte.jojo.client.playeranim.kosmx.KosmXPlayerAnimatorInstalled.AnimLayerHandler;
+import com.github.standobyte.jojo.client.playeranim.kosmx.anim.modifier.KosmXFixedFadeModifier;
 
 import dev.kosmx.playerAnim.api.layered.IAnimation;
 import dev.kosmx.playerAnim.api.layered.ModifierLayer;
-import dev.kosmx.playerAnim.api.layered.modifier.AbstractFadeModifier;
 import dev.kosmx.playerAnim.core.util.Ease;
 import net.minecraft.client.entity.player.AbstractClientPlayerEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.ResourceLocation;
 
-public class KosmXRebuffOverdriveHandler extends AnimLayerHandler<ModifierLayer<IAnimation>> implements BasicToggleAnim {
+public class KosmXRebuffOverdriveHandler extends KosmXWindupAttackHandler {
 
     public KosmXRebuffOverdriveHandler(ResourceLocation id) {
         super(id);
@@ -25,17 +22,21 @@ public class KosmXRebuffOverdriveHandler extends AnimLayerHandler<ModifierLayer<
     }
     
     
+    private static final ResourceLocation REBUFF_OVERDRIVE = new ResourceLocation(JojoMod.MOD_ID, "rebuff_overdrive");
+    
     @Override
-    public boolean setAnimEnabled(PlayerEntity player, boolean enabled) {
-        enabled &= !player.isPassenger() && !LivingWallClimbing.getHandler(player).map(wallClimb -> wallClimb.isWallClimbing()).orElse(false);
-        if (enabled) {
-            return setAnimFromName((AbstractClientPlayerEntity) player, ANIM);
-        }
-        else {
-            return fadeOutAnim((AbstractClientPlayerEntity) player, AbstractFadeModifier.standardFadeIn(10, Ease.OUTCUBIC), null);
-        }
+    public boolean setWindupAnim(PlayerEntity player) {
+        return setAnimFromName(player, REBUFF_OVERDRIVE);
+    }
+
+    @Override
+    public boolean setAttackAnim(PlayerEntity player) {
+        return setToSwingTick(player, 0, REBUFF_OVERDRIVE);
     }
     
-    private static final ResourceLocation ANIM = new ResourceLocation(JojoMod.MOD_ID, "rebuff_overdrive");
+    @Override
+    public void stopAnim(PlayerEntity player) {
+        fadeOutAnim(player, KosmXFixedFadeModifier.standardFadeIn(10, Ease.OUTCUBIC), null);
+    }
     
 }

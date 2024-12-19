@@ -61,6 +61,7 @@ import com.github.standobyte.jojo.entity.stand.StandEntityTask;
 import com.github.standobyte.jojo.entity.stand.StandEntityType;
 import com.github.standobyte.jojo.entity.stand.StandPose;
 import com.github.standobyte.jojo.entity.stand.StandRelativeOffset;
+import com.github.standobyte.jojo.entity.stand.TargetHitPart;
 import com.github.standobyte.jojo.entity.stand.stands.CrazyDiamondEntity;
 import com.github.standobyte.jojo.entity.stand.stands.HierophantGreenEntity;
 import com.github.standobyte.jojo.entity.stand.stands.MagiciansRedEntity;
@@ -72,7 +73,6 @@ import com.github.standobyte.jojo.power.impl.stand.IStandPower;
 import com.github.standobyte.jojo.power.impl.stand.StandInstance.StandPart;
 import com.github.standobyte.jojo.power.impl.stand.stats.ArmoredStandStats;
 import com.github.standobyte.jojo.power.impl.stand.stats.StandStats;
-import com.github.standobyte.jojo.power.impl.stand.stats.TimeStopperStandStats;
 import com.github.standobyte.jojo.power.impl.stand.type.EntityStandType;
 import com.github.standobyte.jojo.power.impl.stand.type.NoManifestationStandType;
 import com.github.standobyte.jojo.power.impl.stand.type.StandType;
@@ -171,7 +171,7 @@ public class ModStandsInit {
                     .partsRequired(StandPart.MAIN_BODY)));
     
     public static final RegistryObject<TimeStop> STAR_PLATINUM_TIME_STOP = ACTIONS.register("star_platinum_time_stop", 
-            () -> new TimeStop(new TimeStop.Builder().holdToFire(40, false).staminaCost(300).staminaCostTick(8.875F).heldWalkSpeed(0)
+            () -> new TimeStop(new TimeStop.Builder().holdToFire(40, false).staminaCost(225).staminaCostTick(9).heldWalkSpeed(0)
                     .isTrained().resolveLevelToUnlock(4)
                     .ignoresPerformerStun().autoSummonStand()
                     .shout(ModSounds.JOTARO_STAR_PLATINUM_THE_WORLD)
@@ -198,10 +198,10 @@ public class ModStandsInit {
             () -> new TimeResume(new StandAction.Builder().shiftVariationOf(STAR_PLATINUM_TIME_STOP)));
     
     
-    public static final EntityStandRegistryObject<EntityStandType<TimeStopperStandStats>, StandEntityType<StarPlatinumEntity>> STAND_STAR_PLATINUM = 
+    public static final EntityStandRegistryObject<EntityStandType<StandStats>, StandEntityType<StarPlatinumEntity>> STAND_STAR_PLATINUM = 
             new EntityStandRegistryObject<>("star_platinum", 
                     STAND_TYPES, 
-                    () -> new EntityStandType.Builder<TimeStopperStandStats>()
+                    () -> new EntityStandType.Builder<StandStats>()
                     .color(0x8E45FF)
                     .storyPartName(StoryPart.STARDUST_CRUSADERS.getName())
                     .leftClickHotbar(
@@ -215,16 +215,12 @@ public class ModStandsInit {
                             STAR_PLATINUM_INHALE.get(), 
                             STAR_PLATINUM_TIME_STOP.get()
                             )
-                    .defaultStats(TimeStopperStandStats.class, new TimeStopperStandStats.Builder()
+                    .defaultStats(StandStats.class, new StandStats.Builder()
                             .power(16.0, 18.5)
                             .speed(16.0, 19.0)
                             .range(2.0, 10.0)
                             .durability(16.0, 20.0)
                             .precision(20.0)
-                            .timeStopMaxTicks(100, 180)
-                            .timeStopLearningPerTick(0.25F)
-                            .timeStopDecayPerDay(0F)
-                            .timeStopCooldownPerTick(3F)
                             .randomWeight(1)
                             )
                     .addSummonShout(ModSounds.JOTARO_STAR_PLATINUM)
@@ -271,7 +267,7 @@ public class ModStandsInit {
             () -> new StandEntityBlock());
     
     public static final RegistryObject<TimeStop> THE_WORLD_TIME_STOP = ACTIONS.register("the_world_time_stop", 
-            () -> new TheWorldTimeStop(new TimeStop.Builder().holdToFire(30, false).staminaCost(300).staminaCostTick(8.875F).heldWalkSpeed(0)
+            () -> new TheWorldTimeStop(new TimeStop.Builder().holdToFire(30, false).staminaCost(225).staminaCostTick(9).heldWalkSpeed(0)
                     .resolveLevelToUnlock(2).isTrained()
                     .ignoresPerformerStun()
                     .shout(ModSounds.DIO_THE_WORLD)
@@ -304,10 +300,10 @@ public class ModStandsInit {
                     .partsRequired(StandPart.MAIN_BODY, StandPart.ARMS), THE_WORLD_TIME_STOP_BLINK));
     
     
-    public static final EntityStandRegistryObject<EntityStandType<TimeStopperStandStats>, StandEntityType<TheWorldEntity>> STAND_THE_WORLD = 
+    public static final EntityStandRegistryObject<EntityStandType<StandStats>, StandEntityType<TheWorldEntity>> STAND_THE_WORLD = 
             new EntityStandRegistryObject<>("the_world", 
                     STAND_TYPES,
-                    () -> new EntityStandType.Builder<TimeStopperStandStats>()
+                    () -> new EntityStandType.Builder<StandStats>()
                     .color(0xFFD800)
                     .storyPartName(StoryPart.STARDUST_CRUSADERS.getName())
                     .leftClickHotbar(
@@ -319,16 +315,12 @@ public class ModStandsInit {
                             THE_WORLD_BLOCK.get(), 
                             THE_WORLD_TIME_STOP.get()
                             )
-                    .defaultStats(TimeStopperStandStats.class, new TimeStopperStandStats.Builder()
+                    .defaultStats(StandStats.class, new StandStats.Builder()
                             .power(16.0, 19.0)
                             .speed(16.0, 18.5)
                             .range(5.0, 10.0)
                             .durability(16.0, 20.0)
                             .precision(12.0)
-                            .timeStopMaxTicks(100, 180)
-                            .timeStopLearningPerTick(0.1F)
-                            .timeStopDecayPerDay(0F)
-                            .timeStopCooldownPerTick(3F)
                             .randomWeight(1)
                             )
                     .addSummonShout(ModSounds.DIO_THE_WORLD)
@@ -496,7 +488,7 @@ public class ModStandsInit {
                             .durability(11.0, 12.0)
                             .armor(20.0F)
                             .armorToughness(12.0F)
-                            .precision(13.0, 16.0)
+                            .precision(11.5, 16.0)
                             .randomWeight(2)
                             )
                     .addSummonShout(ModSounds.POLNAREFF_SILVER_CHARIOT)
@@ -621,32 +613,36 @@ public class ModStandsInit {
                     .barrageHitSound(ModSounds.CRAZY_DIAMOND_PUNCH_BARRAGE)
                     .standSound(Phase.PERFORM, false, ModSounds.CRAZY_DIAMOND_DORARARA)));
     
+    public static final RegistryObject<StandEntityActionModifier> CRAZY_DIAMOND_MISSHAPE_FACE = ACTIONS.register("crazy_diamond_misshape_face", 
+            () -> new CrazyDiamondMisshapeBodyPart(new StandAction.Builder().staminaCost(50).resolveLevelToUnlock(1), TargetHitPart.HEAD));
+    
+    public static final RegistryObject<StandEntityActionModifier> CRAZY_DIAMOND_MISSHAPE_ARMS = ACTIONS.register("crazy_diamond_misshape_arms", 
+            () -> new CrazyDiamondMisshapeBodyPart(new StandAction.Builder().staminaCost(50).resolveLevelToUnlock(1), TargetHitPart.TORSO_ARMS));
+    
+    public static final RegistryObject<StandEntityActionModifier> CRAZY_DIAMOND_MISSHAPE_LEGS = ACTIONS.register("crazy_diamond_misshape_legs", 
+            () -> new CrazyDiamondMisshapeBodyPart(new StandAction.Builder().staminaCost(50).resolveLevelToUnlock(1), TargetHitPart.LEGS));
+    
     public static final RegistryObject<StandEntityHeavyAttack> CRAZY_DIAMOND_FINISHER_PUNCH = ACTIONS.register("crazy_diamond_misshaping_punch", 
             () -> new CrazyDiamondMisshapingPunch(new StandEntityHeavyAttack.Builder()
+                    .attackRecoveryFollowup(CRAZY_DIAMOND_MISSHAPE_FACE)
+                    .attackRecoveryFollowup(CRAZY_DIAMOND_MISSHAPE_ARMS)
+                    .attackRecoveryFollowup(CRAZY_DIAMOND_MISSHAPE_LEGS)
                     .resolveLevelToUnlock(1)
                     .punchSound(ModSounds.CRAZY_DIAMOND_PUNCH_HEAVY)
                     .standSound(Phase.WINDUP, false, ModSounds.CRAZY_DIAMOND_DORA_LONG)
                     .partsRequired(StandPart.ARMS)));
     
-    public static final RegistryObject<StandEntityActionModifier> CRAZY_DIAMOND_MISSHAPE_FACE = ACTIONS.register("crazy_diamond_misshape_face", 
-            () -> new CrazyDiamondMisshapeBodyPart(new StandAction.Builder().staminaCost(50)));
-    
-    public static final RegistryObject<StandEntityActionModifier> CRAZY_DIAMOND_MISSHAPE_ARMS = ACTIONS.register("crazy_diamond_misshape_arms", 
-            () -> new CrazyDiamondMisshapeBodyPart(new StandAction.Builder().staminaCost(50)));
-    
-    public static final RegistryObject<StandEntityActionModifier> CRAZY_DIAMOND_MISSHAPE_LEGS = ACTIONS.register("crazy_diamond_misshape_legs", 
-            () -> new CrazyDiamondMisshapeBodyPart(new StandAction.Builder().staminaCost(50)));
+    public static final RegistryObject<StandEntityActionModifier> CRAZY_DIAMOND_LEAVE_OBJECT = ACTIONS.register("crazy_diamond_leave_object", 
+            () -> new CrazyDiamondLeaveObject(new StandAction.Builder().staminaCost(50).resolveLevelToUnlock(1)));
     
     public static final RegistryObject<CrazyDiamondHeavyPunch> CRAZY_DIAMOND_HEAVY_PUNCH = ACTIONS.register("crazy_diamond_heavy_punch", 
             () -> new CrazyDiamondHeavyPunch(new StandEntityHeavyAttack.Builder()
+                    .attackRecoveryFollowup(CRAZY_DIAMOND_LEAVE_OBJECT)
                     .punchSound(ModSounds.CRAZY_DIAMOND_PUNCH_HEAVY)
                     .standSound(Phase.WINDUP, ModSounds.CRAZY_DIAMOND_DORA_LONG)
                     .partsRequired(StandPart.ARMS)
                     .setFinisherVariation(CRAZY_DIAMOND_FINISHER_PUNCH)
                     .shiftVariationOf(CRAZY_DIAMOND_PUNCH).shiftVariationOf(CRAZY_DIAMOND_BARRAGE)));
-    
-    public static final RegistryObject<StandEntityActionModifier> CRAZY_DIAMOND_LEAVE_OBJECT = ACTIONS.register("crazy_diamond_leave_object", 
-            () -> new CrazyDiamondLeaveObject(new StandAction.Builder().staminaCost(50)));
     
     public static final RegistryObject<CrazyDiamondBlockBullet> CRAZY_DIAMOND_BLOCK_BULLET = ACTIONS.register("crazy_diamond_block_bullet", 
             () -> new CrazyDiamondBlockBullet(new StandEntityAction.Builder().standWindupDuration(15).staminaCost(40).staminaCostTick(2F)

@@ -1,15 +1,20 @@
 package com.github.standobyte.jojo.power.impl.stand;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
 
 import com.github.standobyte.jojo.action.stand.effect.StandEffectInstance;
 import com.github.standobyte.jojo.action.stand.effect.StandEffectType;
+import com.github.standobyte.jojo.capability.entity.LivingUtilCapProvider;
 import com.github.standobyte.jojo.network.PacketManager;
 import com.github.standobyte.jojo.network.packets.fromserver.TrStandEffectPacket;
 import com.github.standobyte.jojo.util.mc.MCUtil;
@@ -22,6 +27,7 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
+import net.minecraft.util.math.vector.Vector3d;
 
 public class StandEffectsTracker {
     public static final AtomicInteger EFFECTS_COUNTER = new AtomicInteger();
@@ -133,25 +139,36 @@ public class StandEffectsTracker {
     }
     
     @SuppressWarnings("unchecked")
-    public <T extends StandEffectInstance> T getOrCreateEffect(StandEffectType<T> effectType, LivingEntity target) {
-        List<StandEffectInstance> effectList = getEffects(effect -> 
+    public <T extends StandEffectInstance> Optional<T> getEffectTargeting(StandEffectType<T> effectType, LivingEntity target) {
+        Stream<StandEffectInstance> effects = getEffects().filter(effect -> 
                 effect.effectType == effectType && 
                 (target == null ? effect.getTargetUUID() == null : target.getUUID().equals(effect.getTargetUUID())));
-        if (effectList.isEmpty()) {
-            T effect = effectType.create();
-            addEffect(effect.withTarget(target));
-            return effect;
+        Optional<T> effect = effects.findFirst().map(e -> (T) e);
+        return effect;
+    }
+    
+    public <T extends StandEffectInstance> T getOrCreateEffect(StandEffectType<T> effectType, LivingEntity target) {
+        Optional<T> effect = getEffectTargeting(effectType, target);
+        if (effect.isPresent()) {
+            return effect.get();
         }
         else {
-            return (T) effectList.get(0);
+            T newEffect = effectType.create();
+            addEffect(newEffect.withTarget(target));
+            return newEffect;
         }
     }
     
+    @Deprecated
     public List<StandEffectInstance> getEffects(@Nullable Predicate<StandEffectInstance> filter) {
         if (filter == null) {
             return new ArrayList<>(effects.values());
         }
         return effects.values().stream().filter(filter).collect(Collectors.toList());
+    }
+    
+    public Stream<StandEffectInstance> getEffects() {
+        return effects.values().stream();
     }
     
     public void syncWithUserOnly(ServerPlayerEntity user) {
@@ -188,5 +205,64 @@ public class StandEffectsTracker {
                 }
             });
         }
+    }
+    
+    
+    
+    @SuppressWarnings("unchecked")
+    public static <T extends StandEffectInstance> Stream<T> getEffectsOfType(LivingEntity user, StandEffectType<T> type) {
+        return IStandPower.getStandPowerOptional(user).resolve()
+                .map(power -> power.getContinuousEffects().getEffects()
+                        .filter(effect -> effect.effectType == type)
+                        .map(standEffectInstance -> (T) standEffectInstance))
+                .orElse(Stream.empty());
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T extends StandEffectInstance> Optional<T> getEffectOfType(LivingEntity user, StandEffectType<T> type) {
+        return IStandPower.getStandPowerOptional(user).resolve()
+                .flatMap(power -> power.getContinuousEffects().getEffects()
+                        .filter(effect -> effect.effectType == type)
+                        .findFirst()
+                        .map(standEffectInstance -> (T) standEffectInstance));
+    }
+    
+
+    @SuppressWarnings("unchecked")
+    public static <T extends StandEffectInstance> Stream<T> getEffectsOfType(IStandPower power, StandEffectType<T> type, double range) {
+        double rangeSq = range * range;
+        return power.getContinuousEffects()
+                .getEffects()
+                .filter(effect -> effect.effectType == type)
+                .filter(effect -> effect.getTarget() != null
+                        && (range <= 0 || effect.getTarget().distanceToSqr(power.getUser()) < rangeSq))
+                .map(effect -> (T) effect);
+    }
+    
+    /**
+     * @return Optional of stream with StandEffectInstance of that type. Instead of an empty stream returns empty optional.
+     */
+    @SuppressWarnings("unchecked")
+    public static <T extends StandEffectInstance> Stream<T> getEffectsTargetedBy(LivingEntity entity, StandEffectType<T> type) {
+        return entity.getCapability(LivingUtilCapProvider.CAPABILITY).resolve().map(cap -> cap.getEffectsTargetedBy().stream()
+                        .filter(effect -> effect.effectType == type)
+                        .map(effect -> (T) effect))
+                .orElse(Stream.empty());
+    }
+    
+    public static boolean isTargetedBy(LivingEntity entity, StandEffectType<?> type) {
+        return getEffectsTargetedBy(entity, type).findAny().isPresent();
+    }
+    
+    public static Optional<StandEffectInstance> getTargetLookedAt(Stream<? extends StandEffectInstance> targets, LivingEntity user) {
+        Vector3d lookAngle = user.getLookAngle();
+        Vector3d eyePos = user.getEyePosition(1.0F);
+        return targets.max(Comparator.comparingDouble(
+                e -> lookAngle.dot(e.getTarget().getBoundingBox().getCenter().subtract(eyePos).normalize())))
+                .map(Function.identity());
+    }
+    
+    public static Optional<StandEffectInstance> getTargetLookedAt(IStandPower power, StandEffectType<?> type, double range, LivingEntity user) {
+        return getTargetLookedAt(getEffectsOfType(power, type, range), user);
     }
 }

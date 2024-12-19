@@ -1,5 +1,6 @@
 package com.github.standobyte.jojo.client.particle.custom;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -9,15 +10,25 @@ import javax.annotation.Nullable;
 import com.github.standobyte.jojo.client.ClientUtil;
 import com.github.standobyte.jojo.client.particle.HamonAuraParticle;
 import com.github.standobyte.jojo.client.particle.SendoHamonOverdriveParticle;
+import com.github.standobyte.jojo.client.render.entity.model.stand.HumanoidStandModel;
+import com.github.standobyte.jojo.client.render.entity.model.stand.StandEntityModel;
+import com.github.standobyte.jojo.client.render.entity.renderer.stand.StandEntityRenderer;
+import com.github.standobyte.jojo.entity.stand.StandEntity;
+import com.github.standobyte.jojo.entity.stand.TargetHitPart;
 import com.github.standobyte.jojo.init.ModParticles;
 import com.github.standobyte.jojo.util.general.GeneralUtil;
 import com.github.standobyte.jojo.util.mc.reflection.ClientReflection;
 
+import net.minecraft.block.BlockState;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.particle.DiggingParticle;
 import net.minecraft.client.particle.IAnimatedSprite;
 import net.minecraft.client.particle.Particle;
+import net.minecraft.client.particle.ParticleManager;
 import net.minecraft.client.particle.SpriteTexturedParticle;
 import net.minecraft.client.renderer.ActiveRenderInfo;
+import net.minecraft.client.renderer.entity.EntityRenderer;
+import net.minecraft.client.renderer.model.ModelRenderer;
 import net.minecraft.client.settings.ParticleStatus;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
@@ -29,6 +40,7 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
 import net.minecraft.util.HandSide;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.World;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -51,6 +63,8 @@ public abstract class CustomParticlesHelper {
         CustomParticlesHelper.saveSprites(spritesMap, ModParticles.HAMON_AURA_YELLOW.get());
         CustomParticlesHelper.saveSprites(spritesMap, ModParticles.HAMON_AURA_RED.get());
         CustomParticlesHelper.saveSprites(spritesMap, ModParticles.HAMON_AURA_SILVER.get());
+        CustomParticlesHelper.saveSprites(spritesMap, ModParticles.HAMON_AURA_GREEN.get());
+        CustomParticlesHelper.saveSprites(spritesMap, ModParticles.HAMON_AURA_RAINBOW.get());
     }
     
     public static IAnimatedSprite getSavedSpriteSet(ParticleType<?> particleType) {
@@ -97,7 +111,6 @@ public abstract class CustomParticlesHelper {
         }
     }
     
-    // FIXME !!!!!! particles at arms in 1st person
     public static void summonHamonAuraParticlesFirstPerson(IParticleData type, LivingEntity user, float particlesPerTick) {
         IAnimatedSprite sprite = getSavedSpriteSet(type.getType());
         if (sprite != null) {
@@ -106,9 +119,6 @@ public abstract class CustomParticlesHelper {
             
             for (HandSide handSide : HandSide.values()) {
                 GeneralUtil.doFractionTimes(() -> {
-//                    double x = random.nextDouble() * 0.25 - 0.5;   // -0.5 - -0.25
-//                    double y = random.nextDouble() * 0.75 + 0.125; // 0.125 - 0.875
-//                    double z = random.nextDouble() * 0.25 - 0.125; // -0.125 - 0.125
                     double x = random.nextDouble() * 0.5 - 0.625;
                     double y = random.nextDouble();
                     double z = random.nextDouble() * 0.5 - 0.25;
@@ -164,6 +174,58 @@ public abstract class CustomParticlesHelper {
                 Particle particle = new HamonSparkEntityOffsetParticle(mc.level, entityToFollow, 
                         x, y, z, xSpeed, ySpeed, zSpeed, particleData.getType());
                 CustomParticlesHelper.addParticle(particle, new Vector3d(x, y, z), particleData.getType().getOverrideLimiter(), false);
+            }
+        }
+    }
+    
+    // TODO use chariot's armor layer if it is on
+    public static <T extends StandEntity> void addStandCrumbleParticles(T standEntity, Vector3d pos, TargetHitPart humanoidPart) {
+        EntityRenderer<? super T> renderer = Minecraft.getInstance().getEntityRenderDispatcher().getRenderer(standEntity);
+        if (renderer instanceof StandEntityRenderer) {
+            StandEntityRenderer<? super T, ?> standRenderer = (StandEntityRenderer<? super T, ?>) renderer;
+            StandEntityModel<? super T> model = standRenderer.getModel(standEntity);
+            
+            ResourceLocation texture = renderer.getTextureLocation(standEntity);
+            if (texture == null) return;
+            
+            ModelRenderer.TexturedQuad polygon = HumanoidStandModel.getRandomQuad(model.getRandomCubeAt(humanoidPart));
+            if (polygon != null) {
+                ModelRenderer.PositionTextureVertex[] vertices = polygon.vertices;
+                if (vertices.length > 0) {
+                    float u0 = (float) Arrays.stream(vertices).mapToDouble(vertex -> vertex.u).min().getAsDouble();
+                    float v0 = (float) Arrays.stream(vertices).mapToDouble(vertex -> vertex.v).min().getAsDouble();
+                    float u1 = (float) Arrays.stream(vertices).mapToDouble(vertex -> vertex.u).max().getAsDouble();
+                    float v1 = (float) Arrays.stream(vertices).mapToDouble(vertex -> vertex.v).max().getAsDouble();
+                    
+                    Minecraft mc = Minecraft.getInstance();
+                    double x = pos.x;
+                    double y = pos.y;
+                    double z = pos.z;
+                    StandCrumbleParticle particle = new StandCrumbleParticle(mc.level, x, y, z, 0, 0, 0);
+                    particle.setTextureAndUv(texture, u0, v0, u1, v1);
+                    mc.particleEngine.add(particle);
+                }
+            }
+            
+        }
+    }
+    
+    public static void addBlockBreakParticles(BlockPos blockPos, BlockState blockState) {
+        Minecraft.getInstance().particleEngine.destroy(blockPos, blockState);
+    }
+    
+    public static void addBlockShardBreakParticles(Vector3d pos, BlockState blockState) {
+        Minecraft mc = Minecraft.getInstance();
+        ParticleManager particleManager = mc.particleEngine;
+        ClientWorld world = mc.level;
+        BlockPos blockPos = new BlockPos(pos);
+        if (!blockState.isAir(world, blockPos)) {
+            for (int i = 0; i < 4; i++) {
+                double x = (Math.random() - 0.5) * 0.2;
+                double y = (Math.random() - 0.5) * 0.2;
+                double z = (Math.random() - 0.5) * 0.2;
+                particleManager.add(new DiggingParticle(world, pos.x + x, pos.y + y, pos.z + z, 
+                        x * 0.25, y * 0.25, z * 0.25, blockState).init(blockPos));
             }
         }
     }

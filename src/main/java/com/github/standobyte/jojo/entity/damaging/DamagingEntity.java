@@ -21,7 +21,6 @@ import com.github.standobyte.jojo.util.mc.damage.ModdedDamageSourceWrapper;
 import com.github.standobyte.jojo.util.mod.JojoModUtil;
 
 import net.minecraft.block.BlockState;
-import net.minecraft.block.TNTBlock;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
@@ -264,8 +263,7 @@ public abstract class DamagingEntity extends ProjectileEntity implements IEntity
         Direction face = blockRayTraceResult.getDirection();
         boolean brokenBlock = canBreakBlock(blockPos, blockState);
         if (isFiery() && blockState.isFlammable(level, blockPos, face)) {
-            blockState.catchFire(level, blockPos, face, getOwner());
-            if (blockState.getBlock() instanceof TNTBlock) level.removeBlock(blockPos, false);
+            MCUtil.blockCatchFire(level, blockPos, blockState, face, getOwner());
             return false;
         }
         if (brokenBlock) {
@@ -274,7 +272,7 @@ public abstract class DamagingEntity extends ProjectileEntity implements IEntity
                 ownerOrStandUser = ((StandEntity) ownerOrStandUser).getUser();
             }
             boolean dropItem = ownerOrStandUser instanceof PlayerEntity ? !((PlayerEntity) ownerOrStandUser).abilities.instabuild : true;
-            brokenBlock = level.destroyBlock(blockPos, dropItem, getOwner());
+            brokenBlock = MCUtil.destroyBlock(level, blockPos, dropItem, getOwner());
         }
         return brokenBlock;
     }
@@ -342,7 +340,8 @@ public abstract class DamagingEntity extends ProjectileEntity implements IEntity
 
     @Override
     public boolean isInvisibleTo(PlayerEntity player) {
-        return standVisibility() && !StandUtil.clStandEntityVisibleTo(player) || !player.isSpectator() && super.isInvisible();
+        return standVisibility() && !StandUtil.clStandEntityVisibleTo(player) 
+                || !JojoModUtil.seesInvisibleAsSpectator(player) && super.isInvisible();
     }
     
     @Override
@@ -424,14 +423,14 @@ public abstract class DamagingEntity extends ProjectileEntity implements IEntity
     public void writeSpawnData(PacketBuffer buffer) {
         buffer.writeInt(tickCount);
         buffer.writeDouble(speedFactor);
-        NetworkUtil.writeOptional(buffer, standSkin, path -> buffer.writeResourceLocation(path));
+        NetworkUtil.writeOptional(buffer, standSkin, buffer::writeResourceLocation);
     }
 
     @Override
     public void readSpawnData(PacketBuffer additionalData) {
         tickCount = additionalData.readInt();
         speedFactor = additionalData.readDouble();
-        standSkin = NetworkUtil.readOptional(additionalData, () -> additionalData.readResourceLocation());
+        standSkin = NetworkUtil.readOptional(additionalData, PacketBuffer::readResourceLocation);
     }
 
     @Override

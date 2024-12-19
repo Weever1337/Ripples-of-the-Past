@@ -7,7 +7,7 @@ import java.util.function.Supplier;
 import com.github.standobyte.jojo.action.ActionTarget;
 import com.github.standobyte.jojo.action.stand.IHasStandPunch;
 import com.github.standobyte.jojo.action.stand.punch.StandEntityPunch;
-import com.github.standobyte.jojo.client.sound.BarrageHitSoundHandler;
+import com.github.standobyte.jojo.client.sound.barrage.BarrageHitSoundHandler;
 import com.github.standobyte.jojo.entity.damaging.DamagingEntity;
 import com.github.standobyte.jojo.entity.damaging.projectile.ModdedProjectileEntity;
 import com.github.standobyte.jojo.entity.damaging.projectile.SCRapierEntity;
@@ -40,7 +40,7 @@ public class SilverChariotEntity extends StandEntity {
     private static final AttributeModifier NO_ARMOR_MOVEMENT_SPEED_BOOST = new AttributeModifier(
             UUID.fromString("a31ffbee-5a26-4022-a298-59c839e5048d"), "Movement speed boost with no armor", 1.5, AttributeModifier.Operation.MULTIPLY_BASE);
     private static final AttributeModifier NO_ARMOR_ATTACK_SPEED_BOOST = new AttributeModifier(
-            UUID.fromString("c3e4ddb0-daa9-4cbb-acb9-dbc7eecad3f1"), "Attack speed boost with no armor", 1, AttributeModifier.Operation.MULTIPLY_BASE);
+            UUID.fromString("c3e4ddb0-daa9-4cbb-acb9-dbc7eecad3f1"), "Attack speed boost with no armor", 0.5, AttributeModifier.Operation.MULTIPLY_BASE);
     private static final AttributeModifier NO_ARMOR = new AttributeModifier(
             UUID.fromString("d4987f5f-55e8-45db-9a5e-b2fd0a98c2ec"), "No armor", -1, AttributeModifier.Operation.MULTIPLY_TOTAL);
     private static final AttributeModifier NO_ARMOR_TOUGHNESS = new AttributeModifier(
@@ -90,7 +90,7 @@ public class SilverChariotEntity extends StandEntity {
         }
     }
 
-    // FIXME render rapier in left arm if the user is left-handed
+    // TODO render rapier in left arm if the user is left-handed
     @Override
     public HandSide getMainArm() {
         return HandSide.RIGHT;
@@ -218,7 +218,7 @@ public class SilverChariotEntity extends StandEntity {
     private boolean deflectProjectile(Entity projectile) {
         if (projectile == null || projectile instanceof ModdedProjectileEntity && !((ModdedProjectileEntity) projectile).canBeDeflected(this)) return false;
         
-        JojoModUtil.deflectProjectile(projectile, getLookAngle());
+        JojoModUtil.deflectProjectile(projectile, getLookAngle().normalize().scale(projectile.getDeltaMovement().length()), projectile.position());
         if (projectile instanceof DamagingEntity && ((DamagingEntity) projectile).isFiery()) {
             entityData.set(RAPIER_ON_FIRE, true);
             rapierFireTicks = 300;

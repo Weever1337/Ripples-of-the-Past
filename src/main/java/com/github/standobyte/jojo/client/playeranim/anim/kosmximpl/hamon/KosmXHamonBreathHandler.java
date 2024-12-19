@@ -5,9 +5,10 @@ import java.util.Map;
 import java.util.Random;
 
 import com.github.standobyte.jojo.JojoMod;
-import com.github.standobyte.jojo.capability.entity.living.LivingWallClimbing;
+import com.github.standobyte.jojo.client.playeranim.PlayerAnimationHandler;
 import com.github.standobyte.jojo.client.playeranim.anim.interfaces.BasicToggleAnim;
 import com.github.standobyte.jojo.client.playeranim.kosmx.KosmXPlayerAnimatorInstalled.AnimLayerHandler;
+import com.github.standobyte.jojo.client.playeranim.kosmx.anim.modifier.KosmXFixedFadeModifier;
 import com.github.standobyte.jojo.init.power.non_stand.ModPowers;
 import com.github.standobyte.jojo.init.power.non_stand.hamon.ModHamonSkills;
 import com.github.standobyte.jojo.power.impl.nonstand.INonStandPower;
@@ -15,14 +16,12 @@ import com.github.standobyte.jojo.power.impl.nonstand.type.hamon.skill.Character
 
 import dev.kosmx.playerAnim.api.layered.IAnimation;
 import dev.kosmx.playerAnim.api.layered.ModifierLayer;
-import dev.kosmx.playerAnim.api.layered.modifier.AbstractFadeModifier;
 import dev.kosmx.playerAnim.core.util.Ease;
 import net.minecraft.client.entity.player.AbstractClientPlayerEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.Util;
 
-//FIXME sometimes the head does 360 when using Hamon Breath
 public class KosmXHamonBreathHandler extends AnimLayerHandler<ModifierLayer<IAnimation>> implements BasicToggleAnim {
     private static final Random RANDOM = new Random();
 
@@ -38,12 +37,12 @@ public class KosmXHamonBreathHandler extends AnimLayerHandler<ModifierLayer<IAni
     
     @Override
     public boolean setAnimEnabled(PlayerEntity player, boolean enabled) {
-        enabled &= !player.isPassenger() && !LivingWallClimbing.getHandler(player).map(wallClimb -> wallClimb.isWallClimbing()).orElse(false);
+        enabled &= PlayerAnimationHandler.canAnimate(player);
         if (enabled) {
             return setAnimFromName((AbstractClientPlayerEntity) player, getAnimPath(player));
         }
         else {
-            return fadeOutAnim((AbstractClientPlayerEntity) player, AbstractFadeModifier.standardFadeIn(10, Ease.OUTCUBIC), null);
+            return fadeOutAnim((AbstractClientPlayerEntity) player, KosmXFixedFadeModifier.standardFadeIn(10, Ease.OUTCUBIC), null);
         }
     }
     

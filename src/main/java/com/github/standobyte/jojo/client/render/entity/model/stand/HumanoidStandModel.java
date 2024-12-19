@@ -3,6 +3,7 @@ package com.github.standobyte.jojo.client.render.entity.model.stand;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -10,6 +11,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
@@ -28,9 +30,9 @@ import com.github.standobyte.jojo.client.render.entity.pose.anim.PosedActionAnim
 import com.github.standobyte.jojo.client.render.entity.pose.anim.barrage.StandTwoHandedBarrageAnimation;
 import com.github.standobyte.jojo.entity.stand.StandEntity;
 import com.github.standobyte.jojo.entity.stand.StandPose;
+import com.github.standobyte.jojo.entity.stand.TargetHitPart;
 import com.github.standobyte.jojo.power.impl.stand.StandInstance.StandPart;
 import com.github.standobyte.jojo.util.general.MathUtil;
-import com.github.standobyte.jojo.util.mc.reflection.ClientReflection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.mojang.blaze3d.matrix.MatrixStack;
@@ -301,237 +303,6 @@ public class HumanoidStandModel<T extends StandEntity> extends StandEntityModel<
         }
     }
     
-    public static float barrageHitEasing(float loopProgress) {
-        if (loopProgress < 0.5F) {
-            return loopProgress * loopProgress * loopProgress * 8;
-        }
-        if (loopProgress < 1.0F) {
-            float halfSw = 2 * loopProgress - 1;
-            return 1 - halfSw * halfSw * halfSw;
-        }
-        return 0F;
-    }
-    
-    protected RotationAngle[] mirrorAngles(RotationAngle[] angles) {
-        RotationAngle[] mirrored = new RotationAngle[angles.length];
-        for (int i = 0; i < angles.length; i++) {
-            RotationAngle angle = angles[i];
-            mirrored[i] = new RotationAngle(getOppositeHandside(angle.modelRenderer), angle.angleX, -angle.angleY, -angle.angleZ);
-        }
-        return mirrored;
-    }
-    
-    @Override
-    public ModelRenderer getArm(HandSide side) {
-        switch (side) {
-        case LEFT:
-            return leftArmXRot != null ? leftArmXRot : leftArm;
-        case RIGHT:
-            return rightArmXRot != null ? rightArmXRot : rightArm;
-        }
-        return null;
-    }
-
-    protected ModelRenderer getForeArm(HandSide side) {
-        switch (side) {
-        case LEFT:
-            return leftForeArm;
-        case RIGHT:
-            return rightForeArm;
-        }
-        return null;
-    }
-    
-    public ModelRenderer getHead() {
-        return head;
-    }
-    
-    public ModelRenderer getTorso() {
-        return torso;
-    }
-    
-    public ModelRenderer getLeg(HandSide side) {
-        switch (side) {
-        case LEFT:
-            return leftLegXRot != null ? leftLegXRot : leftLeg;
-        case RIGHT:
-            return rightLegXRot != null ? rightLegXRot : rightLeg;
-        }
-        return null;
-    }
-
-    @Override
-    protected ModelPose<T> initPoseReset() {
-        return new ModelPose<T>(
-                new RotationAngle[] {
-                        new RotationAngle(body, 0, 0, 0),
-                        new RotationAngle(upperPart, 0, 0, 0),
-                        new RotationAngle(torso, 0, 0, 0),
-                        new RotationAngle(rightArm, 0, 0, 0),
-                        new RotationAngle(rightForeArm, 0, 0, 0),
-                        new RotationAngle(leftArm, 0, 0, 0),
-                        new RotationAngle(leftForeArm, 0, 0, 0),
-                        new RotationAngle(rightLeg, 0, 0, 0),
-                        new RotationAngle(rightLowerLeg, 0, 0, 0),
-                        new RotationAngle(leftLeg, 0, 0, 0),
-                        new RotationAngle(leftLowerLeg, 0, 0, 0)
-                });
-    }
-
-    @Override
-    public void setupAnim(T entity, float walkAnimPos, float walkAnimSpeed, float ticks, float yRotationOffset, float xRotation) {
-        super.setupAnim(entity, walkAnimPos, walkAnimSpeed, ticks, yRotationOffset, xRotation);
-        
-        if (ClientModSettings.getSettingsReadOnly()._standMotionTilt) {
-            motionTilt(entity, ticks);
-        }
-        
-        rotateJoint(leftArmJoint, leftForeArm);
-        rotateJoint(rightArmJoint, rightForeArm);
-        rotateJoint(leftLegJoint, leftLowerLeg);
-        rotateJoint(rightLegJoint, rightLowerLeg);
-    }
-
-    protected void motionTilt(T entity, float ticks) {
-        if (entity.getStandPose() != StandPose.SUMMON) {
-            Vector3d tiltVec;
-            if (MathHelper.floor(entity.lastMotionTiltTick) != MathHelper.floor(ticks)) {
-                Vector3d motion = entity.position().subtract(entity.xOld, entity.yOld, entity.zOld);
-                
-                tiltVec = motion.yRot(entity.yBodyRot * MathUtil.DEG_TO_RAD).scale(2);
-                tiltVec = new Vector3d(tiltVec.z, 0, tiltVec.x);
-                double motionSqr = tiltVec.lengthSqr();
-                if (motionSqr > Math.pow(Math.PI / 4, 2)) {
-                    tiltVec = tiltVec.normalize().scale(Math.PI / 4);
-                }
-                
-//                Vector3d tiltDiff = tiltVec.subtract(entity.prevTiltVec);
-//                if (tiltDiff.lengthSqr() > 1.0E-4) {
-//                    double maxDiff;
-//                    if (entity.motionDist >= entity.prevMotionDist) {
-//                        maxDiff = 0.1;
-//                    }
-//                    else {
-//                        maxDiff = 0.4;
-//                    }
-//                    if (tiltDiff.lengthSqr() > maxDiff * maxDiff) {
-//                        tiltDiff = tiltDiff.normalize().scale(maxDiff);
-//                    }
-//                    tiltVec = entity.prevTiltVec.add(tiltDiff);
-//                }
-                
-//                entity.prevMotionDist = entity.motionDist;
-//                entity.motionVec = motion;
-//                entity.motionDist = motion.length();
-                entity.prevTiltVec = entity.tiltVec;
-                entity.tiltVec = tiltVec;
-                entity.lastMotionTiltTick = ticks;
-            }
-            else {
-                tiltVec = entity.tiltVec;
-            }
-            
-            float partialTick = MathHelper.frac(ticks);
-            tiltVec = new Vector3d(
-                    MathHelper.lerp(partialTick, entity.prevTiltVec.x, entity.tiltVec.x),
-                    MathHelper.lerp(partialTick, entity.prevTiltVec.y, entity.tiltVec.y),
-                    MathHelper.lerp(partialTick, entity.prevTiltVec.z, entity.tiltVec.z));
-            
-            double tiltSqr = tiltVec.lengthSqr();
-            if (tiltSqr > 1.0E-4) {
-                double tilt = Math.sqrt(tiltSqr);
-                double d1 = MathHelper.clamp(1 - tilt / Math.PI * 4, 0, 1);
-                boolean idlePose = entity.getStandPose() == StandPose.IDLE;
-
-                body.xRot += tiltVec.x;
-                if (idlePose) {
-                    body.zRot += tiltVec.z;
-                    body.yRot *= d1;
-                }
-
-                double d = MathHelper.clamp(1 - 1.5 * tilt / Math.PI, 0, 1);
-                leftLowerLeg.xRot *= d;
-                rightLowerLeg.xRot *= d;
-                leftLowerLeg.yRot *= d;
-                rightLowerLeg.yRot *= d;
-                leftLowerLeg.zRot *= d;
-                rightLowerLeg.zRot *= d;
-                if (idlePose) {
-                    leftForeArm.xRot *= d;
-                    rightForeArm.xRot *= d;
-                    leftForeArm.yRot *= d;
-                    rightForeArm.yRot *= d;
-                    leftForeArm.zRot *= d;
-                    rightForeArm.zRot *= d;
-                }
-                
-                double d2 = MathHelper.clamp(1 - tilt / (2 * Math.PI), 0, 1);
-                leftLeg.xRot *= d2;
-                rightLeg.xRot *= d2;
-                leftLeg.yRot *= d2;
-                rightLeg.yRot *= d2;
-                leftLeg.zRot *= d2;
-                rightLeg.zRot *= d2;
-                if (idlePose) {
-                    leftArm.xRot *= d2;
-                    rightArm.xRot *= d2;
-                    leftArm.yRot *= d2;
-                    rightArm.yRot *= d2;
-                    leftArm.zRot *= d2;
-                    rightArm.zRot *= d2;
-                }
-                else {
-                    addSecondXRot(leftArm, (float) -tiltVec.x);
-                    addSecondXRot(rightArm, (float) -tiltVec.x);
-                }
-            }
-        }
-    }
-
-    protected void rotateJoint(ModelRenderer joint, ModelRenderer limbPart) {
-        if (joint != null) {
-            joint.xRot = limbPart.xRot / 2;
-            joint.yRot = limbPart.yRot / 2;
-            joint.zRot = limbPart.zRot / 2;
-        }
-    }
-
-    @Override
-    public Iterable<ModelRenderer> headParts() {
-        return ImmutableList.of(head);
-    }
-
-    @Override
-    public Iterable<ModelRenderer> bodyParts() {
-        return ImmutableList.of(body);
-    }
-    
-    @Override
-    protected void initOpposites() {
-        super.initOpposites();
-        oppositeHandside.put(leftArm, rightArm);
-        oppositeHandside.put(leftForeArm, rightForeArm);
-        oppositeHandside.put(leftLeg, rightLeg);
-        oppositeHandside.put(leftLowerLeg, rightLowerLeg);
-    }
-    
-    @Override
-    public void translateToHand(HandSide handSide, MatrixStack matrixStack) {
-        matrixStack.translate(handSide == HandSide.LEFT ? -0.0625 : 0.0625, 0, 0);
-        body.translateAndRotate(matrixStack);
-        upperPart.translateAndRotate(matrixStack);
-        
-        ModelRenderer arm = getArm(handSide);
-        arm.translateAndRotate(matrixStack);
-
-        ModelRenderer foreArm = getForeArm(handSide);
-        foreArm.translateAndRotate(matrixStack);
-        matrixStack.translate(
-                (double)(-foreArm.x / 16.0F), 
-                (double)(-foreArm.y / 16.0F), 
-                (double)(-foreArm.z / 16.0F));
-    }
-    
     
     
     public void addCrumbleParticleAt(HumanoidPart humanoidPart, ResourceLocation texture, Vector3d pos) {
@@ -565,10 +336,10 @@ public class HumanoidStandModel<T extends StandEntity> extends StandEntityModel<
         List<ModelRenderer> allModelParts = new ArrayList<>();
         addChildren(mainPart, allModelParts);
         ModelRenderer randomPart = allModelParts.get(random.nextInt(allModelParts.size()));
-        ObjectList<ModelRenderer.ModelBox> cubes = ClientReflection.getCubes(randomPart); // TODO don't use reflection here
+        ObjectList<ModelRenderer.ModelBox> cubes = randomPart.cubes;
         if (!cubes.isEmpty()) {
             ModelRenderer.ModelBox cube = cubes.get(random.nextInt(cubes.size()));
-            ModelRenderer.TexturedQuad[] polygons = ClientReflection.getPolygons(cube); // TODO don't use reflection here
+            ModelRenderer.TexturedQuad[] polygons = cube.polygons;
             ModelRenderer.TexturedQuad polygon = polygons[random.nextInt(polygons.length)];
             if (polygon != null) {
                 ModelRenderer.PositionTextureVertex[] vertices = polygon.vertices;
@@ -586,7 +357,7 @@ public class HumanoidStandModel<T extends StandEntity> extends StandEntityModel<
     
     private void addChildren(ModelRenderer parent, Collection<ModelRenderer> collection) {
         collection.add(parent);
-        for (ModelRenderer child : ClientReflection.getChildren(parent)) { // TODO don't use reflection here
+        for (ModelRenderer child : parent.children) {
             addChildren(child, collection);
         }
     }
@@ -808,4 +579,288 @@ public class HumanoidStandModel<T extends StandEntity> extends StandEntityModel<
                 .addPose(0.5F, barrageRecovery)
                 .build(idlePose)));
     }
+    
+    public static float barrageHitEasing(float loopProgress) {
+        if (loopProgress < 0.5F) {
+            return loopProgress * loopProgress * loopProgress * 8;
+        }
+        if (loopProgress < 1.0F) {
+            float halfSw = 2 * loopProgress - 1;
+            return 1 - halfSw * halfSw * halfSw;
+        }
+        return 0F;
+    }
+    
+    protected RotationAngle[] mirrorAngles(RotationAngle[] angles) {
+        RotationAngle[] mirrored = new RotationAngle[angles.length];
+        for (int i = 0; i < angles.length; i++) {
+            RotationAngle angle = angles[i];
+            mirrored[i] = new RotationAngle(getOppositeHandside(angle.modelRenderer), angle.angleX, -angle.angleY, -angle.angleZ);
+        }
+        return mirrored;
+    }
+    
+    @Override
+    public ModelRenderer getArm(HandSide side) {
+        switch (side) {
+        case LEFT:
+            return leftArmXRot != null ? leftArmXRot : leftArm;
+        case RIGHT:
+            return rightArmXRot != null ? rightArmXRot : rightArm;
+        }
+        return null;
+    }
+    
+    protected ModelRenderer getForeArm(HandSide side) {
+        switch (side) {
+        case LEFT:
+            return leftForeArm;
+        case RIGHT:
+            return rightForeArm;
+        }
+        return null;
+    }
+    
+    public ModelRenderer getHead() {
+        return head;
+    }
+    
+    public ModelRenderer getTorso() {
+        return torso;
+    }
+    
+    public ModelRenderer getLeg(HandSide side) {
+        switch (side) {
+        case LEFT:
+            return leftLegXRot != null ? leftLegXRot : leftLeg;
+        case RIGHT:
+            return rightLegXRot != null ? rightLegXRot : rightLeg;
+        }
+        return null;
+    }
+
+    @Override
+    protected ModelPose<T> initPoseReset() {
+        return new ModelPose<T>(
+                new RotationAngle[] {
+                        new RotationAngle(body, 0, 0, 0),
+                        new RotationAngle(upperPart, 0, 0, 0),
+                        new RotationAngle(torso, 0, 0, 0),
+                        new RotationAngle(rightArm, 0, 0, 0),
+                        new RotationAngle(rightForeArm, 0, 0, 0),
+                        new RotationAngle(leftArm, 0, 0, 0),
+                        new RotationAngle(leftForeArm, 0, 0, 0),
+                        new RotationAngle(rightLeg, 0, 0, 0),
+                        new RotationAngle(rightLowerLeg, 0, 0, 0),
+                        new RotationAngle(leftLeg, 0, 0, 0),
+                        new RotationAngle(leftLowerLeg, 0, 0, 0)
+                });
+    }
+
+    @Override
+    public void setupAnim(T entity, float walkAnimPos, float walkAnimSpeed, float ticks, float yRotationOffset, float xRotation) {
+        super.setupAnim(entity, walkAnimPos, walkAnimSpeed, ticks, yRotationOffset, xRotation);
+        
+        if (ClientModSettings.getSettingsReadOnly()._standMotionTilt) {
+            motionTilt(entity, ticks);
+        }
+        
+        rotateJoint(leftArmJoint, leftForeArm);
+        rotateJoint(rightArmJoint, rightForeArm);
+        rotateJoint(leftLegJoint, leftLowerLeg);
+        rotateJoint(rightLegJoint, rightLowerLeg);
+    }
+
+    protected void motionTilt(T entity, float ticks) {
+        if (entity.getStandPose() != StandPose.SUMMON) {
+            Vector3d tiltVec;
+            if (MathHelper.floor(entity.lastMotionTiltTick) != MathHelper.floor(ticks)) {
+                Vector3d motion = entity.position().subtract(entity.xOld, entity.yOld, entity.zOld);
+                
+                tiltVec = motion.yRot(entity.yBodyRot * MathUtil.DEG_TO_RAD).scale(2);
+                tiltVec = new Vector3d(tiltVec.z, 0, tiltVec.x);
+                double motionSqr = tiltVec.lengthSqr();
+                if (motionSqr > Math.pow(Math.PI / 4, 2)) {
+                    tiltVec = tiltVec.normalize().scale(Math.PI / 4);
+                }
+                
+//                Vector3d tiltDiff = tiltVec.subtract(entity.prevTiltVec);
+//                if (tiltDiff.lengthSqr() > 1.0E-4) {
+//                    double maxDiff;
+//                    if (entity.motionDist >= entity.prevMotionDist) {
+//                        maxDiff = 0.1;
+//                    }
+//                    else {
+//                        maxDiff = 0.4;
+//                    }
+//                    if (tiltDiff.lengthSqr() > maxDiff * maxDiff) {
+//                        tiltDiff = tiltDiff.normalize().scale(maxDiff);
+//                    }
+//                    tiltVec = entity.prevTiltVec.add(tiltDiff);
+//                }
+                
+//                entity.prevMotionDist = entity.motionDist;
+//                entity.motionVec = motion;
+//                entity.motionDist = motion.length();
+                entity.prevTiltVec = entity.tiltVec;
+                entity.tiltVec = tiltVec;
+                entity.lastMotionTiltTick = ticks;
+            }
+            else {
+                tiltVec = entity.tiltVec;
+            }
+            
+            float partialTick = MathHelper.frac(ticks);
+            tiltVec = new Vector3d(
+                    MathHelper.lerp(partialTick, entity.prevTiltVec.x, entity.tiltVec.x),
+                    MathHelper.lerp(partialTick, entity.prevTiltVec.y, entity.tiltVec.y),
+                    MathHelper.lerp(partialTick, entity.prevTiltVec.z, entity.tiltVec.z));
+            
+            double tiltSqr = tiltVec.lengthSqr();
+            if (tiltSqr > 1.0E-4) {
+                double tilt = Math.sqrt(tiltSqr);
+                double d1 = MathHelper.clamp(1 - tilt / Math.PI * 4, 0, 1);
+                boolean idlePose = entity.getStandPose() == StandPose.IDLE;
+
+                body.xRot += tiltVec.x;
+                if (idlePose) {
+                    body.zRot += tiltVec.z;
+                    body.yRot *= d1;
+                }
+
+                double d = MathHelper.clamp(1 - 1.5 * tilt / Math.PI, 0, 1);
+                leftLowerLeg.xRot *= d;
+                rightLowerLeg.xRot *= d;
+                leftLowerLeg.yRot *= d;
+                rightLowerLeg.yRot *= d;
+                leftLowerLeg.zRot *= d;
+                rightLowerLeg.zRot *= d;
+                if (idlePose) {
+                    leftForeArm.xRot *= d;
+                    rightForeArm.xRot *= d;
+                    leftForeArm.yRot *= d;
+                    rightForeArm.yRot *= d;
+                    leftForeArm.zRot *= d;
+                    rightForeArm.zRot *= d;
+                }
+                
+                double d2 = MathHelper.clamp(1 - tilt / (2 * Math.PI), 0, 1);
+                leftLeg.xRot *= d2;
+                rightLeg.xRot *= d2;
+                leftLeg.yRot *= d2;
+                rightLeg.yRot *= d2;
+                leftLeg.zRot *= d2;
+                rightLeg.zRot *= d2;
+                if (idlePose) {
+                    leftArm.xRot *= d2;
+                    rightArm.xRot *= d2;
+                    leftArm.yRot *= d2;
+                    rightArm.yRot *= d2;
+                    leftArm.zRot *= d2;
+                    rightArm.zRot *= d2;
+                }
+                else {
+                    addSecondXRot(leftArm, (float) -tiltVec.x);
+                    addSecondXRot(rightArm, (float) -tiltVec.x);
+                }
+            }
+        }
+    }
+
+    protected void rotateJoint(ModelRenderer joint, ModelRenderer limbPart) {
+        if (joint != null) {
+            joint.xRot = limbPart.xRot / 2;
+            joint.yRot = limbPart.yRot / 2;
+            joint.zRot = limbPart.zRot / 2;
+        }
+    }
+
+    @Override
+    public Iterable<ModelRenderer> headParts() {
+        return ImmutableList.of(head);
+    }
+
+    @Override
+    public Iterable<ModelRenderer> bodyParts() {
+        return ImmutableList.of(body);
+    }
+    
+    @Override
+    protected void initOpposites() {
+        super.initOpposites();
+        oppositeHandside.put(leftArm, rightArm);
+        oppositeHandside.put(leftForeArm, rightForeArm);
+        oppositeHandside.put(leftLeg, rightLeg);
+        oppositeHandside.put(leftLowerLeg, rightLowerLeg);
+    }
+    
+    @Override
+    public void translateToHand(HandSide handSide, MatrixStack matrixStack) {
+        matrixStack.translate(handSide == HandSide.LEFT ? -0.0625 : 0.0625, 0, 0);
+        body.translateAndRotate(matrixStack);
+        upperPart.translateAndRotate(matrixStack);
+        
+        ModelRenderer arm = getArm(handSide);
+        arm.translateAndRotate(matrixStack);
+
+        ModelRenderer foreArm = getForeArm(handSide);
+        foreArm.translateAndRotate(matrixStack);
+        matrixStack.translate(
+                (double)(-foreArm.x / 16.0F), 
+                (double)(-foreArm.y / 16.0F), 
+                (double)(-foreArm.z / 16.0F));
+    }
+    
+    
+    protected Map<TargetHitPart, List<ModelRenderer.ModelBox>> cubesCache;
+    @Override
+    public ModelRenderer.ModelBox getRandomCubeAt(TargetHitPart entityPart) {
+        if (cubesCache == null) {
+            cacheCubes();
+        }
+        List<ModelRenderer.ModelBox> cubes = cubesCache.get(entityPart);
+        if (cubes != null && !cubes.isEmpty()) {
+            return cubes.get(RANDOM.nextInt(cubes.size()));
+        }
+        return null;
+    }
+    
+    protected void cacheCubes() {
+        cubesCache = new EnumMap<>(TargetHitPart.class);
+        List<ModelRenderer> headParts = new ArrayList<>();
+        List<ModelRenderer> legsParts = new ArrayList<>();
+        List<ModelRenderer> middleParts = new ArrayList<>();
+        addChildrenRecursive(head, headParts);
+        addChildrenRecursive(leftLeg, legsParts);
+        addChildrenRecursive(rightLeg, legsParts);
+        addChildrenRecursive(torso, middleParts);
+        addChildrenRecursive(leftArm, middleParts);
+        addChildrenRecursive(rightArm, middleParts);
+        cubesCache.put(TargetHitPart.HEAD, allCubes(headParts));
+        cubesCache.put(TargetHitPart.TORSO_ARMS, allCubes(middleParts));
+        cubesCache.put(TargetHitPart.LEGS, allCubes(legsParts));
+    }
+    
+    public static void addChildrenRecursive(ModelRenderer modelPart, Collection<ModelRenderer> collection) {
+        collection.add(modelPart);
+        for (ModelRenderer child : modelPart.children) {
+            addChildrenRecursive(child, collection);
+        }
+    }
+    
+    public static List<ModelRenderer.ModelBox> allCubes(List<ModelRenderer> modelParts) {
+        List<ModelRenderer.ModelBox> cubes = modelParts.stream()
+                .flatMap(modelPart -> modelPart.cubes.stream())
+                .collect(Collectors.toList());
+        return cubes;
+    }
+    
+    // TODO select quads with weight depending on their size
+    public static ModelRenderer.TexturedQuad getRandomQuad(ModelRenderer.ModelBox cube) {
+        if (cube == null) return null;
+        ModelRenderer.TexturedQuad[] polygons = cube.polygons;
+        ModelRenderer.TexturedQuad polygon = polygons[RANDOM.nextInt(polygons.length)];
+        return polygon;
+    }
+    
 }

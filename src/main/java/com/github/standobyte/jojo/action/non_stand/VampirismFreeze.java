@@ -171,15 +171,10 @@ public class VampirismFreeze extends VampirismAction {
     public double getMaxRangeSqEntityTarget() {
         return 4;
     }
-
-    @Override
-    public boolean isHeldSentToTracking() {
-        return true;
-    }
     
     @Override
-    public void onHoldTickClientEffect(LivingEntity user, INonStandPower power, int ticksHeld, boolean requirementsFulfilled, boolean stateRefreshed) {
-        if (requirementsFulfilled) {
+    public void onHoldTickClientEffect(LivingEntity user, INonStandPower power, int ticksHeld, boolean reqFulfilled, boolean reqStateChanged) {
+        if (reqFulfilled) {
             Vector3d particlePos = user.position().add(
                     (Math.random() - 0.5) * (user.getBbWidth() + 1.0), 
                     Math.random() * (user.getBbHeight() + 1.0), 

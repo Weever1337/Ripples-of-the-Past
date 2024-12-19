@@ -235,6 +235,7 @@
   "jojo.key.toggle_stand": "Evoca Stand",
   "jojo.key.stand_remote_control": "Controlla Stand in Lontananza",
   "jojo.key.hamon_skills_window": "Abilità Hamon",
+  "_jojo.key.jojo_menu": "JoJo Menu",
   
   "key.categories.jojo.hud": "JoJo HUD",
   "jojo.key.stand_mode": "Modalità: Stand",
@@ -355,6 +356,7 @@
   "stand.unknown": "Stand Sconosciuto: %s",
   "commands.stand.give.success.single": "Dato %s a %s",
   "commands.stand.give.success.multiple": "Dato %s a %s Giocatori",
+  "commands.stand.give.success.single.random": "Dato stand a caso a %s",
   "commands.stand.give.success.multiple.random": "Dato stand a caso a %s Giocatori",
   "commands.stand.give.failed.single.has": "%s Ha già uno stand",
   "commands.stand.give.failed.multiple.have": "Tutti e %s hanno già uno stand",
@@ -418,7 +420,7 @@
   "hamon.mining_exercise": "Scavando",
   "hamon.running_exercise": "Correndo",
   "hamon.swimming_exercise": "Nuotando",
-  "hamon.meditation": "Meditazione",
+  "hamon.meditation_exercise": "Meditazione",
   
   "hamon.next_point.strength": "Prossimo punto abilità al livello %s Forza Hamon",
   "hamon.next_point.control": "Prossimo punto abilità al livello %s Controllo Hamon",
@@ -498,7 +500,7 @@
   
   "hamonSkill.natural_talent.name": "Talento Naturale",
   "hamonSkill.scarlet_overdrive.name": "Scarlet Overdrive",
-  "hamonSkill.scarlet_overdrive.desc": "Un tipo speciale di attacco Overdrive, che infligge danni aggiuntivi e dà fuoco al bersaglio.",
+  "hamonSkill.scarlet_overdrive.desc": "Un tipo speciale di Sunlight Yellow Overdrive, che dà fuoco al bersaglio.",
   "hamonSkill.metal_silver_overdrive.name": "Metal Silver Overdrive",
   "hamonSkill.metal_silver_overdrive.desc": "Puoi eseguire un attacco Overdrive con un'arma o uno strumento. \nWithout a weapon, the regular Overdrive deals more damage to targets with armor or an equipped melee weapon.",
   "hamonSkill.hamon_cutter.name": "Hamon Cutter",
@@ -537,7 +539,7 @@
   "action.jojo.hamon_zoom_punch": "Pungo Zoom",
   "action.jojo.hamon_speed_boost": "Incremento della velocità",
   "action.jojo.hamon_healing": "Curamento",
-  "action.jojo.hamon_healing_touch": "Tocco Curante",
+  "_action.jojo.hamon_healing_touch": "Heal %s",
   "action.jojo.hamon_wall_climbing": "Scavalcamento delle Pareti",
   "action.jojo.hamon_detector": "Rilevatore di vita Hamon",
   "action.jojo.hamon_life_magnetism": "Magnetismo Vitale",

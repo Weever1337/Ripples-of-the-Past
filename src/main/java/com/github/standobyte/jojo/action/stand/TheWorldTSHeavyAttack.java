@@ -7,6 +7,7 @@ import javax.annotation.Nullable;
 import com.github.standobyte.jojo.action.ActionConditionResult;
 import com.github.standobyte.jojo.action.ActionTarget;
 import com.github.standobyte.jojo.action.ActionTarget.TargetType;
+import com.github.standobyte.jojo.action.stand.StandEntityHeavyAttack.HeavyPunchBlockInstance;
 import com.github.standobyte.jojo.action.stand.StandEntityHeavyAttack.HeavyPunchInstance;
 import com.github.standobyte.jojo.action.stand.punch.StandBlockPunch;
 import com.github.standobyte.jojo.action.stand.punch.StandEntityPunch;
@@ -31,6 +32,7 @@ import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.attributes.Attributes;
+import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvent;
@@ -80,7 +82,7 @@ public class TheWorldTSHeavyAttack extends StandEntityAction implements IHasStan
             StandEntity stand = (StandEntity) power.getStandManifestation();
             return ActionTarget.fromRayTraceResult(
                     stand.precisionRayTrace(stand.isManuallyControlled() ? stand : user, stand.getMaxRange(),
-                            stand.getPrecision() / 16F));
+                            stand.getPrecision() / 16F, false));
         }
         return super.targetBeforePerform(world, user, power, target);
     }
@@ -190,8 +192,8 @@ public class TheWorldTSHeavyAttack extends StandEntityAction implements IHasStan
     }
     
     @Override
-    public StandBlockPunch punchBlock(StandEntity stand, BlockPos pos, BlockState state) {
-        return IHasStandPunch.super.punchBlock(stand, pos, state)
+    public StandBlockPunch punchBlock(StandEntity stand, BlockPos pos, BlockState state, Direction face) {
+        return new HeavyPunchBlockInstance(stand, pos, state, face)
                 .impactSound(ModSounds.THE_WORLD_PUNCH_HEAVY);
     }
     
@@ -216,7 +218,7 @@ public class TheWorldTSHeavyAttack extends StandEntityAction implements IHasStan
     }
     
     @Override
-    public boolean noFinisherDecay() {
+    public boolean noFinisherBarDecay() {
         return true;
     }
     

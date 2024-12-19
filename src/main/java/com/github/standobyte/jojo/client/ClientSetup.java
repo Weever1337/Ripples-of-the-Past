@@ -12,6 +12,7 @@ import com.github.standobyte.jojo.client.controls.HudControlSettings;
 import com.github.standobyte.jojo.client.particle.AirStreamParticle;
 import com.github.standobyte.jojo.client.particle.BloodParticle;
 import com.github.standobyte.jojo.client.particle.CDRestorationParticle;
+import com.github.standobyte.jojo.client.particle.DivineSandstormParticle;
 import com.github.standobyte.jojo.client.particle.HamonAuraParticle;
 import com.github.standobyte.jojo.client.particle.HamonSparkParticle;
 import com.github.standobyte.jojo.client.particle.MeteoriteVirusParticle;
@@ -29,6 +30,7 @@ import com.github.standobyte.jojo.client.render.armor.model.GlovesModel;
 import com.github.standobyte.jojo.client.render.armor.model.SatiporojaScarfArmorModel;
 import com.github.standobyte.jojo.client.render.armor.model.StoneMaskModel;
 import com.github.standobyte.jojo.client.render.block.BlockSprites;
+import com.github.standobyte.jojo.client.render.entity.layerrenderer.DivineSandstormEffectLayer;
 import com.github.standobyte.jojo.client.render.entity.layerrenderer.EnergyRippleLayer;
 import com.github.standobyte.jojo.client.render.entity.layerrenderer.FrozenLayer;
 import com.github.standobyte.jojo.client.render.entity.layerrenderer.GlovesLayer;
@@ -36,7 +38,11 @@ import com.github.standobyte.jojo.client.render.entity.layerrenderer.HamonBurnLa
 import com.github.standobyte.jojo.client.render.entity.layerrenderer.InkLipsLayer;
 import com.github.standobyte.jojo.client.render.entity.layerrenderer.KnifeLayer;
 import com.github.standobyte.jojo.client.render.entity.layerrenderer.LadybugBroochLayer;
+import com.github.standobyte.jojo.client.render.entity.layerrenderer.PillarmanBladesLayer;
+import com.github.standobyte.jojo.client.render.entity.layerrenderer.PillarmanLayer;
 import com.github.standobyte.jojo.client.render.entity.layerrenderer.TornadoOverdriveEffectLayer;
+import com.github.standobyte.jojo.client.render.entity.layerrenderer.WindCloakLayer;
+import com.github.standobyte.jojo.client.render.entity.layerrenderer.ZombieLayer;
 import com.github.standobyte.jojo.client.render.entity.layerrenderer.barrage.BarrageFistAfterimagesLayer;
 import com.github.standobyte.jojo.client.render.entity.renderer.AfterimageRenderer;
 import com.github.standobyte.jojo.client.render.entity.renderer.CrimsonBubbleRenderer;
@@ -44,6 +50,7 @@ import com.github.standobyte.jojo.client.render.entity.renderer.HamonBlockCharge
 import com.github.standobyte.jojo.client.render.entity.renderer.HamonProjectileShieldRenderer;
 import com.github.standobyte.jojo.client.render.entity.renderer.LeavesGliderRenderer;
 import com.github.standobyte.jojo.client.render.entity.renderer.MRDetectorRenderer;
+import com.github.standobyte.jojo.client.render.entity.renderer.PillarmanDivineSandstormRenderer;
 import com.github.standobyte.jojo.client.render.entity.renderer.PillarmanTempleEngravingRenderer;
 import com.github.standobyte.jojo.client.render.entity.renderer.RoadRollerRenderer;
 import com.github.standobyte.jojo.client.render.entity.renderer.SendoHamonOverdriveRenderer;
@@ -57,10 +64,14 @@ import com.github.standobyte.jojo.client.render.entity.renderer.damaging.extendi
 import com.github.standobyte.jojo.client.render.entity.renderer.damaging.extending.HGGrapplingStringRenderer;
 import com.github.standobyte.jojo.client.render.entity.renderer.damaging.extending.HGStringRenderer;
 import com.github.standobyte.jojo.client.render.entity.renderer.damaging.extending.MRRedBindRenderer;
+import com.github.standobyte.jojo.client.render.entity.renderer.damaging.extending.PillarmanHornRenderer;
+import com.github.standobyte.jojo.client.render.entity.renderer.damaging.extending.PillarmanRibRenderer;
+import com.github.standobyte.jojo.client.render.entity.renderer.damaging.extending.PillarmanVeinRenderer;
 import com.github.standobyte.jojo.client.render.entity.renderer.damaging.extending.SPStarFingerRenderer;
 import com.github.standobyte.jojo.client.render.entity.renderer.damaging.extending.SatiporojaScarfBindingRenderer;
 import com.github.standobyte.jojo.client.render.entity.renderer.damaging.extending.SatiporojaScarfRenderer;
 import com.github.standobyte.jojo.client.render.entity.renderer.damaging.extending.SnakeMufflerRenderer;
+import com.github.standobyte.jojo.client.render.entity.renderer.damaging.projectile.BlockShardRenderer;
 import com.github.standobyte.jojo.client.render.entity.renderer.damaging.projectile.CDBlockBulletRenderer;
 import com.github.standobyte.jojo.client.render.entity.renderer.damaging.projectile.CDBloodCutterRenderer;
 import com.github.standobyte.jojo.client.render.entity.renderer.damaging.projectile.HGEmeraldRenderer;
@@ -154,6 +165,7 @@ import net.minecraftforge.client.event.ColorHandlerEvent;
 import net.minecraftforge.client.event.ModelBakeEvent;
 import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.client.event.ParticleFactoryRegisterEvent;
+import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.client.registry.RenderingRegistry;
@@ -195,6 +207,7 @@ public class ClientSetup {
         RenderingRegistry.registerEntityRenderingHandler(ModEntityTypes.MOLOTOV.get(), manager -> new MolotovRenderer<>(manager, Minecraft.getInstance().getItemRenderer(), 1.0F, true));
         RenderingRegistry.registerEntityRenderingHandler(ModEntityTypes.STAND_ARROW.get(), StandArrowRenderer::new);
         RenderingRegistry.registerEntityRenderingHandler(ModEntityTypes.SOUL.get(), SoulRenderer::new);
+        RenderingRegistry.registerEntityRenderingHandler(ModEntityTypes.BLOCK_SHARD.get(), BlockShardRenderer::new);
         RenderingRegistry.registerEntityRenderingHandler(ModEntityTypes.PILLARMAN_TEMPLE_ENGRAVING.get(), PillarmanTempleEngravingRenderer::new);
         RenderingRegistry.registerEntityRenderingHandler(ModEntityTypes.SP_STAR_FINGER.get(), SPStarFingerRenderer::new);
         RenderingRegistry.registerEntityRenderingHandler(ModEntityTypes.HG_STRING.get(), HGStringRenderer::new);
@@ -218,6 +231,10 @@ public class ClientSetup {
         RenderingRegistry.registerEntityRenderingHandler(ModEntityTypes.HAMON_MASTER.get(), HamonMasterRenderer::new);
         RenderingRegistry.registerEntityRenderingHandler(ModEntityTypes.ROCK_PAPER_SCISSORS_KID.get(), RockPaperScissorsKidRenderer::new);
         RenderingRegistry.registerEntityRenderingHandler(ModEntityTypes.STAND_USER_DUMMY.get(), StandUserDummyRenderer::new);
+        RenderingRegistry.registerEntityRenderingHandler(ModEntityTypes.PILLARMAN_HORN.get(), PillarmanHornRenderer::new);
+        RenderingRegistry.registerEntityRenderingHandler(ModEntityTypes.PILLARMAN_DIVINE_SANDSTORM.get(), PillarmanDivineSandstormRenderer::new);
+        RenderingRegistry.registerEntityRenderingHandler(ModEntityTypes.PILLARMAN_VEINS.get(), PillarmanVeinRenderer::new);
+        RenderingRegistry.registerEntityRenderingHandler(ModEntityTypes.PILLARMAN_RIBS.get(), PillarmanRibRenderer::new);
         
         RenderingRegistry.registerEntityRenderingHandler(ModStands.STAR_PLATINUM.getEntityType(), ClientUtil.logException(StarPlatinumRenderer::new));
         RenderingRegistry.registerEntityRenderingHandler(ModStands.THE_WORLD.getEntityType(), ClientUtil.logException(TheWorldRenderer::new));
@@ -229,6 +246,7 @@ public class ClientSetup {
         PlayerAnimationHandler.initAnimator();
         
         ArmorModelRegistry.registerArmorModel(StoneMaskModel::new, ModItems.STONE_MASK.get());
+        ArmorModelRegistry.registerArmorModel(StoneMaskModel::new, ModItems.AJA_STONE_MASK.get());
         ArmorModelRegistry.registerArmorModel(BladeHatArmorModel::new, ModItems.BLADE_HAT.get());
         ArmorModelRegistry.registerArmorModel(BreathControlMaskModel::new, ModItems.BREATH_CONTROL_MASK.get());
         ArmorModelRegistry.registerArmorModel(SatiporojaScarfArmorModel::new, ModItems.SATIPOROJA_SCARF.get());
@@ -273,6 +291,7 @@ public class ClientSetup {
             });
 
             RenderTypeLookup.setRenderLayer(ModBlocks.STONE_MASK.get(), RenderType.cutoutMipped());
+            RenderTypeLookup.setRenderLayer(ModBlocks.AJA_STONE_MASK.get(), RenderType.cutoutMipped());
             RenderTypeLookup.setRenderLayer(ModBlocks.SLUMBERING_PILLARMAN.get(), RenderType.cutoutMipped());
             RenderTypeLookup.setRenderLayer(ModBlocks.MAGICIANS_RED_FIRE.get(), RenderType.cutout());
             ModBlocks.WOODEN_COFFIN_OAK.values().forEach(coffinBlock -> RenderTypeLookup.setRenderLayer(coffinBlock.get(), RenderType.cutout()));
@@ -300,13 +319,7 @@ public class ClientSetup {
             MarkerRenderer.Handler.addRenderer(new CrazyDiamondAnchorMarker(mc));
             MarkerRenderer.Handler.addRenderer(new CrazyDiamondBloodHomingMarker(mc));
             
-//            StandStatsRenderer.overrideCosmeticStats(
-//                    ModStands.GOLD_EXPERIENCE_REQUIEM.getStandType().getRegistryName(), 
-//                    new StandStatsRenderer.OverrideCosmeticStat() {
-//                        @Override public double newValue(StandStat stat, IStandPower standData, double curConvertedValue) { 
-//                            return 0;
-//                        }
-//                    });
+            statsStatsOverrideExamples();
         });
     }
 
@@ -327,13 +340,15 @@ public class ClientSetup {
     private static void addLayers(PlayerRenderer renderer, boolean slim) {
         renderer.addLayer(new KnifeLayer<>(renderer));
         renderer.addLayer(new TornadoOverdriveEffectLayer<>(renderer));
+        renderer.addLayer(new DivineSandstormEffectLayer<>(renderer));
         renderer.addLayer(new BarrageFistAfterimagesLayer(renderer));
         renderer.addLayer(new EnergyRippleLayer<>(renderer));
-        renderer.addLayer(new GlovesLayer<>(renderer, new GlovesModel<>(0.3F, slim), slim));
         renderer.addLayer(new LadybugBroochLayer<>(renderer));
         renderer.addLayer(new InkLipsLayer<>(renderer));
         addLivingLayers(renderer);
-        addBipedLayers(renderer);
+        addBipedLayers(renderer, slim);
+        renderer.addLayer(new GlovesLayer<>(renderer, new GlovesModel<>(0.3F, slim), slim));
+        renderer.addLayer(new WindCloakLayer<>(renderer));
     }
     
     private static <T extends LivingEntity, M extends BipedModel<T>> void addLayersToEntities(EntityRenderer<?> renderer) {
@@ -341,7 +356,7 @@ public class ClientSetup {
             LivingRenderer<T, M> livingRenderer = (LivingRenderer<T, M>) renderer;
             addLivingLayers(livingRenderer);
             if (((LivingRenderer<?, ?>) renderer).getModel() instanceof BipedModel<?>) {
-                addBipedLayers(livingRenderer);
+                addBipedLayers(livingRenderer, false);
             }
             else {
                 livingRenderer.addLayer(new FrozenLayer<T, M>(livingRenderer, FrozenLayer.NON_BIPED_PATH));
@@ -353,8 +368,11 @@ public class ClientSetup {
         renderer.addLayer(new HamonBurnLayer<>(renderer));
     }
     
-    private static <T extends LivingEntity, M extends BipedModel<T>> void addBipedLayers(LivingRenderer<T, M> renderer) {
+    private static <T extends LivingEntity, M extends BipedModel<T>> void addBipedLayers(LivingRenderer<T, M> renderer, boolean slim) {
+        renderer.addLayer(new ZombieLayer<>(renderer));
+        renderer.addLayer(new PillarmanLayer<>(renderer));
         renderer.addLayer(new FrozenLayer<>(renderer, FrozenLayer.BIPED_PATH));
+        renderer.addLayer(new PillarmanBladesLayer<>(renderer, slim));
     }
 
     @SubscribeEvent
@@ -380,17 +398,36 @@ public class ClientSetup {
         }, ModItems.CASSETTE_RECORDED.get());
     }
     
+    
+    private static boolean spritesAdded = false;
+    @SubscribeEvent
+    public static void addSprites(ModelRegistryEvent event) {
+        if (!spritesAdded) {
+            addUnreferencedBlockModels(BlockSprites.MR_FIRE_BLOCK_0, BlockSprites.MR_FIRE_BLOCK_1);
+            addUnreferencedBlockModels(MagiciansRedRenderer.MR_FIRE_0, MagiciansRedRenderer.MR_FIRE_1);
+            spritesAdded = true;
+        }
+        
+        ModelLoader.addSpecialModel(new ModelResourceLocation(new ResourceLocation(JojoMod.MOD_ID, "tommy_gun_flipped"), "inventory"));
+        StandDiscOverrideList.onModelRegistry();
+    }
+    
+    public static void addUnreferencedBlockModels(RenderMaterial... renderMaterials) {
+        Set<RenderMaterial> textures = ClientReflection.getModelBakeryUnreferencedTextures();
+        Collections.addAll(textures, renderMaterials);
+    }
+    
+    
     @SubscribeEvent
     public static void onModelBake(ModelBakeEvent event) {
-        registerCustomBakedModel(ModItems.ROAD_ROLLER.get().getRegistryName(), event.getModelRegistry(), 
-                model -> new RoadRollerBakedModel(model));
-        registerCustomBakedModel(ModItems.STAND_DISC.get().getRegistryName(), event.getModelRegistry(), 
-                model -> new StandDiscISTERModel(model));
-        registerCustomBakedModel(ModItems.POLAROID.get().getRegistryName(), event.getModelRegistry(), 
-                model -> new ItemISTERModelWrapper(model).setCaptureEntity());
-        registerCustomBakedModel(ModItems.CLACKERS.get().getRegistryName(), event.getModelRegistry(), 
-                model -> new ItemISTERModelWrapper(model).setCaptureEntity());
-        CustomIconItem.onModelBake(event.getModelRegistry());
+        Map<ResourceLocation, IBakedModel> registry = event.getModelRegistry();
+        registerCustomBakedModel(ModItems.ROAD_ROLLER.get().getRegistryName(), registry,                model -> new RoadRollerBakedModel(model));
+        registerCustomBakedModel(ModItems.STAND_DISC.get().getRegistryName(), registry,                 model -> new StandDiscISTERModel(model));
+        registerCustomBakedModel(ModItems.POLAROID.get().getRegistryName(), registry,                   model -> new ItemISTERModelWrapper(model).setCaptureEntity());
+        registerCustomBakedModel(new ResourceLocation(JojoMod.MOD_ID, "tommy_gun_flipped"), registry,   model -> new ItemISTERModelWrapper(model));
+        registerCustomBakedModel(ModItems.TOMMY_GUN.get().getRegistryName(), registry,                  model -> new ItemISTERModelWrapper(model).refreshOverrides(registry));
+        registerCustomBakedModel(ModItems.CLACKERS.get().getRegistryName(), registry,                   model -> new ItemISTERModelWrapper(model).setCaptureEntity());
+        CustomIconItem.onModelBake(registry);
     }
     
     public static void registerCustomBakedModel(ResourceLocation resLoc, 
@@ -408,23 +445,7 @@ public class ClientSetup {
         }
     }
     
-    private static boolean spritesAdded = false;
-    @SubscribeEvent
-    public static void addSprites(ModelRegistryEvent event) {
-        if (!spritesAdded) {
-            addUnreferencedBlockModels(BlockSprites.MR_FIRE_BLOCK_0, BlockSprites.MR_FIRE_BLOCK_1);
-            addUnreferencedBlockModels(MagiciansRedRenderer.MR_FIRE_0, MagiciansRedRenderer.MR_FIRE_1);
-            spritesAdded = true;
-        }
-        
-        StandDiscOverrideList.onModelRegistry();
-    }
     
-    public static void addUnreferencedBlockModels(RenderMaterial... renderMaterials) {
-        Set<RenderMaterial> textures = ClientReflection.getModelBakeryUnreferencedTextures();
-        Collections.addAll(textures, renderMaterials);
-    }
-
     @SubscribeEvent
     public static void onMcConstructor(ParticleFactoryRegisterEvent event) {
         Minecraft mc = Minecraft.getInstance();
@@ -439,6 +460,8 @@ public class ClientSetup {
         mc.particleEngine.register(ModParticles.HAMON_AURA_YELLOW.get(),    HamonAuraParticle.Factory::new);
         mc.particleEngine.register(ModParticles.HAMON_AURA_RED.get(),       HamonAuraParticle.Factory::new);
         mc.particleEngine.register(ModParticles.HAMON_AURA_SILVER.get(),    HamonAuraParticle.Factory::new);
+        mc.particleEngine.register(ModParticles.HAMON_AURA_GREEN.get(),     HamonAuraParticle.Factory::new);
+        mc.particleEngine.register(ModParticles.HAMON_AURA_RAINBOW.get(),   HamonAuraParticle.Factory::new);
         mc.particleEngine.register(ModParticles.BOILING_BLOOD_POP.get(),    LavaParticle.Factory::new);
         mc.particleEngine.register(ModParticles.METEORITE_VIRUS.get(),      MeteoriteVirusParticle.Factory::new);
         mc.particleEngine.register(ModParticles.MENACING.get(),             OnomatopoeiaParticle.GoFactory::new);
@@ -450,6 +473,7 @@ public class ClientSetup {
         mc.particleEngine.register(ModParticles.RPS_ROCK.get(),             RPSPickPartile.Factory::new);
         mc.particleEngine.register(ModParticles.RPS_PAPER.get(),            RPSPickPartile.Factory::new);
         mc.particleEngine.register(ModParticles.RPS_SCISSORS.get(),         RPSPickPartile.Factory::new);
+        mc.particleEngine.register(ModParticles.SANDSTORM.get(),         DivineSandstormParticle.Factory::new);
 
         CustomParticlesHelper.saveSprites(mc);
         // yep...
@@ -468,5 +492,72 @@ public class ClientSetup {
            particle.setColor(1.0F, 1.0F, 0.25F);
            return particle;
         }
+    }
+    
+    
+    private static void statsStatsOverrideExamples() {
+//        StandStatsRenderer.overrideCosmeticStats(
+//                ModStands.GOLD_EXPERIENCE_REQUIEM.getStandType().getRegistryName(), 
+//                new StandStatsRenderer.ICosmeticStandStats() {
+//                    @Override public double statConvertedValue(StandStat stat, IStandPower standData, StandStats stats, float statLeveling) {
+//                        return 0;
+//                    }
+//                });
+//        
+//        StandStatsRenderer.overrideCosmeticStats(
+//                ModStands.MADE_IN_HEAVEN.getStandType().getRegistryName(), 
+//                new StandStatsRenderer.ICosmeticStandStats() {
+//                    @Override public String statRankLetter(StandStat stat, IStandPower standData, double statConvertedValue) {
+//                        if (stat == StandStat.SPEED) {
+//                            return "∞";
+//                        }
+//                        return StandStatsRenderer.ICosmeticStandStats.super.statRankLetter(stat, standData, statConvertedValue);
+//                    }
+//                });
+//        
+//        StandStatsRenderer.overrideCosmeticStats(
+//                ModStands.NOTORIOUS_BIG.getStandType().getRegistryName(), 
+//                new StandStatsRenderer.ICosmeticStandStats() {
+//                    @Override public String statRankLetter(StandStat stat, IStandPower standData, double statConvertedValue) {
+//                        switch (stat) {
+//                        case SPEED:
+//                        case RANGE:
+//                        case DURABILITY:
+//                            return "∞";
+//                        default:
+//                            return StandStatsRenderer.ICosmeticStandStats.super.statRankLetter(stat, standData, statConvertedValue);
+//                        }
+//                    }
+//                });
+//        
+//        StandStatsRenderer.overrideCosmeticStats(
+//                ModStands.BABY_FACE.getStandType().getRegistryName(), 
+//                new StandStatsRenderer.ICosmeticStandStats() {
+//                    @Override public double statConvertedValue(StandStat stat, IStandPower standData, StandStats stats, float statLeveling) {
+//                        if (dependsOnEducation(stat)) {
+//                            return 0;
+//                        }
+//                        return StandStatsRenderer.ICosmeticStandStats.super.statConvertedValue(stat, standData, stats, statLeveling);
+//                    }
+//                    
+//                    @Override public String statRankLetter(StandStat stat, IStandPower standData, double statConvertedValue) {
+//                        if (dependsOnEducation(stat)) {
+//                            return StandStatsRenderer.REFERENCE_MARK;
+//                        }
+//                        return StandStatsRenderer.ICosmeticStandStats.super.statRankLetter(stat, standData, statConvertedValue);
+//                    }
+//                    
+//                    @Override public List<ITextComponent> statTooltip(StandStat stat, IStandPower standData) {
+//                        List<ITextComponent> tooltip = StandStatsRenderer.ICosmeticStandStats.super.statTooltip(stat, standData);
+//                        if (dependsOnEducation(stat)) {
+//                            tooltip.add(new TranslationTextComponent("babyface_stat_note")); // "babyface_stat_note": "(Depends on education)"
+//                        }
+//                        return tooltip;
+//                    }
+//                    
+//                    private boolean dependsOnEducation(StandStat stat) {
+//                        return true;
+//                    }
+//                });
     }
 }

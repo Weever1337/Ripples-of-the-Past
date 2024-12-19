@@ -27,6 +27,7 @@ import com.github.standobyte.jojo.power.bowcharge.BowChargeEffectInstance;
 import com.github.standobyte.jojo.power.bowcharge.IBowChargeEffect;
 import com.github.standobyte.jojo.power.impl.stand.IStandPower;
 import com.github.standobyte.jojo.util.general.ObjectWrapper;
+import com.github.standobyte.jojo.util.mod.JojoModUtil;
 
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -37,7 +38,6 @@ import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.Hand;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
@@ -211,8 +211,7 @@ public abstract class PowerBaseImpl<P extends IPower<P, T>, T extends IPowerType
                 if (!user.level.isClientSide()) {
                     action.playVoiceLine(user, getThis(), target, wasActive, sneak);
                 }
-                setHeldAction(action);
-                setMouseTarget(target);
+                setHeldAction(action, target);
                 return true;
             }
             else {
@@ -236,15 +235,7 @@ public abstract class PowerBaseImpl<P extends IPower<P, T>, T extends IPowerType
     }
     
     private void sendMessage(Action<P> action, ActionConditionResult result) {
-        if (!user.level.isClientSide() && action.sendsConditionMessage()) {
-            ITextComponent message = result.getWarning();
-            
-            if (message != null) {
-                serverPlayerUser.ifPresent(player -> {
-                    player.displayClientMessage(message, true);
-                });
-            }
-        }
+        ActionConditionResult.sendActionFailedMessage(action, result, user);
     }
 
     @Override
@@ -315,7 +306,7 @@ public abstract class PowerBaseImpl<P extends IPower<P, T>, T extends IPowerType
     
     @Override
     public boolean canUsePower() {
-        return !user.isSpectator();
+        return !JojoModUtil.tmpSpectatorCantUsePowers(user);
     }
 
     @Override
@@ -332,19 +323,18 @@ public abstract class PowerBaseImpl<P extends IPower<P, T>, T extends IPowerType
                 ModCriteriaTriggers.ACTION_PERFORM.get().trigger(player, action);
             });
             if (!world.isClientSide()) {
-                int cooldown = action.getCooldown(getThis(), -1);
-                if (cooldown > 0) {
-                    setCooldownTimer(action, cooldown);
-                }
+                action.setCooldownOnUse(getThis());
             }
         }
     }
 
     @Override
-    public void setHeldAction(Action<P> action) {
-        heldActionData = new HeldActionData<P>(action);
-        if (!user.level.isClientSide() && action.isHeldSentToTracking()) {
-            PacketManager.sendToClientsTracking(new TrHeldActionPacket(user.getId(), getPowerClassification(), action, false), user);
+    public void setHeldAction(Action<P> action, ActionTarget target) {
+        stopHeldAction(false);
+        this.heldActionData = new HeldActionData<P>(action);
+        setMouseTarget(target);
+        if (!user.level.isClientSide()) {
+            PacketManager.sendToClientsTracking(new TrHeldActionPacket(user.getId(), getPowerClassification(), action, false, target), user);
         }
     }
 
@@ -398,13 +388,8 @@ public abstract class PowerBaseImpl<P extends IPower<P, T>, T extends IPowerType
                 heldAction.onHoldTickClientEffect(user, getThis(), heldActionData.getTicks(), requirementsFulfilled, true);
             }
             else {
-                TrHeldActionPacket packet = new TrHeldActionPacket(user.getId(), getPowerClassification(), heldAction, requirementsFulfilled);
-                if (heldAction.isHeldSentToTracking()) {
-                    PacketManager.sendToClientsTrackingAndSelf(packet, user);
-                }
-                else {
-                    serverPlayerUser.ifPresent(player -> PacketManager.sendToClient(packet, player));
-                }
+                TrHeldActionPacket packet = new TrHeldActionPacket(user.getId(), getPowerClassification(), heldAction, requirementsFulfilled, getMouseTarget());
+                PacketManager.sendToClientsTrackingAndSelf(packet, user);
             }
         }
     }
@@ -418,6 +403,8 @@ public abstract class PowerBaseImpl<P extends IPower<P, T>, T extends IPowerType
     public void stopHeldAction(boolean shouldFire) {
         if (heldActionData != null) {
             Action<P> heldAction = heldActionData.action;
+//            int ticks = heldActionData.getTicks();
+            
             ActionTarget target = getMouseTarget();
             int ticksHeld = getHeldActionTicks();
             
@@ -431,38 +418,34 @@ public abstract class PowerBaseImpl<P extends IPower<P, T>, T extends IPowerType
             }
             else {
                 ObjectWrapper<ActionTarget> targetContainer = new ObjectWrapper<>(target);
-                boolean fire = shouldFire && heldActionData.getTicks() >= heldAction.getHoldDurationToFire(getThis()) && 
-                        checkRequirements(heldAction, targetContainer, true).isPositive();
-
-                heldAction.stoppedHolding(user.level, user, getThis(), ticksHeld, fire);
-                if (fire && heldAction.swingHand()) {
+                if (!user.level.isClientSide()) {
+                    shouldFire &= checkRequirements(heldAction, targetContainer, true).isPositive();
+                }
+                
+                heldAction.stoppedHolding(user.level, user, getThis(), ticksHeld, shouldFire);
+                if (shouldFire && heldAction.swingHand()) {
                     user.swing(Hand.MAIN_HAND);
                 }
                 
-                if (fire) {
+                if (shouldFire) {
                     target = targetContainer.get();
                     performAction(heldAction, target, null);
                 }
             }
+            
             heldActionData = null;
+            
             if (!user.level.isClientSide()) {
-                TrHeldActionPacket packet = TrHeldActionPacket.actionStopped(user.getId(), getPowerClassification());
-                if (heldAction.isHeldSentToTracking()) {
-                    PacketManager.sendToClientsTrackingAndSelf(packet, user);
-                }
-                else {
-                    serverPlayerUser.ifPresent(player -> PacketManager.sendToClient(packet, player));
-                }
+                TrHeldActionPacket packet = TrHeldActionPacket.actionStopped(user.getId(), getPowerClassification(), shouldFire);
+                PacketManager.sendToClientsTrackingAndSelf(packet, user);
             }
         }
     }
     
-
+    
     @Override
     public void setMouseTarget(ActionTarget target) {
-        if (target != null) {
-            this.mouseTarget = target;
-        }
+        this.mouseTarget = target != null ? target : ActionTarget.EMPTY;
     }
     
     @Override
@@ -607,12 +590,12 @@ public abstract class PowerBaseImpl<P extends IPower<P, T>, T extends IPowerType
     public void syncWithTrackingOrUser(ServerPlayerEntity player) {
         if (hasPower() && user != null) {
             if (getHeldAction() != null) {
-                PacketManager.sendToClient(new TrHeldActionPacket(user.getId(), getPowerClassification(), getHeldAction(), false), player);
+                PacketManager.sendToClient(new TrHeldActionPacket(user.getId(), getPowerClassification(), getHeldAction(), false, getMouseTarget()), player);
             }
         }
     }
     
-    private P getThis() {
+    private final P getThis() {
         return (P) this;
     }
 }

@@ -3,13 +3,16 @@ package com.github.standobyte.jojo.util.mc;
 import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -17,13 +20,19 @@ import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import com.github.standobyte.jojo.action.stand.CrazyDiamondRestoreTerrain;
 import com.github.standobyte.jojo.client.ClientUtil;
+import com.github.standobyte.jojo.entity.stand.StandEntity;
 import com.github.standobyte.jojo.item.GlovesItem;
 import com.github.standobyte.jojo.network.NetworkUtil;
 import com.github.standobyte.jojo.network.PacketManager;
+import com.github.standobyte.jojo.network.packets.fromserver.LotsOfBlocksBrokenPacket;
 import com.github.standobyte.jojo.network.packets.fromserver.SpawnParticlePacket;
 import com.github.standobyte.jojo.util.general.GeneralUtil;
 import com.github.standobyte.jojo.util.general.MathUtil;
+import com.github.standobyte.jojo.util.mc.damage.explosion.CustomExplosion;
+import com.github.standobyte.jojo.util.mc.reflection.CommonReflection;
+import com.github.standobyte.jojo.util.mod.JojoModUtil;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
@@ -32,9 +41,15 @@ import com.google.gson.JsonParseException;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
+import com.mojang.datafixers.util.Pair;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import net.minecraft.block.AbstractFireBlock;
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockState;
 import net.minecraft.block.DispenserBlock;
+import net.minecraft.block.TNTBlock;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.command.CommandSource;
 import net.minecraft.crash.CrashReport;
@@ -44,6 +59,7 @@ import net.minecraft.dispenser.IBlockSource;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
+import net.minecraft.entity.ai.attributes.Attribute;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.entity.ai.attributes.ModifiableAttributeInstance;
@@ -51,8 +67,11 @@ import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.entity.projectile.PotionEntity;
+import net.minecraft.fluid.FluidState;
 import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.inventory.IInventory;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.TieredItem;
 import net.minecraft.nbt.ByteArrayNBT;
@@ -76,10 +95,14 @@ import net.minecraft.network.play.server.SSpawnMovingSoundEffectPacket;
 import net.minecraft.particles.IParticleData;
 import net.minecraft.particles.ItemParticleData;
 import net.minecraft.particles.ParticleTypes;
+import net.minecraft.potion.Effect;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.PotionUtils;
 import net.minecraft.potion.Potions;
+import net.minecraft.scoreboard.Team;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.Direction;
 import net.minecraft.util.EntityPredicates;
 import net.minecraft.util.Hand;
 import net.minecraft.util.HandSide;
@@ -101,13 +124,16 @@ import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.GameRules;
+import net.minecraft.world.GameType;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ChunkManager;
 import net.minecraft.world.server.ServerWorld;
+import net.minecraftforge.common.ForgeMod;
 import net.minecraftforge.event.ForgeEventFactory;
 import net.minecraftforge.event.entity.PlaySoundAtEntityEvent;
 import net.minecraftforge.registries.IForgeRegistry;
 import net.minecraftforge.registries.IForgeRegistryEntry;
+import net.minecraftforge.registries.RegistryManager;
 
 public class MCUtil {
     public static final IFormattableTextComponent EMPTY_TEXT = new StringTextComponent("");
@@ -311,6 +337,74 @@ public class MCUtil {
     }
     
     
+    public static boolean isLocalServer(MinecraftServer server, Entity serverPlayer) {
+        if (server.isDedicatedServer() || !(serverPlayer instanceof ServerPlayerEntity)) {
+            return false;
+        }
+        ServerPlayerEntity player = (ServerPlayerEntity) serverPlayer;
+        PlayerEntity clientPlayer = ClientUtil.getClientPlayer();
+        return clientPlayer != null && player.getUUID().equals(clientPlayer.getUUID());
+    }
+    
+    
+    
+    public static Collection<BlockPos> explosionBlocks(BlockPos center, float radius, World world) {
+        Set<BlockPos> set = new HashSet<>();
+        for(int j = 0; j < 16; ++j) {
+            for (int k = 0; k < 16; ++k) {
+                for (int l = 0; l < 16; ++l) {
+                    if (j == 0 || j == 15 || k == 0 || k == 15 || l == 0 || l == 15) {
+                        double d0 = (j / 15.0F * 2.0F - 1.0F);
+                        double d1 = (k / 15.0F * 2.0F - 1.0F);
+                        double d2 = (l / 15.0F * 2.0F - 1.0F);
+                        double d3 = Math.sqrt(d0 * d0 + d1 * d1 + d2 * d2);
+                        d0 = d0 / d3;
+                        d1 = d1 / d3;
+                        d2 = d2 / d3;
+                        float f = radius * (0.7F + world.random.nextFloat() * 0.6F);
+                        double d4 = center.getX();
+                        double d6 = center.getY();
+                        double d8 = center.getZ();
+
+                        for (; f > 0.0F; f -= 0.225F) {
+                            BlockPos blockpos = new BlockPos(d4, d6, d8);
+                            BlockState blockstate = world.getBlockState(blockpos);
+                            FluidState fluidstate = world.getFluidState(blockpos);
+                            Optional<Float> optional = blockstate.isAir(world, blockpos) && fluidstate.isEmpty()
+                                    ? Optional.empty()
+                                    : Optional.of(Math.max(blockstate.getBlock().getExplosionResistance(), fluidstate.getExplosionResistance()));
+                            if (optional.isPresent()) {
+                                f -= (optional.get() + 0.3F) * 0.3F;
+                            }
+
+                            if (f > 0.0F) {
+                                set.add(blockpos);
+                            }
+
+                            d4 += d0 * (double)0.3F;
+                            d6 += d1 * (double)0.3F;
+                            d8 += d2 * (double)0.3F;
+                        }
+                    }
+                }
+            }
+        }
+        
+        return set;
+    }
+    
+    public static void iterateOverBlocks(int minX, int minY, int minZ, int maxX, int maxY, int maxZ, Consumer<BlockPos> action) {
+        for (int x = minX; x <= maxX; ++x) {
+            for (int y = minY; y <= maxY; ++y) {
+                for (int z = minZ; z <= maxZ; ++z) {
+                    BlockPos pos = new BlockPos(x, y, z);
+                    action.accept(pos);
+                }
+            }
+        }
+    }
+    
+    
     
     public static Set<ServerPlayerEntity> getTrackingPlayers(Entity entity) {
         if (entity.level.isClientSide()) {
@@ -321,6 +415,17 @@ public class MCUtil {
         Int2ObjectMap<ChunkManager.EntityTracker> entityMap = chunkMap.entityMap;
         ChunkManager.EntityTracker tracker = entityMap.get(entity.getId());
         return tracker.seenBy;
+    }
+    
+    
+    
+    public static GameType getGameMode(PlayerEntity player) {
+        if (!player.level.isClientSide()) {
+            return ((ServerPlayerEntity) player).gameMode.getGameModeForPlayer();
+        }
+        else {
+            return ClientUtil.getPlayerGameMode(player);
+        }
     }
     
     
@@ -373,6 +478,15 @@ public class MCUtil {
             itemEntity.setOwner(entity.getUUID());
             return itemEntity;
         }
+    }
+    
+    
+    
+    // i ain't using access transformers for this, this is ridiculous
+    public static boolean itemAllowedIn(Item item, ItemGroup creativeTab) {
+        if (item.getCreativeTabs().stream().anyMatch(tab -> tab == creativeTab)) return true;
+        ItemGroup itemCategory = item.getItemCategory();
+        return itemCategory != null && (creativeTab == ItemGroup.TAB_SEARCH || creativeTab == itemCategory);
     }
     
 
@@ -459,6 +573,15 @@ public class MCUtil {
         }
     }
     
+    public static double getPickRange(LivingEntity entity) {
+        ModifiableAttributeInstance reachDist = entity.getAttribute(ForgeMod.REACH_DISTANCE.get());
+        double value = reachDist != null ? reachDist.getValue() : 5;
+        if (entity instanceof PlayerEntity && !((PlayerEntity) entity).isCreative()) {
+            value -= 0.5;
+        }
+        return value;
+    }
+    
     
     
     public static AxisAlignedBB scale(AxisAlignedBB aabb, double scale) {
@@ -475,6 +598,42 @@ public class MCUtil {
                 center.x + inflX, center.y + inflY, center.z + inflZ);
     }
     
+    public static double getManhattanDist(AxisAlignedBB aabb1, AxisAlignedBB aabb2) {
+        double xDist = 0;
+        double yDist = 0;
+        double zDist = 0;
+        
+        if      (aabb1.maxX < aabb2.minX) xDist = aabb2.minX - aabb1.maxX;
+        else if (aabb2.maxX < aabb1.minX) xDist = aabb1.minX - aabb2.maxX;
+        
+        if      (aabb1.maxY < aabb2.minY) yDist = aabb2.minY - aabb1.maxY;
+        else if (aabb2.maxY < aabb1.minY) yDist = aabb1.minY - aabb2.maxY;
+        
+        if      (aabb1.maxZ < aabb2.minZ) zDist = aabb2.minZ - aabb1.maxZ;
+        else if (aabb2.maxZ < aabb1.minZ) zDist = aabb1.minZ - aabb2.maxZ;
+        
+        return xDist + yDist + zDist;
+    }
+    
+    
+    
+    public static boolean canHarm(LivingEntity attacker, LivingEntity target) {
+        if (attacker.is(target)) {
+            return false;
+        }
+        if (!attacker.canAttack(target)) {
+            return false;
+        }
+        
+        Team team1 = attacker.getTeam();
+        Team team2 = target.getTeam();
+        if (team1 != null && team1.isAlliedTo(team2) && !team1.isAllowFriendlyFire()) {
+            return false;
+        }
+        
+        return true;
+    }
+    
     
     
     public static boolean isControlledThisSide(Entity entity) {
@@ -485,7 +644,116 @@ public class MCUtil {
     }
     
     
+    
+    public static boolean canHarm(LivingEntity attacker, Entity target) {
+        if (attacker == target) return false;
+        Team team = attacker.getTeam();
+        Team team1 = target.getTeam();
+        if (team != null && team.isAlliedTo(team1) && !team.isAllowFriendlyFire()) {
+            return false;
+        }
+        if (attacker instanceof StandEntity) {
+            return ((StandEntity) attacker).canHarm(target);
+        }
+        return target instanceof LivingEntity && attacker.canAttack((LivingEntity) target);
+    }
+    
+    
+    /**
+     *  Limits the amount of particles and break sounds that the blocks produce, sending it all in one packet
+     */
+    public static int destroyBlocksInBulk(Collection<BlockPos> blocks, ServerWorld world, @Nullable LivingEntity entity, boolean dropItems) {
+        if (!world.isClientSide() && world.isDebug()) {
+            return -1;
+        }
+        
+        Iterator<BlockPos> iter = blocks.iterator();
+        while (iter.hasNext()) {
+            BlockPos blockPos = iter.next();
+            BlockState blockState = world.getBlockState(blockPos);
+            if (World.isOutsideBuildHeight(blockPos) || blockState.isAir(world, blockPos)
+                    || !JojoModUtil.canEntityDestroy(world, blockPos, blockState, entity)) {
+                iter.remove();
+            }
+        }
+        if (blocks.isEmpty()) return 0;
+        int blocksBroken = 0;
+        
+        LotsOfBlocksBrokenPacket packet = new LotsOfBlocksBrokenPacket();
+        int minX = 30000001;
+        int minY = 999;
+        int minZ = 30000001;
+        int maxX = -30000001;
+        int maxY = -999;
+        int maxZ = -30000001;
+        
+        ObjectArrayList<Pair<ItemStack, BlockPos>> dropPositions = new ObjectArrayList<>();
+        
+        for (BlockPos blockPos : blocks) {
+            FluidState fluidState = world.getFluidState(blockPos);
+            BlockState newState = fluidState.createLegacyBlock();
+            
+            BlockState oldState = world.getBlockState(blockPos);
 
+            if (!(oldState.getBlock() instanceof AbstractFireBlock)) {
+                minX = Math.min(minX, blockPos.getX());
+                minY = Math.min(minY, blockPos.getY());
+                minZ = Math.min(minZ, blockPos.getZ());
+                maxX = Math.max(maxX, blockPos.getX());
+                maxY = Math.max(maxY, blockPos.getY());
+                maxZ = Math.max(maxZ, blockPos.getZ());
+                packet.addBlock(blockPos, oldState);
+            }
+            if (dropItems) {
+                TileEntity tileentity = oldState.hasTileEntity() ? world.getBlockEntity(blockPos) : null;
+
+                Block.getDrops(oldState, world, blockPos, tileentity, entity, ItemStack.EMPTY).forEach(itemStack -> {
+                    CustomExplosion.addBlockDrops(dropPositions, itemStack, blockPos);
+                });
+            }
+            else {
+                CrazyDiamondRestoreTerrain.rememberBrokenBlock(world, blockPos, oldState, 
+                        Optional.ofNullable(world.getBlockEntity(blockPos)), 
+                        Collections.emptyList());
+            }
+            
+            if (world.setBlock(blockPos, newState, 3)) {
+                ++blocksBroken;
+            }
+        }
+        
+        for (Pair<ItemStack, BlockPos> pair : dropPositions) {
+            Block.popResource(world, pair.getSecond(), pair.getFirst());
+        }
+        
+        packet.sendToPlayers(world, minX, minY, minZ, maxX, maxY, maxZ);
+        
+        return blocksBroken;
+    }
+    
+    public static void blockCatchFire(World world, BlockPos blockPos, BlockState blockState, @Nullable Direction face, @Nullable LivingEntity igniter) {
+        blockState.catchFire(world, blockPos, face, igniter);
+        if (blockState.getBlock() instanceof TNTBlock) {
+            CrazyDiamondRestoreTerrain.rememberBrokenBlock(world, blockPos, blockState, 
+                    Optional.ofNullable(world.getBlockEntity(blockPos)), Collections.emptyList());
+            world.removeBlock(blockPos, false);
+        }
+    }
+    
+    public static boolean destroyBlock(World world, BlockPos blockPos, boolean dropBlock, @Nullable Entity entity) {
+        BlockState oldState = dropBlock ? null /*no need to call it in this case*/ : world.getBlockState(blockPos);
+        boolean res = world.destroyBlock(blockPos, dropBlock, entity);
+        if (!dropBlock) {
+            CrazyDiamondRestoreTerrain.rememberBrokenBlock(world, blockPos, oldState, 
+                    Optional.ofNullable(world.getBlockEntity(blockPos)), 
+                    Collections.emptyList());
+        }
+        return res;
+    }
+    
+    
+    
+    
     public static void playSound(World world, @Nullable PlayerEntity clientHandled, BlockPos blockPos, 
             SoundEvent sound, SoundCategory category, float volume, float pitch, Predicate<PlayerEntity> condition) {
         playSound(world, clientHandled, (double) blockPos.getX() + 0.5D, (double) blockPos.getY() + 0.5D, (double)blockPos.getZ() + 0.5D, 
@@ -583,6 +851,31 @@ public class MCUtil {
         return entityAttribute.getAttribute().sanitizeValue(value);
     }
     
+    public static void applyAttributeModifier(LivingEntity entity, Attribute attribute, AttributeModifier modifier) {
+        ModifiableAttributeInstance attributeInstance = entity.getAttribute(attribute);
+        if (attributeInstance != null) {
+            attributeInstance.removeModifier(modifier);
+            attributeInstance.addTransientModifier(modifier);
+        }
+    }
+    
+    public static void removeAttributeModifier(LivingEntity entity, Attribute attribute, AttributeModifier modifier) {
+        ModifiableAttributeInstance instance = entity.getAttribute(attribute);
+        if (instance != null && instance.hasModifier(modifier)) {
+            instance.removeModifier(modifier);
+        }
+    }
+    
+    public static void applyAttributeModifierMultiplied(LivingEntity entity, Attribute attribute, AttributeModifier modifier, double multiplier) {
+        ModifiableAttributeInstance attributeInstance = entity.getAttribute(attribute);
+        if (attributeInstance != null) {
+            attributeInstance.removeModifier(modifier);
+            attributeInstance.addTransientModifier(new AttributeModifier(modifier.getId(), 
+                    modifier.getName(), modifier.getAmount() * multiplier, modifier.getOperation()));
+        }
+    }
+    
+    
     
     
     public static boolean removeEffectInstance(LivingEntity entity, EffectInstance effectInstance) {
@@ -590,6 +883,39 @@ public class MCUtil {
             return entity.removeEffect(effectInstance.getEffect());
         }
         return false;
+    }
+    
+    public static boolean reduceEffect(LivingEntity entity, Effect effect, int reduceDuration, int reduceAmplifier) {
+        EffectInstance mainEffectInstance = entity.getEffect(effect);
+        if (mainEffectInstance == null) {
+            return false;
+        }
+        
+        EffectInstance effectInstance = mainEffectInstance;
+        EffectInstance prevInstance = null;
+        
+        while (effectInstance != null) {
+            if (effectInstance.getAmplifier() < reduceAmplifier || effectInstance.getDuration() <= reduceDuration) {
+                if (effectInstance == mainEffectInstance) {
+                    return entity.removeEffect(effect);
+                }
+                else {
+                    prevInstance.hiddenEffect = null;
+                    break;
+                }
+            }
+
+            effectInstance.duration -= reduceDuration;
+            if (reduceAmplifier > 0) {
+                effectInstance.amplifier -= reduceAmplifier;
+            }
+            
+            prevInstance = effectInstance;
+            effectInstance = effectInstance.hiddenEffect;
+        }
+        
+        CommonReflection.onEffectUpdated(entity, mainEffectInstance, true);
+        return true;
     }
     
     
@@ -646,13 +972,23 @@ public class MCUtil {
         }
     }
     
-    
+
     
     public static boolean isHandFree(LivingEntity entity, Hand hand) {
+        return areHandsFree(entity, hand);
+    }
+    
+    // TODO areBothHandsFree method?
+    public static boolean areHandsFree(LivingEntity entity, Hand... hands) {
         if (entity.level.isClientSide() && entity.is(ClientUtil.getClientPlayer()) && ClientUtil.arePlayerHandsBusy()) {
             return false;
         }
-        return itemHandFree(entity.getItemInHand(hand));
+        for (Hand hand : hands) {
+            if (!itemHandFree(entity.getItemInHand(hand))) {
+                return false;
+            }
+        }
+        return true;
     }
     
     public static boolean itemHandFree(ItemStack item) {
@@ -721,6 +1057,10 @@ public class MCUtil {
         return server.isDedicatedServer() ? "en_us" : ClientUtil.getCurrentLanguageCode();
     }
     
+    
+    public static <V extends IForgeRegistryEntry<V>> IForgeRegistry<V> getRegistry(IForgeRegistryEntry<?> regEntry) {
+        return RegistryManager.ACTIVE.getRegistry(((IForgeRegistryEntry<V>) regEntry).getRegistryType());
+    }
     
     
     public static class EntityEvents { // TODO entity event constants

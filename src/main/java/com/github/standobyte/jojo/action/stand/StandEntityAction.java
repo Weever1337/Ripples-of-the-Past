@@ -3,6 +3,7 @@ package com.github.standobyte.jojo.action.stand;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -24,21 +25,23 @@ import com.github.standobyte.jojo.entity.stand.StandEntity;
 import com.github.standobyte.jojo.entity.stand.StandEntityTask;
 import com.github.standobyte.jojo.entity.stand.StandPose;
 import com.github.standobyte.jojo.entity.stand.StandRelativeOffset;
-import com.github.standobyte.jojo.network.PacketManager;
-import com.github.standobyte.jojo.network.packets.fromserver.TrBarrageHitSoundPacket;
 import com.github.standobyte.jojo.power.impl.stand.IStandPower;
 import com.github.standobyte.jojo.power.impl.stand.type.EntityStandType;
+import com.github.standobyte.jojo.util.general.ObjectWrapper;
 import com.github.standobyte.jojo.util.general.OptionalUtil;
 import com.github.standobyte.jojo.util.mc.MCUtil;
 import com.github.standobyte.jojo.util.mod.JojoModUtil;
 
+import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.Hand;
 import net.minecraft.util.SoundEvent;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.RayTraceContext;
+import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.World;
 
@@ -71,8 +74,15 @@ public abstract class StandEntityAction extends StandAction implements IStandPha
         this.enablePhysics = builder.enablePhysics;
         this.standSounds = builder.standSounds;
         this.barrageVisuals = builder.barrageVisuals;
+        this._recoveryFollowUpPreInit = builder.recoveryFollowUp;
     }
-
+    
+    @Override
+    public void onCommonSetup() {
+        super.onCommonSetup();
+        initRecoveryFollowUp();
+    }
+    
     @Override
     public int getStandWindupTicks(IStandPower standPower, StandEntity standEntity) {
         return standWindupDuration;
@@ -176,6 +186,24 @@ public abstract class StandEntityAction extends StandAction implements IStandPha
         }
     }
     
+    @Override
+    public void overrideVanillaMouseTarget(ObjectWrapper<ActionTarget> targetContainer, World world, LivingEntity user, IStandPower power) {
+        if (getTargetRequirement().checkTargetType(TargetType.ENTITY)) {
+            ActionTarget target = targetContainer.get();
+            if (target.getType() == TargetType.BLOCK) {
+                BlockPos blockPos = target.getBlockPos();
+                BlockState blockState = world.getBlockState(blockPos);
+                if (blockState.getCollisionShape(world, blockPos).isEmpty()) {
+                    LivingEntity performer = getPerformer(user, power);
+                    RayTraceResult noTallGrass = JojoModUtil.rayTraceMultipleEntities(performer, MCUtil.getPickRange(performer), 
+                            null, RayTraceContext.BlockMode.COLLIDER, 
+                            0, 0)[0];
+                    targetContainer.set(ActionTarget.fromRayTraceResult(noTallGrass));
+                }
+            }
+        }
+    }
+    
     protected boolean canStandTargetEntity(StandEntity standEntity, LivingEntity target, IStandPower power) {
         return friendlyFire ? true : standEntity.canAttack(target);
     }
@@ -255,11 +283,6 @@ public abstract class StandEntityAction extends StandAction implements IStandPha
     
     @Override
     protected void holdTick(World world, LivingEntity user, IStandPower power, int ticksHeld, ActionTarget target, boolean requirementsFulfilled) {}
-
-    @Override
-    public boolean isHeldSentToTracking() {
-        return true;
-    }
 
     @Override
     public void stoppedHolding(World world, LivingEntity user, IStandPower power, int ticksHeld, boolean willFire) {
@@ -384,11 +407,7 @@ public abstract class StandEntityAction extends StandAction implements IStandPha
     protected void barrageVisualsTick(StandEntity stand, boolean playSound, Vector3d soundPos) {
         if (!stand.level.isClientSide()) {
             SoundEvent hitSound = barrageVisuals.get() != null ? barrageVisuals.get().getHitSound() : null;
-            if (hitSound != null) {
-                PacketManager.sendToClientsTracking(playSound && soundPos != null ? 
-                        new TrBarrageHitSoundPacket(stand.getId(), hitSound, soundPos)
-                        : TrBarrageHitSoundPacket.noSound(stand.getId()), stand);
-            }
+            StandEntityMeleeBarrage.tickBarrageSound(playSound, hitSound, soundPos, stand);
         }
     }
     
@@ -506,18 +525,68 @@ public abstract class StandEntityAction extends StandAction implements IStandPha
         return false;
     }
     
+    public float getDamageBlockMultiplier(IStandPower standPower, StandEntity standEntity, StandEntityTask task) {
+        return 0.5f;
+    }
+    
     @Override
     public boolean heldAllowsOtherAction(IStandPower standPower, Action<IStandPower> action) {
         return getHoldDurationToFire(standPower) == 0;
     }
     
-    public boolean noFinisherDecay() {
+    public boolean noFinisherBarDecay() {
         return false;
     }
     
     public boolean canFollowUpBarrage() {
         return false;
     }
+    
+    
+    private Map<Supplier<? extends StandEntityAction>, List<Supplier<? extends StandAction>>> _recoveryFollowUpPreInit;
+    private Map<? extends StandEntityAction, List<? extends StandAction>> recoveryFollowUp;
+    
+    protected void initRecoveryFollowUp() {
+        if (_recoveryFollowUpPreInit != null) {
+            recoveryFollowUp = _recoveryFollowUpPreInit.entrySet().stream().collect(Collectors.toMap(
+                    entry -> entry.getKey() != null ? entry.getKey().get() : this, 
+                    entry -> entry.getValue().stream().map(Supplier::get).collect(Collectors.toList())));
+        }
+    }
+    
+    @Override
+    protected Action<IStandPower> replaceAction(IStandPower power, ActionTarget target) {
+        if (recoveryFollowUp != null && power.getStandManifestation() instanceof StandEntity) {
+            StandEntity standEntity = (StandEntity) power.getStandManifestation();
+            
+            Optional<StandAction> attackFollowUp = Optional.ofNullable(getRecoveryFollowup(power, standEntity));
+            if (!attackFollowUp.isPresent()) {
+                attackFollowUp = standEntity.getCurrentTask().map(task -> {
+                    List<? extends StandAction> availableFollowUps = recoveryFollowUp.get(task.getAction());
+                    if (availableFollowUps != null) {
+                        return availableFollowUps.stream()
+                                .filter(action -> !task.hasModifierAction(action)
+                                        && power.checkRequirements(action, new ObjectWrapper<>(task.getTarget()), true).isPositive())
+                                .findFirst()
+                                .orElse(null);
+                    }
+                    return null;
+                });
+            }
+            
+            if (attackFollowUp.isPresent()) {
+                return attackFollowUp.get();
+            }
+        }
+        return super.replaceAction(power, target);
+    }
+    
+    @Deprecated
+    @Nullable
+    protected StandEntityActionModifier getRecoveryFollowup(IStandPower standPower, StandEntity standEntity) {
+        return null;
+    }
+    
     
     public float getStandAlpha(StandEntity standEntity, int ticksLeft, float partialTick) {
         return 1F;
@@ -581,6 +650,7 @@ public abstract class StandEntityAction extends StandAction implements IStandPha
         protected boolean enablePhysics = true;
         protected final Map<Phase, List<StandSound>> standSounds = new EnumMap<>(Phase.class);
         protected Supplier<StandEntityMeleeBarrage> barrageVisuals = () -> null;
+        protected Map<Supplier<? extends StandEntityAction>, List<Supplier<? extends StandAction>>> recoveryFollowUp;
 
         @Override
         public T autoSummonStand() {
@@ -681,6 +751,24 @@ public abstract class StandEntityAction extends StandAction implements IStandPha
         
         public T barrageVisuals(Supplier<StandEntityMeleeBarrage> barrageAttack) {
             this.barrageVisuals = barrageAttack != null ? barrageAttack : () -> null;
+            return getThis();
+        }
+        
+        public T attackRecoveryFollowup(Supplier<? extends StandAction> followUp) {
+            return attackRecoveryFollowup(followUp, null);
+        }
+        
+        /**
+         * @param attack - if equals to null, the attack is the action being constructed, if not - this action will be replaced when the Stand is performing the attack
+         * (made this way because you can't have a supplier of the action that is currently being constructed by the builder)
+         */
+        public T attackRecoveryFollowup(Supplier<? extends StandAction> followUp, @Nullable Supplier<? extends StandEntityAction> attack) {
+            if (recoveryFollowUp == null) {
+                recoveryFollowUp = new HashMap<>();
+            }
+            List<Supplier<? extends StandAction>> followUps = recoveryFollowUp.computeIfAbsent(attack, __ -> new ArrayList<>());
+            followUps.add(followUp);
+            addExtraUnlockable(followUp);
             return getThis();
         }
     }

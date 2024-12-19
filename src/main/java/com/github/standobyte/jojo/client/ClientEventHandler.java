@@ -4,18 +4,25 @@ import static net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType
 import static net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType.EXPERIENCE;
 import static net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType.FOOD;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Random;
 import java.util.UUID;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
 
 import com.github.standobyte.jojo.JojoMod;
+import com.github.standobyte.jojo.action.Action;
+import com.github.standobyte.jojo.action.player.ContinuousActionInstance;
 import com.github.standobyte.jojo.action.stand.CrazyDiamondBlockCheckpointMake;
 import com.github.standobyte.jojo.action.stand.CrazyDiamondRestoreTerrain;
 import com.github.standobyte.jojo.capability.entity.ClientPlayerUtilCapProvider;
@@ -27,12 +34,11 @@ import com.github.standobyte.jojo.capability.entity.living.LivingWallClimbing;
 import com.github.standobyte.jojo.capability.world.WorldUtilCapProvider;
 import com.github.standobyte.jojo.client.controls.ControlScheme;
 import com.github.standobyte.jojo.client.particle.custom.FirstPersonHamonAura;
+import com.github.standobyte.jojo.client.playeranim.PlayerAnimationHandler;
 import com.github.standobyte.jojo.client.polaroid.PhotosCache;
 import com.github.standobyte.jojo.client.polaroid.PolaroidHelper;
 import com.github.standobyte.jojo.client.render.block.overlay.TranslucentBlockRenderHelper;
-import com.github.standobyte.jojo.client.render.entity.layerrenderer.FrozenLayer;
 import com.github.standobyte.jojo.client.render.entity.layerrenderer.GlovesLayer;
-import com.github.standobyte.jojo.client.render.entity.layerrenderer.HamonBurnLayer;
 import com.github.standobyte.jojo.client.render.item.InventoryItemHighlight;
 import com.github.standobyte.jojo.client.render.world.shader.ShaderEffectApplier;
 import com.github.standobyte.jojo.client.resources.CustomResources;
@@ -40,6 +46,7 @@ import com.github.standobyte.jojo.client.sound.ClientTickingSoundsHelper;
 import com.github.standobyte.jojo.client.sound.StandOstSound;
 import com.github.standobyte.jojo.client.ui.actionshud.ActionsOverlayGui;
 import com.github.standobyte.jojo.client.ui.screen.ClientModSettingsScreen;
+import com.github.standobyte.jojo.client.ui.screen.IJojoScreen;
 import com.github.standobyte.jojo.client.ui.screen.controls.HudLayoutEditingScreen;
 import com.github.standobyte.jojo.client.ui.screen.controls.vanilla.CategoryWithButtonsEntry;
 import com.github.standobyte.jojo.client.ui.screen.controls.vanilla.ControlSettingToggleButton;
@@ -48,11 +55,13 @@ import com.github.standobyte.jojo.client.ui.screen.widgets.HeightScaledSlider;
 import com.github.standobyte.jojo.client.ui.screen.widgets.ImageMutableButton;
 import com.github.standobyte.jojo.client.ui.screen.widgets.ImageVanillaButton;
 import com.github.standobyte.jojo.client.ui.standstats.StandStatsRenderer;
+import com.github.standobyte.jojo.client.ui.text.JojoTextComponentWrapper;
 import com.github.standobyte.jojo.init.ModEntityTypes;
 import com.github.standobyte.jojo.init.ModItems;
 import com.github.standobyte.jojo.init.ModStatusEffects;
 import com.github.standobyte.jojo.init.power.non_stand.ModPowers;
 import com.github.standobyte.jojo.init.power.non_stand.hamon.ModHamonActions;
+import com.github.standobyte.jojo.init.power.non_stand.pillarman.ModPillarmanActions;
 import com.github.standobyte.jojo.init.power.stand.ModStands;
 import com.github.standobyte.jojo.init.power.stand.ModStandsInit;
 import com.github.standobyte.jojo.item.OilItem;
@@ -70,6 +79,7 @@ import com.github.standobyte.jojo.power.impl.stand.StandUtil;
 import com.github.standobyte.jojo.util.mc.MCUtil;
 import com.github.standobyte.jojo.util.mc.OstSoundList;
 import com.github.standobyte.jojo.util.mc.reflection.ClientReflection;
+import com.github.standobyte.jojo.util.mod.JojoModUtil;
 import com.google.common.base.MoreObjects;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -81,6 +91,7 @@ import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.IngameGui;
+import net.minecraft.client.gui.NewChatGui;
 import net.minecraft.client.gui.screen.ControlsScreen;
 import net.minecraft.client.gui.screen.DeathScreen;
 import net.minecraft.client.gui.screen.IngameMenuScreen;
@@ -119,11 +130,16 @@ import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.util.math.vector.Vector3f;
 import net.minecraft.util.math.vector.Vector3i;
+import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.ITextProperties;
 import net.minecraft.util.text.KeybindTextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.util.text.event.ClickEvent;
+import net.minecraft.util.text.event.HoverEvent;
+import net.minecraft.world.GameType;
 import net.minecraftforge.client.ForgeHooksClient;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
 import net.minecraftforge.client.event.EntityViewRenderEvent;
@@ -132,10 +148,12 @@ import net.minecraftforge.client.event.GuiScreenEvent.DrawScreenEvent;
 import net.minecraftforge.client.event.GuiScreenEvent.InitGuiEvent;
 import net.minecraftforge.client.event.RenderArmEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
+import net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType;
 import net.minecraftforge.client.event.RenderHandEvent;
 import net.minecraftforge.client.event.RenderLivingEvent;
 import net.minecraftforge.client.event.RenderNameplateEvent;
 import net.minecraftforge.client.event.RenderPlayerEvent;
+import net.minecraftforge.client.event.RenderTooltipEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.client.event.sound.PlaySoundEvent;
 import net.minecraftforge.client.gui.ForgeIngameGui;
@@ -154,6 +172,10 @@ public class ClientEventHandler {
     private static ClientEventHandler instance = null;
 
     private final Minecraft mc;
+
+    private List<ITextComponent> multiLineOverlayMessage = new ArrayList<>();
+    private int overlayMessageTime;
+    private boolean animateOverlayMessageColor;
     
     private float pausePartialTick;
     private boolean prevPause = false;
@@ -165,6 +187,7 @@ public class ClientEventHandler {
     private double zoomModifier;
     public boolean isZooming;
 
+    public int tickCount = 0;
     private int deathScreenTick;
     private int standStatsTick;
     
@@ -203,20 +226,37 @@ public class ClientEventHandler {
             return;
         }
         
-        float partialTick = event.getPartialRenderTick();
-        float changePartialTick = ClientTimeStopHandler.getInstance().getConstantEntityPartialTick(entity, partialTick);
-        if (partialTick != changePartialTick) {
-            event.setCanceled(true);
-            event.getRenderer().render((T) entity, MathHelper.lerp(changePartialTick, entity.yRotO, entity.yRot), 
-                    changePartialTick, event.getMatrixStack(), event.getBuffers(), event.getLight());
-            return;
-        }
+//        float partialTick = event.getPartialRenderTick();
+//        float changePartialTick = ClientTimeStopHandler.getInstance().getConstantEntityPartialTick(entity, partialTick);
+//        if (partialTick != changePartialTick) {
+//            event.setCanceled(true);
+//            event.getRenderer().render((T) entity, MathHelper.lerp(changePartialTick, entity.yRotO, entity.yRot), 
+//                    changePartialTick, event.getMatrixStack(), event.getBuffers(), event.getLight());
+//            return;
+//        }
         
         M model = event.getRenderer().getModel();
         if (model instanceof BipedModel) {
             BipedModel<?> bipedModel = (BipedModel<?>) model;
             correctHeldItemPose(entity, bipedModel, HandSide.RIGHT);
             correctHeldItemPose(entity, bipedModel, HandSide.LEFT);
+        }
+        
+        if (model instanceof PlayerModel) {
+            INonStandPower.getNonStandPowerOptional(event.getEntity()).map(power -> {
+                if (power.getTypeSpecificData(ModPowers.PILLAR_MAN.get()).map(
+                        pillarmanData -> pillarmanData.isStoneFormEnabled()).orElse(false)) {
+                    PlayerModel<?> playerModel = (PlayerModel<?>) model;
+                    playerModel.leftSleeve.visible = false;
+                    playerModel.rightSleeve.visible = false;
+                    playerModel.leftPants.visible = false;
+                    playerModel.rightPants.visible = false;
+                    playerModel.hat.visible = false;
+                    playerModel.jacket.visible = false;
+                    return true;
+                }
+                return false;
+            });
         }
         // FIXME (vampire\curing) shake vampire while curing
         // yRot += (float) (Math.cos((double)entity.tickCount * 3.25) * Math.PI * 0.4);
@@ -277,28 +317,49 @@ public class ClientEventHandler {
     @SubscribeEvent(priority = EventPriority.HIGH)
     public void onRenderPlayer(RenderPlayerEvent.Pre event) {
         if (mc.player != event.getPlayer()) {
+            float partialTick = event.getPartialRenderTick();
             event.getPlayer().getCapability(LivingUtilCapProvider.CAPABILITY).ifPresent(cap -> {
                 cap.limitPlayerHeadRot();
             });
+            ContinuousActionInstance.getCurrentAction(event.getPlayer()).ifPresent(action -> action.onPreRender(partialTick));
         }
     }
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void onRenderTick(RenderTickEvent event) {
-        if (mc.level != null && event.phase == TickEvent.Phase.START) {
-            ClientUtil.canSeeStands = StandUtil.playerCanSeeStands(mc.player);
-            ClientUtil.canHearStands = /*StandUtil.playerCanHearStands(mc.player)*/ ClientUtil.canSeeStands;
-            
-            ClientTimeStopHandler timeStopHandler = ClientTimeStopHandler.getInstance();
-            if (mc.player.isAlive()) {
-                timeStopHandler.setConstantPartialTick(clientTimer);
+        if (mc.level != null) {
+            float partialTick = ClientUtil.getPartialTick();
+            switch (event.phase) {
+            case START:
+                ClientUtil.canSeeStands = StandUtil.playerCanSeeStands(mc.player);
+                ClientUtil.canHearStands = /*StandUtil.playerCanHearStands(mc.player)*/ ClientUtil.canSeeStands;
                 
-                mc.player.getCapability(LivingUtilCapProvider.CAPABILITY).ifPresent(cap -> {
-                    cap.limitPlayerHeadRot();
-                });
-                mc.player.getCapability(ClientPlayerUtilCapProvider.CAPABILITY).ifPresent(cap -> {
-                    cap.applyLockedRotation();
-                });
+                ClientTimeStopHandler timeStopHandler = ClientTimeStopHandler.getInstance();
+                if (mc.player.isAlive()) {
+                    timeStopHandler.setConstantPartialTick(clientTimer);
+                    
+                    mc.player.getCapability(LivingUtilCapProvider.CAPABILITY).ifPresent(cap -> {
+                        cap.limitPlayerHeadRot();
+                    });
+                    mc.player.getCapability(ClientPlayerUtilCapProvider.CAPABILITY).ifPresent(cap -> {
+                        cap.applyLockedRotation();
+                    });
+                    ContinuousActionInstance.getCurrentAction(mc.player).ifPresent(action -> action.onPreRender(partialTick));
+                }
+                
+                PlayerAnimationHandler.getPlayerAnimator().onRenderFrameStart(partialTick);
+                
+                if (mc.player.isSpectator() && mc.options.keySpectatorOutlines.isDown()) {
+                    JojoModUtil.getActualGameModeWhilePossessing(mc.player).ifPresent(actualGameMode -> {
+                        if (actualGameMode != GameType.SPECTATOR) {
+                            mc.options.keySpectatorOutlines.setDown(false);
+                        }
+                    });
+                }
+                break;
+            case END:
+                PlayerAnimationHandler.getPlayerAnimator().onRenderFrameEnd(partialTick);
+                break;
             }
         }
     }
@@ -328,6 +389,10 @@ public class ClientEventHandler {
                     InventoryItemHighlight.tick();
                 }
                 
+                if (mc.player != null && mc.player.tickCount == 200) {
+                    extraModsReminder();
+                }
+                
                 tickResolveEffect();
                 PhotosCache.tick();
                 break;
@@ -346,8 +411,58 @@ public class ClientEventHandler {
         if (event.phase == TickEvent.Phase.START) {
             ClientTimeStopHandler.getInstance().tickPauseIrrelevant();
             
+            ++tickCount;
             deathScreenTick = mc.screen instanceof DeathScreen ? deathScreenTick + 1 : 0;
             standStatsTick = mc.screen instanceof IngameMenuScreen && doStandStatsRender(mc.screen) ? standStatsTick + 1 : 0;
+            
+            if (!mc.isPaused()) {
+                if (overlayMessageTime > 0) overlayMessageTime--;
+            }
+        }
+    }
+    
+    private static final List<String[]> MOD_LINKS = Util.make(new ArrayList<>(), list -> {
+        list.add(new String[] { 
+                "playeranimator", 
+                "playerAnimator ", 
+                "forge-0.4.0+1.16.5 ", 
+                "https://www.curseforge.com/minecraft/mc-mods/playeranimator/files/4111516" });
+        list.add(new String[] { 
+                "bendylib", 
+                "bendy-lib ", 
+                "forge-1.2.1 ", 
+                "https://www.curseforge.com/minecraft/mc-mods/bendy-lib/files/3930015" });
+    });
+    public static boolean seenExtraModsReminder = false;
+    private void extraModsReminder() {
+        if (!seenExtraModsReminder) {
+            seenExtraModsReminder = true;
+            
+            List<String[]> missingMods = MOD_LINKS.stream()
+                    .filter(modEntry -> !ModInteractionUtil.isModLoaded(modEntry[0]))
+                    .collect(Collectors.toList());
+            if (!missingMods.isEmpty()) {
+                NewChatGui chat = mc.gui.getChat();
+                chat.addMessage(new TranslationTextComponent("jojo.player_anim_reminder.1")
+                        .withStyle(TextFormatting.GRAY, TextFormatting.ITALIC));
+                chat.addMessage(new TranslationTextComponent("jojo.player_anim_reminder.2")
+                        .withStyle(TextFormatting.GRAY, TextFormatting.ITALIC));
+                for (String[] modEntry : missingMods) {
+                    IFormattableTextComponent line = new StringTextComponent("  ").withStyle(TextFormatting.ITALIC)
+                            .append(modEntry[1])
+                            .append(modEntry[2])
+                            .append(new TranslationTextComponent("jojo.player_anim_reminder.cf_link")
+                                    .withStyle(TextFormatting.GREEN)
+                                    .withStyle(style -> style
+                                            .withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, modEntry[3]))
+                                            .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new TranslationTextComponent("chat.link.open")))));
+                    chat.addMessage(line);
+                }
+                chat.addMessage(new TranslationTextComponent("jojo.player_anim_reminder.3")
+                        .withStyle(TextFormatting.GRAY, TextFormatting.ITALIC));
+                chat.addMessage(new TranslationTextComponent("jojo.player_anim_reminder.4")
+                        .withStyle(TextFormatting.GRAY, TextFormatting.ITALIC));
+            }
         }
     }
     
@@ -478,23 +593,25 @@ public class ClientEventHandler {
         boolean isVampirismModVampire = OptionalDependencyHelper.vampirism().isEntityVampire(mc.player);
         if (event.getType() == FOOD && !isVampirismModVampire || event.getType() == AIR) {
             INonStandPower.getNonStandPowerOptional(mc.player).ifPresent(power -> {
-                if (power.getType() == ModPowers.VAMPIRISM.get()) {
+                if (power.getType() == ModPowers.VAMPIRISM.get() || power.getType() == ModPowers.ZOMBIE.get() 
+                        || power.getTypeSpecificData(ModPowers.PILLAR_MAN.get()).map(pillarMan -> pillarMan.getEvolutionStage() > 1).orElse(false)) {
                     event.setCanceled(true);
                 }
             });
         }
         
-        if (event.getType() == EXPERIENCE && mc.gameMode.hasExperience()
-                && mc.player.hasEffect(ModStatusEffects.STAND_VIRUS.get())) {
-            IStandPower.getStandPowerOptional(mc.player).ifPresent(power -> {
-                StandArrowHandler handler = power.getStandArrowHandler();
-                int standArrowLevels = handler.getXpLevelsTakenByArrow();
-                if (standArrowLevels > 0) {
-                    MatrixStack matrixStack = event.getMatrixStack();
-                    renderExperienceBar(matrixStack, standArrowLevels, event.getWindow());
-                    event.setCanceled(true);
-                }
-            });
+        if (event.getType() == EXPERIENCE && mc.gameMode.hasExperience()) {
+            if (mc.player.hasEffect(ModStatusEffects.STAND_VIRUS.get())) {
+                IStandPower.getStandPowerOptional(mc.player).ifPresent(power -> {
+                    StandArrowHandler handler = power.getStandArrowHandler();
+                    int standArrowLevels = handler.getXpLevelsTakenByArrow();
+                    if (standArrowLevels > 0) {
+                        MatrixStack matrixStack = event.getMatrixStack();
+                        renderExperienceBar(matrixStack, standArrowLevels, event.getWindow());
+                        event.setCanceled(true);
+                    }
+                });
+            }
         }
     }
     
@@ -571,7 +688,7 @@ public class ClientEventHandler {
         int healthLast = this.lastEntityHealth;
 
         ModifiableAttributeInstance attrMaxHealth = entity.getAttribute(Attributes.MAX_HEALTH);
-        float healthWithoutBleedMax = (float) MCUtil.calcValueWithoutModifiers(attrMaxHealth, BleedingEffect.ATTRIBUTE_MODIFIER_ID); // !
+        float healthWithoutBleedMax = BleedingEffect.getMaxHealthWithoutBleeding(entity); // !
         float healthMax = (float)attrMaxHealth.getValue();
         float absorb = MathHelper.ceil(entity.getAbsorptionAmount());
 
@@ -661,8 +778,7 @@ public class ClientEventHandler {
         mc.getProfiler().popPush("mountHealth");
         RenderSystem.enableBlend();
         int health = (int)Math.ceil((double)entity.getHealth());
-        float healthWithoutBleedMax = (float) MCUtil.calcValueWithoutModifiers(entity.getAttribute(
-                Attributes.MAX_HEALTH), BleedingEffect.ATTRIBUTE_MODIFIER_ID); // !
+        float healthWithoutBleedMax = BleedingEffect.getMaxHealthWithoutBleeding(entity); // !
         float healthMax = entity.getMaxHealth();
         int hearts = (int)(healthWithoutBleedMax + 0.5F) / 2; // !
 
@@ -753,6 +869,57 @@ public class ClientEventHandler {
         RenderSystem.enableBlend();
         RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
     }
+    
+    @SubscribeEvent(priority = EventPriority.LOW)
+    public void renderOverlayMessage(RenderGameOverlayEvent.Pre event) {
+        if (event.getType() == ElementType.SUBTITLES) {
+            MainWindow window = mc.getWindow();
+            renderMultiLineMessage(event.getMatrixStack(), event.getPartialTicks(), 
+                    window.getGuiScaledWidth(), window.getGuiScaledHeight());
+        }
+    }
+    
+    public void setMultiLineOverlayMessage(Collection<ITextComponent> message, boolean animateColor) {
+        multiLineOverlayMessage.clear();
+        multiLineOverlayMessage.addAll(message);
+        overlayMessageTime = 60;
+        animateOverlayMessageColor = animateColor;
+    }
+    
+    @SuppressWarnings("deprecation")
+    private void renderMultiLineMessage(MatrixStack matrixStack, float partialTick, int width, int height) {
+        if (!mc.options.hideGui) {
+            IngameGui vanillaGui = mc.gui;
+            if (vanillaGui.overlayMessageTime > 0 || multiLineOverlayMessage.isEmpty()) {
+                this.overlayMessageTime = 0;
+                return;
+            }
+            mc.getProfiler().push("overlayMessage");
+            float hue = (float)overlayMessageTime - partialTick;
+            int opacity = (int)(hue * 255.0F / 20.0F);
+            if (opacity > 255) opacity = 255;
+
+            if (opacity > 8) {
+                RenderSystem.pushMatrix();
+                RenderSystem.translatef((float)(width / 2), (float)(height - 68), 0.0F);
+                RenderSystem.enableBlend();
+                RenderSystem.defaultBlendFunc();
+                FontRenderer font = vanillaGui.getFont();
+                int color = (animateOverlayMessageColor ? MathHelper.hsvToRgb(hue / 50.0F, 0.7F, 0.6F) & 0xFFFFFF : 0xFFFFFF);
+                for (int i = multiLineOverlayMessage.size() - 1; i >= 0; i--) {
+                    ITextComponent line = multiLineOverlayMessage.get(i);
+                    int lineWidth = font.width(line);
+                    ClientUtil.drawBackdrop(matrixStack, -font.width(line) / 2, -4, lineWidth, 1 - opacity);
+                    font.draw(matrixStack, line.getVisualOrderText(), -font.width(line) / 2, -4, color | (opacity << 24));
+                    RenderSystem.translatef(0, -13, 0);
+                }
+                RenderSystem.disableBlend();
+                RenderSystem.popMatrix();
+            }
+
+            mc.getProfiler().pop();
+        }
+    }
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void cancelHandRender(RenderHandEvent event) {
@@ -786,28 +953,40 @@ public class ClientEventHandler {
         ClientPlayerEntity player = Minecraft.getInstance().player;
         Hand hand = event.getHand();
         ItemStack item = player.getItemInHand(hand);
+        boolean renderOtherHand = false;
         if (!event.isCanceled() && !modPostedEvent) {
-            if (hand == Hand.MAIN_HAND) {
-                if (!player.isInvisible()) {
-                    INonStandPower.getNonStandPowerOptional(player).ifPresent(power -> {
-                        ActionsOverlayGui hud = ActionsOverlayGui.getInstance();
-                        if ((hud.isActionSelectedAndEnabled(
-                                ModHamonActions.JONATHAN_OVERDRIVE_BARRAGE.get(), 
-                                ModHamonActions.JONATHAN_SUNLIGHT_YELLOW_OVERDRIVE_BARRAGE.get(),
-                                ModHamonActions.HAMON_WALL_CLIMBING.get())
-                                || LivingWallClimbing.getHandler(player).map(cap -> cap.isWallClimbing()).orElse(false))
-                                && MCUtil.isHandFree(player, Hand.MAIN_HAND) && MCUtil.isHandFree(player, Hand.OFF_HAND)) {
-                            renderHand(Hand.OFF_HAND, event.getMatrixStack(), event.getBuffers(), event.getLight(), 
-                                    event.getPartialTicks(), event.getInterpolatedPitch(), player);
-                        }
-                    });
-
-                    boolean hasGloves = GlovesLayer.areGloves(player.getItemInHand(Hand.MAIN_HAND)) || GlovesLayer.areGloves(player.getItemInHand(Hand.OFF_HAND));
-                    boolean hasEffect = player.hasEffect(ModStatusEffects.HAMON_SPREAD.get()) || player.hasEffect(ModStatusEffects.FREEZE.get());
-                    if (hasGloves && (GlovesLayer.areGloves(item) || item.isEmpty()) || 
-                            hasEffect && item.isEmpty()) {
+            if (hand == Hand.MAIN_HAND && !player.isInvisible()) {
+                ActionsOverlayGui hud = ActionsOverlayGui.getInstance();
+                
+                Stream<Action<? extends IPower<? extends IPower<?, ?>, ?>>> /* what the absolute fuck, java? */ curActions = Stream.concat(
+                        hud.getSelectedEnabledActions(),
+                        ContinuousActionInstance.getCurrentAction(player)
+                            .map(ContinuousActionInstance::getAction)
+                            .filter(action -> action instanceof Action<?>)
+                            .map(action -> (Action<?>) action)
+                            .map(Stream::of).orElseGet(Stream::empty))
+                        .filter(Objects::nonNull);
+                if (curActions.anyMatch(action -> !action.needsFreeMainHand && action.needsFreeOffHand)) {
+                    renderOtherHand = true;
+                }
+                
+                if (MCUtil.areHandsFree(player, Hand.MAIN_HAND, Hand.OFF_HAND) && hud.isActionSelectedAndEnabled(
+                        ModHamonActions.JONATHAN_OVERDRIVE_BARRAGE.get(), 
+                        ModHamonActions.JONATHAN_SUNLIGHT_YELLOW_OVERDRIVE_BARRAGE.get(),
+                        ModHamonActions.HAMON_WALL_CLIMBING.get(),
+                        ModPillarmanActions.PILLARMAN_ERRATIC_BLAZE_KING.get(),
+                        ModPillarmanActions.PILLARMAN_DIVINE_SANDSTORM.get())
+                        || LivingWallClimbing.getHandler(player).map(cap -> cap.isWallClimbing()).orElse(false)) {
+                    renderHand(Hand.OFF_HAND, event.getMatrixStack(), event.getBuffers(), event.getLight(), 
+                            event.getPartialTicks(), event.getInterpolatedPitch(), player);
+                    renderOtherHand = false;
+                }
+                
+                if (renderOtherHand || GlovesLayer.areGloves(player.getItemInHand(Hand.MAIN_HAND)) || GlovesLayer.areGloves(player.getItemInHand(Hand.OFF_HAND))) {
+                    Hand handToRender = renderOtherHand ? Hand.OFF_HAND : Hand.MAIN_HAND;
+                    if (MCUtil.isHandFree(player, handToRender)) {
                         event.setCanceled(true);
-                        renderHand(Hand.MAIN_HAND, event.getMatrixStack(), event.getBuffers(), event.getLight(), 
+                        renderHand(handToRender, event.getMatrixStack(), event.getBuffers(), event.getLight(), 
                                 event.getPartialTicks(), event.getInterpolatedPitch(), player);
                     }
                 }
@@ -841,9 +1020,9 @@ public class ClientEventHandler {
             matrixStack.pushPose();
             ClientReflection.renderPlayerArm(matrixStack, buffer, light, equipProgress, 
                     swingProgress, handSide, renderer);
-            HamonBurnLayer.renderFirstPerson(handSide, matrixStack, buffer, light, player);
-            FrozenLayer.renderFirstPerson(handSide, matrixStack, buffer, light, player);
-            GlovesLayer.renderFirstPerson(handSide, matrixStack, buffer, light, player);
+//            HamonBurnLayer.renderFirstPerson(handSide, matrixStack, buffer, light, player);
+//            FrozenLayer.renderFirstPerson(handSide, matrixStack, buffer, light, player);
+//            GlovesLayer.renderFirstPerson(handSide, matrixStack, buffer, light, player);
             matrixStack.popPose();
             // i've won... but at what cost?
         }
@@ -928,6 +1107,23 @@ public class ClientEventHandler {
         mc.textureManager.bind(ClientUtil.ADDITIONAL_UI);
         ui.blit(matrixStack, x, y, 0, 231, 130, 25);
         AbstractGui.drawCenteredString(matrixStack, mc.font, new TranslationTextComponent("jojo.to_be_continued"), x + 61, y + 8, 0x525544);
+    }
+    
+    @SubscribeEvent
+    public void onTooltipRender(RenderTooltipEvent.PostText event) {
+        List<? extends ITextProperties> lines = event.getLines();
+        int x = event.getX();
+        int y = event.getY();
+        for (int i = 0; i < lines.size(); i++) {
+            ITextProperties line = lines.get(i);
+            if (line instanceof JojoTextComponentWrapper) {
+                ((JojoTextComponentWrapper) line).tooltipRenderExtra(event.getMatrixStack(), x, y - 0.5f);
+            }
+            if (i == 0) {
+                y += 2;
+            }
+            y += 10;
+        }
     }
     
     @SubscribeEvent(priority = EventPriority.LOW)
@@ -1111,9 +1307,19 @@ public class ClientEventHandler {
                 ClientReflection.setSplash((MainMenuScreen) screen, splash);
             }
         }
+        else if (screen instanceof IngameMenuScreen) {
+            IStandPower.getStandPowerOptional(mc.player).resolve()
+            .map(StandStatsRenderer.ICosmeticStandStats::getHandler)
+            .ifPresent(StandStatsRenderer.ICosmeticStandStats::onPauseScreenOpened);
+        }
         else if (screen == null) {
             onScreenClosed();
         }
+    }
+    
+    @SubscribeEvent(priority = EventPriority.LOWEST)
+    public void onScreenOpened2(GuiOpenEvent event) {
+        IJojoScreen.rememberScreenTab(event.getGui());
     }
     
     private void onScreenClosed() {
@@ -1241,6 +1447,7 @@ public class ClientEventHandler {
     @SubscribeEvent
     public void clientLoggedIn(ClientPlayerNetworkEvent.LoggedInEvent event) {
         isLoggedIn = true;
+        ClientModSettings.getSettingsReadOnly().broadcasted.broadcastToServer();
     }
     
     @SubscribeEvent

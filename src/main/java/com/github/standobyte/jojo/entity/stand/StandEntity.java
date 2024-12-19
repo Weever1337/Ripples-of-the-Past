@@ -9,13 +9,13 @@ import java.util.UUID;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import com.github.standobyte.jojo.JojoModConfig;
 import com.github.standobyte.jojo.action.ActionConditionResult;
 import com.github.standobyte.jojo.action.ActionTarget;
 import com.github.standobyte.jojo.action.ActionTarget.TargetType;
-import com.github.standobyte.jojo.action.stand.CrazyDiamondRestoreTerrain;
 import com.github.standobyte.jojo.action.stand.IHasStandPunch;
 import com.github.standobyte.jojo.action.stand.StandEntityAction;
 import com.github.standobyte.jojo.action.stand.punch.IPunch;
@@ -24,12 +24,14 @@ import com.github.standobyte.jojo.action.stand.punch.StandEntityPunch;
 import com.github.standobyte.jojo.action.stand.punch.StandMissedPunch;
 import com.github.standobyte.jojo.capability.entity.PlayerUtilCap.OneTimeNotification;
 import com.github.standobyte.jojo.capability.entity.PlayerUtilCapProvider;
+import com.github.standobyte.jojo.capability.entity.player.PlayerClientBroadcastedSettings;
 import com.github.standobyte.jojo.client.ClientUtil;
+import com.github.standobyte.jojo.client.particle.custom.CustomParticlesHelper;
 import com.github.standobyte.jojo.client.render.entity.model.animnew.BarrageSwings;
 import com.github.standobyte.jojo.client.render.entity.model.animnew.stand.StandPoseData;
 import com.github.standobyte.jojo.client.render.entity.model.stand.StandEntityModel;
 import com.github.standobyte.jojo.client.render.entity.pose.anim.barrage.BarrageSwingsHolder;
-import com.github.standobyte.jojo.client.sound.BarrageHitSoundHandler;
+import com.github.standobyte.jojo.client.sound.barrage.BarrageHitSoundHandler;
 import com.github.standobyte.jojo.entity.damaging.DamagingEntity;
 import com.github.standobyte.jojo.entity.damaging.projectile.ModdedProjectileEntity;
 import com.github.standobyte.jojo.entity.mob.IMobStandUser;
@@ -73,6 +75,7 @@ import net.minecraft.entity.ai.attributes.ModifiableAttributeInstance;
 import net.minecraft.entity.effect.LightningBoltEntity;
 import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.passive.AnimalEntity;
+import net.minecraft.entity.passive.TameableEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.entity.projectile.ProjectileEntity;
@@ -140,7 +143,8 @@ public class StandEntity extends LivingEntity implements IStandManifestation, IE
     protected StandRelativeOffset curOffset;
     protected int offsetLerpTicks;
     protected int offsetLerpMaxTicks;
-
+    private Optional<PlayerClientBroadcastedSettings> playerSettings = Optional.empty();
+    
     private static final DataParameter<Boolean> SWING_OFF_HAND = EntityDataManager.defineId(StandEntity.class, DataSerializers.BOOLEAN);
     private boolean alternateAdditionalSwing;
     private int lastSwingTick = -2;
@@ -152,6 +156,8 @@ public class StandEntity extends LivingEntity implements IStandManifestation, IE
     
     private static final DataParameter<Float> FINISHER_VALUE = EntityDataManager.defineId(StandEntity.class, DataSerializers.FLOAT);
     private static final DataParameter<Float> LAST_HEAVY_FINISHER_VALUE = EntityDataManager.defineId(StandEntity.class, DataSerializers.FLOAT);
+    private float lastTickFinisherVal;
+    private float finisherVal;
     private int noFinisherDecayTicks;
     public static final int FINISHER_NO_DECAY_TICKS = 40;
     private static final float FINISHER_DECAY = 0.025F;
@@ -182,6 +188,8 @@ public class StandEntity extends LivingEntity implements IStandManifestation, IE
     private BarrageSwingsHolder<?, ?> barrageSwingsOld;
     private BarrageSwings barrageSwings;
     private final BarrageHitSoundHandler barrageSounds;
+    
+    public ActionTarget clFrontTarget = ActionTarget.EMPTY;
 
     public float lastRenderTick = 0;
     public float lastMotionTiltTick = -1;
@@ -303,15 +311,15 @@ public class StandEntity extends LivingEntity implements IStandManifestation, IE
         return false;
     }
 
-    protected boolean transfersDamage() {
+    public boolean transfersDamage() {
         return true;
     }
 
-    protected boolean standCanHaveNoPhysics() {
+    public boolean standCanHaveNoPhysics() {
         return true;
     }
 
-    protected boolean standHasNoGravity() {
+    public boolean standHasNoGravity() {
         return true;
     }
 
@@ -603,9 +611,12 @@ public class StandEntity extends LivingEntity implements IStandManifestation, IE
     
     private void updateUserFromNetwork(int userId) {
         userRef = lookupUser(userId);
-        if (level.isClientSide()) {
-            LivingEntity user = getUser();
-            if (user != null) {
+        LivingEntity user = getUser();
+        if (user != null) {
+            if (user instanceof PlayerEntity) {
+                playerSettings = PlayerClientBroadcastedSettings.getPlayerSettings((PlayerEntity) user);
+            }
+            if (level.isClientSide()) {
                 IStandPower standPower = IStandPower.getStandPowerOptional(user).resolve().get();
                 if (standPower.getStandManifestation() != this) {
                     standPower.setStandManifestation(this);
@@ -670,6 +681,17 @@ public class StandEntity extends LivingEntity implements IStandManifestation, IE
         }
         return super.isAlliedTo(entity);
     }
+    
+    
+    
+    @Override
+    public boolean isBaby() {
+        LivingEntity user = getUser();
+        if (user != null) {
+            return user.isBaby();
+        }
+        return super.isBaby();
+    }
 
 
 
@@ -724,7 +746,8 @@ public class StandEntity extends LivingEntity implements IStandManifestation, IE
     
     @Override
     public boolean isInvisibleTo(PlayerEntity player) {
-        return !isVisibleForAll() && !StandUtil.clStandEntityVisibleTo(player) || !player.isSpectator() && underInvisibilityEffect();
+        return !isVisibleForAll() && !StandUtil.clStandEntityVisibleTo(player) 
+                || !JojoModUtil.seesInvisibleAsSpectator(player) && underInvisibilityEffect();
     }
 
     @Override
@@ -876,7 +899,6 @@ public class StandEntity extends LivingEntity implements IStandManifestation, IE
     protected void actuallyHurt(DamageSource dmgSource, float damageAmount) {
         boolean blockableAngle = canBlockOrParryFromAngle(dmgSource.getSourcePosition());
         if (!isManuallyControlled() && canBlockDamage(dmgSource) && blockableAngle && !getCurrentTask().isPresent() && canStartBlocking()) {
-            // FIXME extend the task if it's already blocking
             setTask(ModStandsInit.BLOCK_STAND_ENTITY.get(), 5, StandEntityAction.Phase.PERFORM, ActionTarget.EMPTY);
         }
         if (transfersDamage() && hasUser()) {
@@ -1004,8 +1026,10 @@ public class StandEntity extends LivingEntity implements IStandManifestation, IE
                     }
                 }
             }
-            if (getCurrentTask().isPresent()) {
-                blockedRatio += (1 - blockedRatio) * 0.5f;
+            Float multiplier = getCurrentTask().map(task -> task.getAction()
+                    .getDamageBlockMultiplier(userPower, this, task)).orElse(null);
+            if (multiplier != null && multiplier != 0) {
+                blockedRatio += (1 - blockedRatio) * multiplier;
             }
             if (blockedRatio >= 1) {
                 wasDamageBlocked = true;
@@ -1137,6 +1161,7 @@ public class StandEntity extends LivingEntity implements IStandManifestation, IE
     }
     
     private float prevUserMaxHealth = -1;
+    private boolean prevIsDead = false;
     private static final UUID SYNC_USER_MAX_HP_ATTRIBUTE = UUID.fromString("279afa29-d83b-4562-bcc5-059c3b7773d0");
     @Override
     public void tick() {
@@ -1161,7 +1186,7 @@ public class StandEntity extends LivingEntity implements IStandManifestation, IE
             }
             else {
                 StandEntityAction currentAction = getCurrentTaskAction();
-                if (currentAction == null || !currentAction.noFinisherDecay()) {
+                if (currentAction == null || !currentAction.noFinisherBarDecay()) {
                     float decay = FINISHER_DECAY;
                     float value = entityData.get(FINISHER_VALUE);
                     if (value < 0.5F) {
@@ -1179,6 +1204,8 @@ public class StandEntity extends LivingEntity implements IStandManifestation, IE
                 entityData.set(NO_BLOCKING_TICKS, noBlockingTicks - 1);
             }
         }
+        lastTickFinisherVal = finisherVal;
+        finisherVal = entityData.get(FINISHER_VALUE);
         
         if (barrageHandler.clashOpponent.map(stand -> {
             return !stand.isAlive() || !this.isTargetInReach(new ActionTarget(stand));
@@ -1249,6 +1276,12 @@ public class StandEntity extends LivingEntity implements IStandManifestation, IE
         if (user != null) {
             deathTime = user.deathTime;
         }
+        
+        boolean isDead = deathTime > 0;
+//        if (true || !prevIsDead && isDead) {
+//            onStandDying();
+//        }
+        prevIsDead = isDead;
     }
 
 
@@ -1372,8 +1405,8 @@ public class StandEntity extends LivingEntity implements IStandManifestation, IE
             yRot = currentTask.map(task -> task.getAction().yRotForOffset(user, task)).orElse(user.yRot);
             xRot = user.xRot;
         }
-            
-        Vector3d offset = relativeOffset.getAbsoluteVec(yRot, xRot, this, user, getDefaultOffsetFromUser().y);
+        
+        Vector3d offset = relativeOffset.getAbsoluteVec(yRot, xRot, this, user, getDefaultOffsetFromUser().y, playerSettings);
         if (!currentTask.isPresent() && user.isShiftKeyDown()) {
             offset = new Vector3d(offset.x, 0, offset.z);
         }
@@ -1458,7 +1491,7 @@ public class StandEntity extends LivingEntity implements IStandManifestation, IE
         stopTask(false);
     }
     
-    protected void stopTask(boolean stopNonCancelable) {
+    public void stopTask(boolean stopNonCancelable) {
         stopTask(null, stopNonCancelable);
     }
     
@@ -1558,7 +1591,7 @@ public class StandEntity extends LivingEntity implements IStandManifestation, IE
 
     
     /**
-     * @deprecated use {@link StandEntity#aimWithThisOrUser(double, ActionTarget)}, which returns an {@link ActionTarget} instance
+     * @deprecated use {@link StandEntity#aimWithThisOrUser(double, ActionTarget, boolean)}, which returns an {@link ActionTarget} instance
      */
     @Deprecated
     public RayTraceResult aimWithStandOrUser(double reachDistance, ActionTarget currentTarget) {
@@ -1580,7 +1613,12 @@ public class StandEntity extends LivingEntity implements IStandManifestation, IE
         return aim;
     }
     
+    @Deprecated
     public ActionTarget aimWithThisOrUser(double reachDistance, ActionTarget currentTarget) {
+        return aimWithThisOrUser(reachDistance, currentTarget, true);
+    }
+    
+    public ActionTarget aimWithThisOrUser(double reachDistance, ActionTarget currentTarget, boolean friendlyFire) {
         ActionTarget target;
         if (currentTarget.getType() != TargetType.EMPTY && isTargetInReach(currentTarget)) {
             target = currentTarget;
@@ -1590,11 +1628,11 @@ public class StandEntity extends LivingEntity implements IStandManifestation, IE
             if (!isManuallyControlled()) {
                 LivingEntity user = getUser();
                 if (user != null) {
-                    aim = precisionRayTrace(user, reachDistance);
+                    aim = precisionRayTrace(user, reachDistance, 0, friendlyFire);
                 }
             }
-            if (aim == null) {
-                aim = precisionRayTrace(this, reachDistance);
+            if (aim == null || aim.getType() == RayTraceResult.Type.MISS) {
+                aim = precisionRayTrace(this, reachDistance, 0, friendlyFire);
             }
             
             target = ActionTarget.fromRayTraceResult(aim);
@@ -1630,13 +1668,24 @@ public class StandEntity extends LivingEntity implements IStandManifestation, IE
                 && !(entity instanceof ProjectileEntity && this.is(((ProjectileEntity) entity).getOwner()));
     }
     
+    @Nonnull
     public RayTraceResult precisionRayTrace(Entity aimingEntity, double reachDistance) {
         return precisionRayTrace(aimingEntity, reachDistance, 0);
     }
-    
+
+    @Nonnull
     public RayTraceResult precisionRayTrace(Entity aimingEntity, double reachDistance, double rayTraceInflate) {
+        return precisionRayTrace(aimingEntity, reachDistance, rayTraceInflate, true);
+    }
+
+    @Nonnull
+    public RayTraceResult precisionRayTrace(Entity aimingEntity, double reachDistance, double rayTraceInflate, boolean friendlyFire) {
+        Predicate<Entity> filter = canTarget();
+        if (!friendlyFire) {
+            filter = filter.and(this::canHarm);
+        }
         RayTraceResult[] targets = JojoModUtil.rayTraceMultipleEntities(aimingEntity, 
-                reachDistance, canTarget(), rayTraceInflate, getPrecision());
+                reachDistance, filter, rayTraceInflate, getPrecision());
         if (targets.length == 1) {
             return targets[0];
         }
@@ -1684,7 +1733,7 @@ public class StandEntity extends LivingEntity implements IStandManifestation, IE
 
     public boolean punch(StandEntityTask task, IHasStandPunch punch, ActionTarget target) {
         if (!level.isClientSide()) {
-            ActionTarget finalTarget = aimWithThisOrUser(getAimDistance(getUser()), target);
+            ActionTarget finalTarget = aimWithThisOrUser(getAimDistance(getUser()), target, false);
             target = finalTarget.getType() != TargetType.EMPTY && isTargetInReach(finalTarget) ? finalTarget : ActionTarget.EMPTY;
             setTaskTarget(target);
         }
@@ -1705,11 +1754,14 @@ public class StandEntity extends LivingEntity implements IStandManifestation, IE
         switch (target.getType()) {
         case BLOCK:
             BlockPos blockPos = target.getBlockPos();
-            StandBlockPunch blockPunchInstance = punchAction.punchBlock(this, blockPos, level.getBlockState(blockPos));
+            StandBlockPunch blockPunchInstance = punchAction.punchBlock(this, blockPos, level.getBlockState(blockPos), target.getFace());
             punchInstance = blockPunchInstance;
             break;
         case ENTITY:
             Entity entity = target.getEntity();
+            if (!(entity instanceof LivingEntity)) {
+                playPunchSound = true;
+            }
             StandEntityPunch entityPunchInstance = punchAction.punchEntity(this, entity, getDamageSource());
             punchInstance = entityPunchInstance;
             break;
@@ -1823,10 +1875,15 @@ public class StandEntity extends LivingEntity implements IStandManifestation, IE
         
         LivingEntity user = getUser();
         if (user != null) {
-            return !entity.is(user) && user.canAttack(entity)
-                    && !(entity instanceof AnimalEntity && entity.isPassengerOfSameVehicle(user))
-                    && !(user instanceof PlayerEntity && entity instanceof PlayerEntity
-                            && !((PlayerEntity) user).canHarmPlayer((PlayerEntity) entity));
+            boolean canHarm = MCUtil.canHarm(user, entity);
+            if (canHarm && entity instanceof AnimalEntity) {
+                canHarm &= !entity.isPassengerOfSameVehicle(user);
+                if (canHarm && entity instanceof TameableEntity) {
+                    LivingEntity tameableOwner = ((TameableEntity) entity).getOwner();
+                    canHarm &= !(tameableOwner != null && tameableOwner == user);
+                }
+            }
+            return canHarm;
         }
         
         return true;
@@ -1888,6 +1945,13 @@ public class StandEntity extends LivingEntity implements IStandManifestation, IE
         return entityData.get(FINISHER_VALUE);
     }
     
+    public float getFinisherMeter(float partialTick) {
+        if (userPower != null && !StandUtil.isFinisherMechanicUnlocked(userPower)) {
+            return 0;
+        }
+        return MathHelper.clamp(partialTick, lastTickFinisherVal, finisherVal);
+    }
+    
     public void addFinisherMeter(float value, int noDecayTicks) {
         if (value > 0 && getUser() != null && getUser().hasEffect(ModStatusEffects.RESOLVE.get())) {
             value *= 2F;
@@ -1897,7 +1961,9 @@ public class StandEntity extends LivingEntity implements IStandManifestation, IE
     }
     
     protected void setFinisherMeter(float value) {
-        entityData.set(FINISHER_VALUE, MathHelper.clamp(value, 0F, 1F));
+        if (!level.isClientSide()) {
+            entityData.set(FINISHER_VALUE, MathHelper.clamp(value, 0F, 1F));
+        }
     }
     
     public void setHeavyPunchFinisher() {
@@ -1944,7 +2010,7 @@ public class StandEntity extends LivingEntity implements IStandManifestation, IE
     }
     
     protected boolean breakBlock(BlockPos blockPos, BlockState blockState, boolean dropLootTableItems, @Nullable List<ItemStack> createdDrops) {
-        if (level.isClientSide() || !JojoModUtil.canEntityDestroy((ServerWorld) level, blockPos, blockState, this)) {
+        if (level.isClientSide() || !JojoModUtil.canEntityDestroy((ServerWorld) level, blockPos, blockState, this) || blockState.isAir(level, blockPos)) {
             return false;
         }
         
@@ -1956,12 +2022,7 @@ public class StandEntity extends LivingEntity implements IStandManifestation, IE
                 blockState.getBlock().playerWillDestroy(level, blockPos, blockState, playerUser);
                 dropItem &= !playerUser.abilities.instabuild;
             }
-            if (!dropItem) {
-                CrazyDiamondRestoreTerrain.rememberBrokenBlock(level, blockPos, blockState, 
-                        Optional.ofNullable(level.getBlockEntity(blockPos)), 
-                        createdDrops != null ? createdDrops : Collections.emptyList());
-            }
-            if (level.destroyBlock(blockPos, dropItem, this)) {
+            if (MCUtil.destroyBlock(level, blockPos, dropItem, this)) {
                 blockState.getBlock().destroy(level, blockPos, blockState);
                 return true;
             }
@@ -1974,14 +2035,14 @@ public class StandEntity extends LivingEntity implements IStandManifestation, IE
     }
     
     public boolean canBreakBlock(BlockPos blockPos, BlockState blockState) {
-        float blockHardness = blockState.getDestroySpeed(level, blockPos);
+        float blockHardness = StandStatFormulas.getStandBreakBlockHardness(blockState, level, blockPos);
         return blockHardness >= 0 && canBreakBlock(blockHardness, blockState.getHarvestLevel());
     }
 
     public boolean canBreakBlock(float blockHardness, int blockHarvestLevel) {
         return StandStatFormulas.isBlockBreakable(getAttackDamage(), blockHardness, blockHarvestLevel);
     }
-
+    
     public double getMaxRange() {
         return rangeMax;
     }
@@ -2284,8 +2345,24 @@ public class StandEntity extends LivingEntity implements IStandManifestation, IE
         return false;
     }
     
-
-
+    
+    
+    protected void onStandDying() {
+        if (level.isClientSide()) {
+            for (double y = 0.25; y < getBbHeight(); y += 0.25) {
+                addCrumbleParticles(y);
+            }
+        }
+    }
+    
+    public void addCrumbleParticles(double entityY) {
+        if (level.isClientSide()) {
+            CustomParticlesHelper.addStandCrumbleParticles(this, position().add(0, entityY, 0), TargetHitPart.getHitTarget(this, entityY));
+        }
+    }
+    
+    
+    
     public float getAlpha(float partialTick) {
         float alpha = 1F;
         int ticks = summonLockTicks > 0 ? summonLockTicks : gradualSummonWeaknessTicks;

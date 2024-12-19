@@ -66,7 +66,7 @@ public class CrazyDiamondBlockBullet extends StandEntityAction {
         return super.checkSpecificConditions(user, power, target);
     }
     
-    private boolean hardMaterial(BlockState blockState) {
+    public static boolean hardMaterial(BlockState blockState) {
         Material material = blockState.getMaterial();
         return 
                 material == Material.BUILDABLE_GLASS || 
@@ -121,8 +121,9 @@ public class CrazyDiamondBlockBullet extends StandEntityAction {
     }
     
     public static Stream<StandEffectInstance> targets(IStandPower power) {
-        return power.getContinuousEffects().getEffects(effect -> effect.effectType == ModStandEffects.DRIED_BLOOD_DROPS.get())
-        .stream().filter(effect -> effect.getTarget() != null && effect.getTarget().distanceToSqr(power.getUser()) < 4096);
+        return power.getContinuousEffects().getEffects()
+                .filter(effect -> effect.effectType == ModStandEffects.DRIED_BLOOD_DROPS.get()
+                                  && effect.getTarget() != null && effect.getTarget().distanceToSqr(power.getUser()) < 4096);
     }
 
     public static Optional<StandEffectInstance> getTarget(Stream<StandEffectInstance> targets, LivingEntity user) {

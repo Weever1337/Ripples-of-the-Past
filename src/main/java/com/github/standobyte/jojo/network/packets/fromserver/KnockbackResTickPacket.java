@@ -4,12 +4,10 @@ import java.util.function.Supplier;
 
 import com.github.standobyte.jojo.client.ClientUtil;
 import com.github.standobyte.jojo.network.packets.IModPacketHandler;
-import com.github.standobyte.jojo.util.mod.NoKnockbackOnBlocking;
+import com.github.standobyte.jojo.util.mc.damage.NoKnockbackOnBlocking;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.entity.ai.attributes.ModifiableAttributeInstance;
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.network.NetworkEvent;
 
@@ -39,14 +37,7 @@ public class KnockbackResTickPacket {
             Entity entity = ClientUtil.getEntityById(msg.entityId);
             if (entity instanceof LivingEntity) {
                 LivingEntity living = (LivingEntity) entity;
-                ModifiableAttributeInstance kbRes = living.getAttribute(Attributes.KNOCKBACK_RESISTANCE);
-                if (!kbRes.hasModifier(NoKnockbackOnBlocking.ONE_TICK_KB_RES)) {
-                    kbRes.addTransientModifier(NoKnockbackOnBlocking.ONE_TICK_KB_RES);
-                }
-                if (living == ClientUtil.getClientPlayer()) {
-                    NoKnockbackOnBlocking.clCancelHurtBob = true;
-                    NoKnockbackOnBlocking.clDidHurtWithNoBob = false;
-                }
+                NoKnockbackOnBlocking.setOneTickKbRes(living);
             }
         }
 

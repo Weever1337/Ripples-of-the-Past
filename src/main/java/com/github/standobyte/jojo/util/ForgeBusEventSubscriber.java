@@ -46,6 +46,7 @@ import com.github.standobyte.jojo.command.JojoCommandsCommand;
 import com.github.standobyte.jojo.command.JojoControlsCommand;
 import com.github.standobyte.jojo.command.JojoEnergyCommand;
 import com.github.standobyte.jojo.command.JojoPowerCommand;
+import com.github.standobyte.jojo.command.PillarmanModeCommand;
 import com.github.standobyte.jojo.command.RockPaperScissorsCommand;
 import com.github.standobyte.jojo.command.StandCommand;
 import com.github.standobyte.jojo.command.StandDiscGiveCommand;
@@ -126,6 +127,7 @@ public class ForgeBusEventSubscriber {
         RockPaperScissorsCommand.register(dispatcher);
         ConfigPackCommand.register(dispatcher);
         JojoCommandsCommand.register(dispatcher);
+        PillarmanModeCommand.register(dispatcher);
     }
     
     

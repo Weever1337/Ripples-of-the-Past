@@ -22,7 +22,7 @@ import com.github.standobyte.jojo.init.ModStatusEffects;
 import com.github.standobyte.jojo.init.power.non_stand.ModPowers;
 import com.github.standobyte.jojo.modcompat.OptionalDependencyHelper;
 import com.github.standobyte.jojo.network.PacketManager;
-import com.github.standobyte.jojo.network.packets.fromserver.PlaySoundAtStandEntityPacket;
+import com.github.standobyte.jojo.network.packets.fromserver.PlaySoundAtEntityPacket;
 import com.github.standobyte.jojo.network.packets.fromserver.SkippedStandProgressionPacket;
 import com.github.standobyte.jojo.network.packets.fromserver.SoulSpawnPacket;
 import com.github.standobyte.jojo.network.packets.fromserver.StandActionLearningPacket;
@@ -65,6 +65,8 @@ public class StandPower extends PowerBaseImpl<IStandPower, StandType<?>> impleme
     @Nullable
     private IStandManifestation standManifestation = null;
     private float stamina;
+    private float staminaAddNextTick = 0;
+    private boolean sendStaminaToTracking = false;
     
     private final ResolveCounter resolveCounter;
     private boolean skippedProgression;
@@ -152,7 +154,7 @@ public class StandPower extends PowerBaseImpl<IStandPower, StandType<?>> impleme
         
         if (user != null && !user.level.isClientSide()) {
             setStamina(getMaxStamina() * 0.5F);
-            if (playerSkipsActionTraining()) {
+            if (playerSkipsActionTraining(user)) {
                 skipProgression();
             }
             else {
@@ -262,7 +264,7 @@ public class StandPower extends PowerBaseImpl<IStandPower, StandType<?>> impleme
     public float getStamina() {
         return isStaminaInfinite() ? getMaxStamina() : stamina;
     }
-
+    
     @Override
     public float getMaxStamina() {
         if (!usesStamina()) {
@@ -283,7 +285,6 @@ public class StandPower extends PowerBaseImpl<IStandPower, StandType<?>> impleme
         setStamina(MathHelper.clamp(this.stamina + amount, 0, getMaxStamina()), sendToClient);
     }
 
-    private float staminaAddNextTick = 0;
     @Override
     public boolean consumeStamina(float amount, boolean ticking) {
         if (isStaminaInfinite()) {
@@ -315,24 +316,34 @@ public class StandPower extends PowerBaseImpl<IStandPower, StandType<?>> impleme
     
     private void setStamina(float amount, boolean sendToClient) {
         amount = MathHelper.clamp(amount, 0, getMaxStamina());
-        if (this.stamina != amount) {
+        if (this.stamina != amount && user != null && (!user.level.isClientSide() || user == ClientUtil.getClientPlayer())) {
             this.stamina = amount;
-            if (sendToClient && user != null && !user.level.isClientSide()) {
-                PacketManager.sendToClientsTrackingAndSelf(new TrStaminaPacket(user.getId(), getStamina()), user);
+            if (sendToClient) {
+                serverPlayerUser.ifPresent(player -> PacketManager.sendToClient(new TrStaminaPacket(user.getId(), getStamina()), player));
+                sendStaminaToTracking = true;
             }
         }
     }
     
     private void tickStamina() {
         if (usesStamina()) {
+            float prevStamina = getStamina();
             addStamina(getStaminaTickGain() + staminaAddNextTick, false);
             staminaAddNextTick = 0;
             
-            LivingEntity user = getUser();
-            if (!user.level.isClientSide()) {
-                PacketManager.sendToClientsTracking(new TrStaminaPacket(user.getId(), getStamina()), user);
+            if (user != null && !user.level.isClientSide()) {
+                float curStamina = getStamina();
+                if (sendStaminaToTracking || prevStamina != curStamina) {
+                    PacketManager.sendToClientsTracking(new TrStaminaPacket(user.getId(), curStamina), user);
+                    sendStaminaToTracking = false;
+                }
             }
         }
+    }
+    
+    @Override
+    public void clPacketSetStamina(float amount) {
+        this.stamina = amount;
     }
     
     @Override
@@ -555,7 +566,7 @@ public class StandPower extends PowerBaseImpl<IStandPower, StandType<?>> impleme
         return usesResolve() ? (float) getResolveLevel() / (float) getMaxResolveLevel() : 0;
     }
     
-    private boolean playerSkipsActionTraining() {
+    public static boolean playerSkipsActionTraining(LivingEntity user) {
         return user != null && (user instanceof PlayerEntity && ((PlayerEntity) user).abilities.instabuild
                 || JojoModConfig.getCommonConfigInstance(user.level.isClientSide()).skipStandProgression.get());
     }
@@ -563,7 +574,7 @@ public class StandPower extends PowerBaseImpl<IStandPower, StandType<?>> impleme
     @Override
     public boolean unlockAction(StandAction action) {
         if (actionLearningProgressMap.addEntry(action, getType())) {
-            boolean getFull = !action.isTrained() || playerSkipsActionTraining();
+            boolean getFull = !action.isTrained() || playerSkipsActionTraining(user);
             setLearningProgressPoints(action, getFull ? action.getMaxTrainingPoints(this) : 0F);
             return true;
         }
@@ -607,7 +618,7 @@ public class StandPower extends PowerBaseImpl<IStandPower, StandType<?>> impleme
     @Override
     public void addLearningProgressPoints(StandAction action, float points) {
         if (user != null && points > 0 && user.hasEffect(ModStatusEffects.RESOLVE.get())) {
-            points *= 4;
+            points *= action.resolveLearningMultiplier(this);
         }
         
         float currentValue = actionLearningProgressMap.getLearningProgressPoints(action, getType());
@@ -725,7 +736,7 @@ public class StandPower extends PowerBaseImpl<IStandPower, StandType<?>> impleme
             StandEntity standEntity = (StandEntity) standManifestation;
             float volume = standEntity.getLeapStrength() / 2.4F;
             ServerPlayerEntity except = serverPlayerUser.map(player -> {
-                PacketManager.sendToClient(new PlaySoundAtStandEntityPacket(ModSounds.STAND_LEAP.get(), standEntity.getId(), 
+                PacketManager.sendToClient(new PlaySoundAtEntityPacket(ModSounds.STAND_LEAP.get(), standEntity.getId(), 
                         volume, 1.0F), player);
                 return player;
             }).orElse(null);

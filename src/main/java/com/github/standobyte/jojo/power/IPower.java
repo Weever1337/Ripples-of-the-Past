@@ -66,7 +66,11 @@ public interface IPower<P extends IPower<P, T>, T extends IPowerType<P, T>> {
     
     float getLearningProgressRatio(Action<P> action);
 
-    void setHeldAction(Action<P> action);
+    @Deprecated
+    default void setHeldAction(Action<P> action) {
+        setHeldAction(action, ActionTarget.EMPTY);
+    }
+    void setHeldAction(Action<P> action, ActionTarget target);
     @Nullable default Action<P> getHeldAction() {
         return getHeldAction(false);
     }
@@ -76,7 +80,7 @@ public interface IPower<P extends IPower<P, T>, T extends IPowerType<P, T>> {
     void stopHeldAction(boolean shouldFire);
 
     void setMouseTarget(ActionTarget target);
-    @Nullable ActionTarget getMouseTarget();
+    ActionTarget getMouseTarget();
     boolean isTargetUpdateTick();
     
     void onUserGettingAttacked(DamageSource dmgSource, float dmgAmount);

@@ -9,6 +9,7 @@ import com.github.standobyte.jojo.client.sound.HamonSparksLoopSound;
 import com.github.standobyte.jojo.init.ModEntityTypes;
 import com.github.standobyte.jojo.init.power.non_stand.ModPowers;
 import com.github.standobyte.jojo.init.power.non_stand.hamon.ModHamonActions;
+import com.github.standobyte.jojo.init.power.non_stand.hamon.ModHamonSkills;
 import com.github.standobyte.jojo.power.impl.nonstand.INonStandPower;
 import com.github.standobyte.jojo.power.impl.nonstand.type.hamon.HamonData;
 import com.github.standobyte.jojo.power.impl.nonstand.type.hamon.skill.BaseHamonSkill.HamonStat;
@@ -25,6 +26,7 @@ import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.HandSide;
 import net.minecraft.util.IndirectEntityDamageSource;
+import net.minecraft.util.math.EntityRayTraceResult;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.World;
@@ -129,47 +131,49 @@ public class ZoomPunchEntity extends OwnerBoundProjectileEntity {
 
     @Override
     protected boolean hurtTarget(Entity target, LivingEntity owner) {
-        boolean regularAttack = super.hurtTarget(target, owner);
-        boolean hamonAttack = userHamon((power, hamon) -> {
-            boolean hasEnergy = power.getEnergy() > 0;
-            if (!(hasEnergy || spendHamonStability)) return false;
-            Boolean dealtDamage = hamon.consumeHamonEnergyTo(eff -> {
-                boolean dealtHamonDamage = DamageUtil.dealHamonDamage(target, hamonDamage * eff, this, owner);
-                
-                if (hasEnergy && dealtHamonDamage) {
-                    hamon.hamonPointsFromAction(HamonStat.STRENGTH, Math.min(hamonDamageCost, power.getEnergy()) * eff);
-                }
-                
-                if (!gaveHamonPointsForBaseHit) {
-                    gaveHamonPointsForBaseHit = true;
-                    hamon.hamonPointsFromAction(HamonStat.STRENGTH, baseHitPoints);
-                }
-                
-                return dealtHamonDamage;
-            }, hamonDamageCost);
-            return dealtDamage != null && dealtDamage;
-        });
-        
-        if (regularAttack) {
-            float knockback = (float) owner.getAttributeValue(Attributes.ATTACK_KNOCKBACK);
-            if (knockback > 0) {
-                if (target instanceof LivingEntity) {
-                    ((LivingEntity) target).knockback(knockback * 0.5F, 
-                            (double) MathHelper.sin(owner.yRot * MathUtil.DEG_TO_RAD), 
-                            (double)(-MathHelper.cos(owner.yRot * MathUtil.DEG_TO_RAD)));
-                } else {
-                    target.push(
-                            (double)(-MathHelper.sin(owner.yRot * MathUtil.DEG_TO_RAD) * knockback * 0.5F), 
-                            0.1D, 
-                            (double)(MathHelper.cos(owner.yRot * MathUtil.DEG_TO_RAD) * knockback * 0.5F));
-                }
-
-                this.setDeltaMovement(this.getDeltaMovement().multiply(0.6D, 1.0D, 0.6D));
-                this.setSprinting(false);
-            }
-        }
-        
-        return regularAttack || hamonAttack;
+    	if(!isRetracting()) {
+	        boolean regularAttack = super.hurtTarget(target, owner);
+	        boolean hamonAttack = userHamon((power, hamon) -> {
+	            boolean hasEnergy = power.getEnergy() > 0;
+	            if (!(hasEnergy || spendHamonStability)) return false;
+	            Boolean dealtDamage = hamon.consumeHamonEnergyTo(eff -> {
+	                boolean dealtHamonDamage = DamageUtil.dealHamonDamage(target, hamonDamage * eff, this, owner);
+	                
+	                if (hasEnergy && dealtHamonDamage) {
+	                    hamon.hamonPointsFromAction(HamonStat.STRENGTH, Math.min(hamonDamageCost, power.getEnergy()) * eff);
+	                }
+	                
+	                if (!gaveHamonPointsForBaseHit) {
+	                    gaveHamonPointsForBaseHit = true;
+	                    hamon.hamonPointsFromAction(HamonStat.STRENGTH, baseHitPoints);
+	                }
+	                
+	                return dealtHamonDamage;
+	            }, hamonDamageCost, ModHamonSkills.ZOOM_PUNCH.get());
+	            return dealtDamage != null && dealtDamage;
+	        });
+	        
+	        if (regularAttack) {
+	            float knockback = (float) owner.getAttributeValue(Attributes.ATTACK_KNOCKBACK);
+	            if (knockback > 0) {
+	                if (target instanceof LivingEntity) {
+	                    ((LivingEntity) target).knockback(knockback * 0.5F, 
+	                            (double) MathHelper.sin(owner.yRot * MathUtil.DEG_TO_RAD), 
+	                            (double)(-MathHelper.cos(owner.yRot * MathUtil.DEG_TO_RAD)));
+	                } else {
+	                    target.push(
+	                            (double)(-MathHelper.sin(owner.yRot * MathUtil.DEG_TO_RAD) * knockback * 0.5F), 
+	                            0.1D, 
+	                            (double)(MathHelper.cos(owner.yRot * MathUtil.DEG_TO_RAD) * knockback * 0.5F));
+	                }
+	
+	                this.setDeltaMovement(this.getDeltaMovement().multiply(0.6D, 1.0D, 0.6D));
+	                this.setSprinting(false);
+	            }
+	        }
+	        return regularAttack || hamonAttack;
+    	}
+    	return false;
     }
 
     @Override
@@ -254,6 +258,13 @@ public class ZoomPunchEntity extends OwnerBoundProjectileEntity {
             if (user != null) {
                 user.getCapability(LivingUtilCapProvider.CAPABILITY).ifPresent(cap -> cap.setUsingZoomPunch(value));
             }
+        }
+    }
+    
+    @Override
+    protected void afterEntityHit(EntityRayTraceResult entityRayTraceResult, boolean entityHurt) {
+        if (entityHurt) {
+            setIsRetracting(true);
         }
     }
 

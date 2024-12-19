@@ -6,6 +6,8 @@ import java.util.Optional;
 import com.github.standobyte.jojo.init.ModEntityTypes;
 import com.github.standobyte.jojo.init.ModItems;
 import com.github.standobyte.jojo.item.StandArrowItem;
+import com.github.standobyte.jojo.util.general.MathUtil;
+import com.github.standobyte.jojo.util.mod.JojoModUtil;
 
 import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.enchantment.EnchantmentHelper;
@@ -16,6 +18,7 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.entity.projectile.AbstractArrowEntity;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.IPacket;
@@ -23,11 +26,17 @@ import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.network.play.server.SChangeGameStatePacket;
+import net.minecraft.particles.ItemParticleData;
+import net.minecraft.particles.ParticleTypes;
+import net.minecraft.stats.Stats;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.EntityRayTraceResult;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.world.GameType;
 import net.minecraft.world.World;
+import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.fml.network.NetworkHooks;
 
 public class StandArrowEntity extends AbstractArrowEntity {
@@ -65,6 +74,44 @@ public class StandArrowEntity extends AbstractArrowEntity {
     protected void doPostHurtEffects(LivingEntity target) {
         if (!level.isClientSide() && target.isAlive()) {
             StandArrowItem.onPiercedByArrow(target, arrowItem, level, Optional.ofNullable(getOwner()));
+
+            if (!arrowItem.isEmpty()) {
+                Entity shooter = getOwner();
+                LivingEntity living = shooter instanceof LivingEntity ? (LivingEntity) shooter : null;
+                ServerPlayerEntity player = living instanceof ServerPlayerEntity ? (ServerPlayerEntity) living : null;
+                if ((!(shooter instanceof PlayerEntity) || !((PlayerEntity) shooter).abilities.instabuild)) {
+                    if (arrowItem.isDamageableItem()) {
+                        Item itemType = arrowItem.getItem();
+                        if (arrowItem.hurt(1, random, player)) {
+                            if (player != null) {
+                                ((PlayerEntity) player).awardStat(Stats.ITEM_BROKEN.get(itemType));
+                            }
+                            
+                            if (!isSilent()) {
+                                level.playSound(null, 
+                                        getX(), getY(), getZ(), 
+                                        SoundEvents.ITEM_BREAK, getSoundSource(), 
+                                        0.8F, 0.8F + level.random.nextFloat() * 0.4F);
+                            }
+                            
+                            for (int i = 0; i < 25; ++i) {
+                                Vector3d offset = new Vector3d((random.nextFloat() - 0.5) * 0.1, Math.random() * 0.1 + 0.1, 0);
+                                offset = offset.xRot(-xRot * MathUtil.DEG_TO_RAD);
+                                offset = offset.yRot(-yRot * MathUtil.DEG_TO_RAD);
+                                
+                                if (level instanceof ServerWorld) {
+                                    ((ServerWorld) level).sendParticles(new ItemParticleData(ParticleTypes.ITEM, arrowItem), 
+                                            getX(), getY(0.5), getZ(), 5, 0, 0, 0, 0);
+                                }
+                            }
+                            
+                            remove();
+                            arrowItem.setDamageValue(0);
+                        }
+
+                    }
+                }
+            }
         }
     }
     
@@ -157,7 +204,7 @@ public class StandArrowEntity extends AbstractArrowEntity {
         if ((dealtDamage || isNoPhysics()) && owner != null) {
             int loyalty = entityData.get(LOYALTY);
             if (loyalty > 0) {
-                if (!owner.isAlive() || owner.isSpectator()) {
+                if (!owner.isAlive() || owner instanceof PlayerEntity && JojoModUtil.getGameModeConsiderPossessing((PlayerEntity) owner) == GameType.SPECTATOR) {
                     if (!level.isClientSide && pickup == AbstractArrowEntity.PickupStatus.ALLOWED) {
                         spawnAtLocation(getPickupItem(), 0.1F);
                     }

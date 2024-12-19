@@ -11,9 +11,11 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.annotation.Nonnull;
@@ -22,11 +24,13 @@ import javax.annotation.Nullable;
 import org.apache.commons.io.FileUtils;
 
 import com.google.common.collect.ObjectArrays;
+import com.mojang.datafixers.util.Either;
 
 import net.minecraft.util.Util;
 import net.minecraftforge.common.util.LazyOptional;
 
 public class GeneralUtil {
+    private static final Random RANDOM = new Random();
     
     public static int doFractionTimes(Runnable action, double times) {
         return doFractionTimes(action, times, null);
@@ -62,6 +66,10 @@ public class GeneralUtil {
         return optional.map(element -> predicate.test(element)).orElse(false);
     }
     
+    public static <T> T merge(Either<T, T> either) {
+        return either.left().orElseGet(either.right()::get);
+    }
+    
     public static <T> LinkedHashMap<Predicate<T>, List<T>> groupByPredicatesOrdered(Stream<T> elements, List<Predicate<T>> predicates, 
             @Nullable Predicate<T> commonCondition, boolean elementRepeats) {
         LinkedHashMap<Predicate<T>, List<T>> map = Util.make(new LinkedHashMap<>(), m -> {
@@ -87,6 +95,20 @@ public class GeneralUtil {
         return list.isEmpty() ? null : list.get(Math.min(index, list.size() - 1));
     }
     
+    public static <E> List<E> limitRandom(List<E> randomAccessMutableList, int limit) {
+        int size = randomAccessMutableList.size();
+        if (size > limit) {
+            for (int i = 0; i < limit; i++){
+                int index = i + RANDOM.nextInt(size - i);
+                E tmp = randomAccessMutableList.get(index);
+                randomAccessMutableList.set(index, randomAccessMutableList.get(i));
+                randomAccessMutableList.set(i, tmp);
+            }
+            return randomAccessMutableList.stream().limit(limit).collect(Collectors.toList());
+        }
+        return randomAccessMutableList;
+    }
+    
     @Nullable
     public static <T extends Enum<T>> T enumValueOfNullable(Class<T> enumType, @Nonnull String name) {
         try {
@@ -105,6 +127,7 @@ public class GeneralUtil {
             enumClass = superClass;
         }
         
+        @SuppressWarnings("unchecked")
         T[] values = ((Class<T>) enumClass).getEnumConstants();
         int ordinal = enumVal.ordinal();
         return values[(ordinal + 1) % values.length];
