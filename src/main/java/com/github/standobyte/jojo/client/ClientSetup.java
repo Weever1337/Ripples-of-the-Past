@@ -15,6 +15,7 @@ import com.github.standobyte.jojo.client.particle.CDRestorationParticle;
 import com.github.standobyte.jojo.client.particle.DivineSandstormParticle;
 import com.github.standobyte.jojo.client.particle.HamonAuraParticle;
 import com.github.standobyte.jojo.client.particle.HamonSparkParticle;
+import com.github.standobyte.jojo.client.particle.LightGlintParticle;
 import com.github.standobyte.jojo.client.particle.MeteoriteVirusParticle;
 import com.github.standobyte.jojo.client.particle.OneTickFlameParticle;
 import com.github.standobyte.jojo.client.particle.OnomatopoeiaParticle;
@@ -474,6 +475,7 @@ public class ClientSetup {
         mc.particleEngine.register(ModParticles.RPS_PAPER.get(),            RPSPickPartile.Factory::new);
         mc.particleEngine.register(ModParticles.RPS_SCISSORS.get(),         RPSPickPartile.Factory::new);
         mc.particleEngine.register(ModParticles.SANDSTORM.get(),         DivineSandstormParticle.Factory::new);
+        mc.particleEngine.register(ModParticles.LIGHT_SPARK.get(),       LightGlintParticle.Factory::new);
 
         CustomParticlesHelper.saveSprites(mc);
         // yep...

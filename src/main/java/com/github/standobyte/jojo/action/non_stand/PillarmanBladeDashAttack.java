@@ -16,8 +16,8 @@ import com.github.standobyte.jojo.client.playeranim.anim.interfaces.WindupAttack
 import com.github.standobyte.jojo.init.ModSounds;
 import com.github.standobyte.jojo.init.power.non_stand.ModPowers;
 import com.github.standobyte.jojo.power.impl.nonstand.INonStandPower;
-import com.github.standobyte.jojo.power.impl.nonstand.type.hamon.HamonData;
 import com.github.standobyte.jojo.power.impl.nonstand.type.pillarman.PillarmanData.Mode;
+import com.github.standobyte.jojo.power.impl.nonstand.type.pillarman.PillarmanUtil;
 import com.github.standobyte.jojo.util.general.MathUtil;
 import com.github.standobyte.jojo.util.mc.damage.DamageUtil;
 
@@ -132,6 +132,7 @@ public class PillarmanBladeDashAttack extends PillarmanAction implements IPlayer
                          float knockbackYRot = (60F + user.getRandom().nextFloat() * 30F) * (left ? 1 : -1);
                          knockbackYRot += (float) -MathHelper.atan2(vecToTarget.x, vecToTarget.z) * MathUtil.RAD_TO_DEG;
                          DamageUtil.knockback((LivingEntity) target, 0.75F, knockbackYRot);
+                         PillarmanUtil.sparkEffect(target, 60);
                      }
                  }
              }

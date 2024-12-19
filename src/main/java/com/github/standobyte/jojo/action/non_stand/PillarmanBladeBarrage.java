@@ -5,14 +5,12 @@ import com.github.standobyte.jojo.action.ActionConditionResult;
 import com.github.standobyte.jojo.action.ActionTarget;
 import com.github.standobyte.jojo.client.playeranim.anim.ModPlayerAnimations;
 import com.github.standobyte.jojo.entity.damaging.projectile.ModdedProjectileEntity;
-import com.github.standobyte.jojo.entity.stand.StandEntity;
-import com.github.standobyte.jojo.init.ModParticles;
 import com.github.standobyte.jojo.init.ModSounds;
-import com.github.standobyte.jojo.init.ModStatusEffects;
 import com.github.standobyte.jojo.init.power.non_stand.ModPowers;
 import com.github.standobyte.jojo.init.power.non_stand.pillarman.ModPillarmanActions;
 import com.github.standobyte.jojo.power.impl.nonstand.INonStandPower;
 import com.github.standobyte.jojo.power.impl.nonstand.type.pillarman.PillarmanData.Mode;
+import com.github.standobyte.jojo.power.impl.nonstand.type.pillarman.PillarmanUtil;
 import com.github.standobyte.jojo.util.general.MathUtil;
 import com.github.standobyte.jojo.util.mc.MCUtil;
 import com.github.standobyte.jojo.util.mc.damage.DamageUtil;
@@ -25,13 +23,11 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.projectile.ProjectileEntity;
-import net.minecraft.particles.ParticleTypes;
-import net.minecraft.potion.EffectInstance;
-import net.minecraft.potion.Effects;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EntityDamageSource;
 import net.minecraft.util.Hand;
 import net.minecraft.util.SoundCategory;
+import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
@@ -73,6 +69,9 @@ public class PillarmanBladeBarrage extends PillarmanAction {
                                 if (targetLiving.getLookAngle().dot(projectile.getDeltaMovement().reverse().normalize())
                                         >= MathHelper.cos((float) (30.0 + MathHelper.clamp(10F, 0, 16) * 30.0 / 16.0) * MathUtil.DEG_TO_RAD)) {
                                 	event.setCanceled(true);
+                                	PillarmanUtil.sparkEffect(projectile, 12);
+                                	world.playSound(null, projectile.getX(), projectile.getY(), projectile.getZ(), 
+                                			SoundEvents.ANVIL_LAND, projectile.getSoundSource(), 0.4F, 1.35F);
                                 }
                             });
                     return false;
@@ -125,15 +124,17 @@ public class PillarmanBladeBarrage extends PillarmanAction {
 	                    targetEntity.invulnerableTime = invulTicks;
 	                }
 	                if (!world.isClientSide()) {
-	                    DamageUtil.hurtThroughInvulTicks(targetLiving, EntityDamageSource.playerAttack((PlayerEntity) user), 
-	                            (DamageUtil.getDamageWithoutHeldItem(user) * 0.2F));
+	                    if (DamageUtil.hurtThroughInvulTicks(targetLiving, EntityDamageSource.playerAttack((PlayerEntity) user), 
+	                            (DamageUtil.getDamageWithoutHeldItem(user) * 0.2F))) {
+	                    	PillarmanUtil.sparkEffect(targetLiving, 12);
+	                    }
 	                }
             	}
                 break;
             default:
                 break;
             }
-            world.playSound(null, user.getX(), user.getY(), user.getZ(), ModSounds.SILVER_CHARIOT_BARRAGE_SWIPE.get(), user.getSoundSource(), 0.75F, 1.0F);
+            world.playSound(null, user.getX(), user.getY(), user.getZ(), ModSounds.SILVER_CHARIOT_BARRAGE_SWIPE.get(), user.getSoundSource(), 0.5F, 1.0F);
         }
     }
     

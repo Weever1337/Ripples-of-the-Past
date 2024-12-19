@@ -42,7 +42,7 @@ public class PillarmanAtmosphericRift extends PillarmanDivineSandstorm {
         if (!world.isClientSide()) {
             int maxTicks = Math.max(getHoldDurationToFire(power), 1);
             if (ticksHeld >= maxTicks && power.getEnergy() > 0) {
-                PillarmanDivineSandstormEntity sanstormWave = new PillarmanDivineSandstormEntity(world, user)
+                PillarmanDivineSandstormEntity sanstormWave = new PillarmanDivineSandstormEntity(world, user, 0)
                         .setRadius(0.5F)
                         .setDamage(2F)
                         .setDuration(60);

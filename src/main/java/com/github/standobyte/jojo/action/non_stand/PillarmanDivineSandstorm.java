@@ -54,12 +54,18 @@ public class PillarmanDivineSandstorm extends PillarmanAction {
         if (!world.isClientSide()) {
             int maxTicks = Math.max(getHoldDurationToFire(power), 1);
             if (ticksHeld >= maxTicks && power.getEnergy() > 0) {
-                PillarmanDivineSandstormEntity sanstormWave = new PillarmanDivineSandstormEntity(world, user)
+                PillarmanDivineSandstormEntity sanstormWave = new PillarmanDivineSandstormEntity(world, user, 0)
                         .setRadius(1.5F)
                         .setDamage(2F)
                         .setDuration(10);
-                sanstormWave.shootFromRotation(user, 0.9F, 15F);
+                sanstormWave.shootFromRotation(user, 0.9F, 2F);
                 world.addFreshEntity(sanstormWave);
+                /*PillarmanDivineSandstormEntity sanstormWave2 = new PillarmanDivineSandstormEntity(world, user, -2F)
+                        .setRadius(1.5F)
+                        .setDamage(1F)
+                        .setDuration(10);
+                sanstormWave2.shootFromRotation(user, 0.9F, 2F);
+                world.addFreshEntity(sanstormWave2);*/
             }
         }
     }

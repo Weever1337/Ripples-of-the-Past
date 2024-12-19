@@ -17,6 +17,7 @@ import net.minecraft.entity.Pose;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.SoundCategory;
+import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.util.math.EntityRayTraceResult;
@@ -29,9 +30,11 @@ public class PillarmanDivineSandstormEntity extends ModdedProjectileEntity {
     private float damage;
     private float particlesCount;
     private int duration;
+    private float xOriginOffset;
 
-    public PillarmanDivineSandstormEntity(World world, LivingEntity entity) {
+    public PillarmanDivineSandstormEntity(World world, LivingEntity entity, float offsetX) {
         super(ModEntityTypes.PILLARMAN_DIVINE_SANDSTORM.get(), entity, world);
+        this.xOriginOffset = offsetX;
     }
     
     public PillarmanDivineSandstormEntity setRadius(float radius) {
@@ -96,6 +99,9 @@ public class PillarmanDivineSandstormEntity extends ModdedProjectileEntity {
     @Override
     protected void afterBlockHit(BlockRayTraceResult blockRayTraceResult, boolean blockDestroyed) {
         super.afterBlockHit(blockRayTraceResult, blockDestroyed);
+        Vector3d center = getBoundingBox().getCenter();
+        level.playSound(ClientUtil.getClientPlayer(), center.x, center.y, center.z, SoundEvents.GENERIC_EXPLODE, 
+                SoundCategory.AMBIENT, 0.7F, 1.0F);
     }
     
     @Override
@@ -164,6 +170,11 @@ public class PillarmanDivineSandstormEntity extends ModdedProjectileEntity {
     public boolean standDamage() {
         return false;
     }
+    
+    @Override
+    protected Vector3d getOwnerRelativeOffset() {
+        return new Vector3d((float) xOriginOffset, 0.8F, 0);
+    }
 
     @Override
     protected void addAdditionalSaveData(CompoundNBT nbt) {
@@ -172,6 +183,7 @@ public class PillarmanDivineSandstormEntity extends ModdedProjectileEntity {
         nbt.putFloat("Damage", damage);
         nbt.putInt("Duration", duration);
         nbt.putFloat("Particles", particlesCount);
+        nbt.putFloat("XOriginOffset", xOriginOffset);
     }
 
     @Override
@@ -181,6 +193,7 @@ public class PillarmanDivineSandstormEntity extends ModdedProjectileEntity {
         damage = nbt.getFloat("Damage");
         duration = nbt.getInt("Duration");
         particlesCount = nbt.getFloat("Particles");
+        xOriginOffset = nbt.getFloat("XOriginOffset");
     }
     
     @Override
@@ -189,6 +202,7 @@ public class PillarmanDivineSandstormEntity extends ModdedProjectileEntity {
         buffer.writeFloat(radius);
         buffer.writeVarInt(duration);
         buffer.writeFloat(particlesCount);
+        buffer.writeFloat(xOriginOffset);
     }
 
     @Override
@@ -197,13 +211,7 @@ public class PillarmanDivineSandstormEntity extends ModdedProjectileEntity {
         setRadius(additionalData.readFloat());
         setDuration(additionalData.readVarInt());
         particlesCount = additionalData.readFloat();
-    }
-    
-    private static final Vector3d OFFSET = new Vector3d(0, 0.8F, 0);
-    @Override
-    protected Vector3d getOwnerRelativeOffset() {
-        return OFFSET;
-    }
-    
+        this.xOriginOffset = additionalData.readFloat();
+    }   
     
 }

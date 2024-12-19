@@ -48,4 +48,5 @@ public class ModParticles {
     public static final RegistryObject<BasicParticleType> RPS_SCISSORS = PARTICLES.register("rps_scissors", () -> new BasicParticleType(false));
     
     public static final RegistryObject<BasicParticleType> SANDSTORM = PARTICLES.register("divine_sandstorm", () -> new BasicParticleType(false));
+    public static final RegistryObject<BasicParticleType> LIGHT_SPARK = PARTICLES.register("light_spark", () -> new BasicParticleType(false));
 }

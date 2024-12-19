@@ -93,7 +93,7 @@ public class ModPillarmanActions {
             () -> new PillarmanLightFlash(new NonStandAction.Builder().energyCost(25F).cooldown(80).holdToFire(40, false).heldWalkSpeed(0)));
     
     public static final RegistryObject<PillarmanAction> PILLARMAN_LIGHT_FLASH_DECOY = ACTIONS.register("pillarman_light_flash_decoy", 
-            () -> new PillarmanLightFlashDecoy(new NonStandAction.Builder().energyCost(40F).cooldown(80).holdToFire(50, false).heldWalkSpeed(0).shiftVariationOf(PILLARMAN_LIGHT_FLASH)));
+            () -> new PillarmanLightFlashDecoy(new NonStandAction.Builder().energyCost(40F).cooldown(120).holdToFire(50, false).heldWalkSpeed(0).shiftVariationOf(PILLARMAN_LIGHT_FLASH)));
     
     public static final RegistryObject<PillarmanAction> PILLARMAN_BLADE_SLASH = ACTIONS.register("pillarman_blade_slash", 
             () -> new PillarmanBladeSlash(new NonStandAction.Builder().needsFreeMainHand().energyCost(10F).shiftVariationOf(PILLARMAN_HEAVY_PUNCH)));

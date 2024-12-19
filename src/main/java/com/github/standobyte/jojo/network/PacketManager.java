@@ -112,6 +112,7 @@ import com.github.standobyte.jojo.network.packets.fromserver.TrHeldActionPacket;
 import com.github.standobyte.jojo.network.packets.fromserver.TrKnivesCountPacket;
 import com.github.standobyte.jojo.network.packets.fromserver.TrNoMotionLerpPacket;
 import com.github.standobyte.jojo.network.packets.fromserver.TrPillarmanDataPacket;
+import com.github.standobyte.jojo.network.packets.fromserver.TrPillarmanParticlesPacket;
 import com.github.standobyte.jojo.network.packets.fromserver.TrPlayerContinuousActionPacket;
 import com.github.standobyte.jojo.network.packets.fromserver.TrPlayerModSettingsPacket;
 import com.github.standobyte.jojo.network.packets.fromserver.TrPlayerVisualDetailPacket;
@@ -247,6 +248,7 @@ public class PacketManager {
         registerMessage(serverChannel, new VampireSleepInCoffinPacket.Handler(),           Optional.of(NetworkDirection.PLAY_TO_CLIENT));
         registerMessage(serverChannel, new TrZombieDataPacket.Handler(),                   Optional.of(NetworkDirection.PLAY_TO_CLIENT));
         registerMessage(serverChannel, new TrPillarmanDataPacket.Handler(),                Optional.of(NetworkDirection.PLAY_TO_CLIENT));
+        registerMessage(serverChannel, new TrPillarmanParticlesPacket.Handler(),                Optional.of(NetworkDirection.PLAY_TO_CLIENT));
         registerMessage(serverChannel, new TrStaminaPacket.Handler(),                      Optional.of(NetworkDirection.PLAY_TO_CLIENT));
         registerMessage(serverChannel, new ArrowXpLevelsDataPacket.Handler(),              Optional.of(NetworkDirection.PLAY_TO_CLIENT));
         registerMessage(serverChannel, new PreviousStandTypesPacket.Handler(),             Optional.of(NetworkDirection.PLAY_TO_CLIENT));
