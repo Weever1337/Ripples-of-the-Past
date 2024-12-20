@@ -86,6 +86,7 @@ public class GeckoAnimLoader extends ReloadListener<Map<ResourceLocation, JsonEl
             ResourceLocation key = rawModelEntry.getKey();
             StandModelRegistryObj standModel = StandModelRegistry.getRegisteredModel(key);
             GeckoStandAnimator standModelAnims = new GeckoStandAnimator();
+            standModelAnims.setExists();
             
             JsonObject modelAnimsJson = rawModelEntry.getValue().getAsJsonObject().getAsJsonObject("animations");
             for (Map.Entry<String, JsonElement> animJsonEntry : modelAnimsJson.entrySet()) {

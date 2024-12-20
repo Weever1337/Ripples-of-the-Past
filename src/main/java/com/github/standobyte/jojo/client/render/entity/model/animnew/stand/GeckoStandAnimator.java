@@ -30,13 +30,17 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.vector.Vector3f;
 
 public class GeckoStandAnimator implements IStandAnimator {
-    public static boolean IS_TESTING_GECKO = false; // if false, the legacy code animator is used as a fallback
     protected final Map<String, List<StandActionAnimation>> namedAnimations = new HashMap<>();
     protected StandActionAnimation idleAnim;
     @Nullable protected StandActionAnimation curAnim;
+    protected boolean exists = false;
     
     public GeckoStandAnimator() {}
     
+    
+    public void setExists() {
+        this.exists = true;
+    }
     
     public void putNamedAnim(String name, StandActionAnimation anim) {
         name = name.replaceAll("\\d*$", ""); // removes digits at the end
@@ -94,7 +98,7 @@ public class GeckoStandAnimator implements IStandAnimator {
             return applyAnim(idleAnim, entity, model, ticks, yRotOffsetDeg, xRotDeg, standPose, poseData);
         }
         
-        return false;
+        return exists;
     }
     
     protected <T extends StandEntity> boolean applyAnim(StandActionAnimation anim, 
@@ -102,7 +106,8 @@ public class GeckoStandAnimator implements IStandAnimator {
             float yRotOffsetDeg, float xRotDeg, StandPose standPose, StandPoseData poseData) {
         curAnim = anim;
         poseData.edit().standPose(standPose);
-        return poseData.standPose.applyAnim(entity, model, anim, ticks, yRotOffsetDeg, xRotDeg, poseData);
+        poseData.standPose.applyAnim(entity, model, anim, ticks, yRotOffsetDeg, xRotDeg, poseData);
+        return true;
         
     }
     
