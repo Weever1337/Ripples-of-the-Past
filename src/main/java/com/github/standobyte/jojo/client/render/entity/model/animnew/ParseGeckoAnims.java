@@ -10,7 +10,6 @@ import com.github.standobyte.jojo.client.render.entity.model.animnew.floatquery.
 import com.github.standobyte.jojo.client.render.entity.model.animnew.mojang.Animation;
 import com.github.standobyte.jojo.client.render.entity.model.animnew.mojang.Transformation;
 import com.github.standobyte.jojo.client.render.entity.model.animnew.mojang.Transformation.Interpolation;
-import com.github.standobyte.jojo.util.general.MathUtil;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -75,10 +74,7 @@ public class ParseGeckoAnims {
                 JsonArray rotVecJson = rotVecJsonElem.getAsJsonArray();
                 
                 KeyframeWithQuery rotVec = KeyframeWithQuery.parseJsonVec(rotVecJson);
-                if (target == Transformation.Targets.ROTATE) {
-                    rotVec.mul(MathUtil.DEG_TO_RAD);
-                }
-                else if (target == Transformation.Targets.TRANSLATE) {
+                if (target == Transformation.Targets.TRANSLATE) {
                     rotVec.mul(1, -1, 1);
                 }
                 

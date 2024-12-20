@@ -38,8 +38,8 @@ public class StandPose {
     }
     
     public <T extends StandEntity> boolean applyAnim(@Nullable T entity, StandEntityModel<T> model, StandActionAnimation anim, 
-            float ticks, float yRotOffsetRad, float xRotRad, StandPoseData poseData) {
-        return anim.poseStand(entity, model, ticks, yRotOffsetRad, xRotRad, poseData);
+            float ticks, float yRotOffsetDeg, float xRotDeg, StandPoseData poseData) {
+        return anim.poseStand(entity, model, ticks, yRotOffsetDeg, xRotDeg, poseData);
     }
     
     public static final StandPose IDLE = new StandPose("idle");

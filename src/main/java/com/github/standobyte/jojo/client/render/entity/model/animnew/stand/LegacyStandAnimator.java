@@ -16,6 +16,7 @@ import com.github.standobyte.jojo.client.render.entity.pose.anim.barrage.Barrage
 import com.github.standobyte.jojo.client.render.entity.pose.anim.barrage.IBarrageAnimation;
 import com.github.standobyte.jojo.entity.stand.StandEntity;
 import com.github.standobyte.jojo.entity.stand.StandPose;
+import com.github.standobyte.jojo.util.general.MathUtil;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.vertex.IVertexBuilder;
 
@@ -48,7 +49,9 @@ public class LegacyStandAnimator<T extends StandEntity> implements IStandAnimato
 
     @Override
     public <A extends StandEntity> boolean poseStand(@Nullable A standEntity, StandEntityModel<A> standEntityModel, StandPoseData poseData, 
-            float ticks, float yRotOffsetRad, float xRotRad) {
+            float ticks, float yRotOffsetDeg, float xRotDeg) {
+        float yRotOffsetRad = yRotOffsetDeg * MathUtil.DEG_TO_RAD;
+        float xRotRad = xRotDeg * MathUtil.DEG_TO_RAD;
         T entity = (T) standEntity;
         StandEntityModel<T> model = (StandEntityModel<T>) standEntityModel;
         currentActionAnim = null;
@@ -124,12 +127,12 @@ public class LegacyStandAnimator<T extends StandEntity> implements IStandAnimato
     }
     
     @Override
-    public <A extends StandEntity> void renderBarrageSwings(A entity, StandEntityModel<A> model, float yRotOffsetRad, float xRotRad, 
+    public <A extends StandEntity> void renderBarrageSwings(A entity, StandEntityModel<A> model, float yRotOffsetDeg, float xRotDeg, 
             MatrixStack matrixStack, IVertexBuilder buffer, 
             int packedLight, int packedOverlay, float red, float green, float blue, float alpha) {
         BarrageSwingsHolder<T, StandEntityModel<T>> barrageSwings = (BarrageSwingsHolder<T, StandEntityModel<T>>) entity.getBarrageSwingsHolder();
         barrageSwings.renderBarrageSwings((StandEntityModel<T>) model, (T) entity, matrixStack, buffer, 
-                packedLight, packedOverlay, yRotOffsetRad, xRotRad, red, green, blue, alpha);
+                packedLight, packedOverlay, yRotOffsetDeg * MathUtil.DEG_TO_RAD, xRotDeg * MathUtil.DEG_TO_RAD, red, green, blue, alpha);
     }
 
 }

@@ -14,9 +14,11 @@ import com.github.standobyte.jojo.client.render.entity.model.animnew.floatquery.
 import com.github.standobyte.jojo.client.render.entity.model.animnew.mojang.Animation;
 import com.github.standobyte.jojo.client.render.entity.model.animnew.mojang.Keyframe;
 import com.github.standobyte.jojo.client.render.entity.model.animnew.mojang.Transformation;
+import com.github.standobyte.jojo.client.render.entity.model.animnew.mojang.Transformation.Targets;
 import com.github.standobyte.jojo.client.render.entity.model.stand.StandEntityModel;
 import com.github.standobyte.jojo.entity.stand.StandEntity;
 import com.github.standobyte.jojo.entity.stand.StandPose;
+import com.github.standobyte.jojo.util.general.MathUtil;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.mojang.blaze3d.matrix.MatrixStack;
@@ -54,7 +56,7 @@ public class GeckoStandAnimator implements IStandAnimator {
     
     @Override
     public <T extends StandEntity> boolean poseStand(@Nullable T entity, StandEntityModel<T> model, StandPoseData poseData, 
-            float ticks, float yRotOffsetRad, float xRotRad) {
+            float ticks, float yRotOffsetDeg, float xRotDeg) {
         model.resetPose(entity);
         curAnim = null;
         
@@ -70,7 +72,7 @@ public class GeckoStandAnimator implements IStandAnimator {
                 }
                 
                 model.idleLoopTickStamp = ticks;
-                return applyAnim(summonAnim, entity, model, ticks, yRotOffsetRad, xRotRad, 
+                return applyAnim(summonAnim, entity, model, ticks, yRotOffsetDeg, xRotDeg, 
                         standPose, poseData);
             }
         }
@@ -82,14 +84,14 @@ public class GeckoStandAnimator implements IStandAnimator {
             if (anims != null) {
                 StandActionAnimation anim = standPose.getAnim(anims, entity);
                 if (anim != null) {
-                    return applyAnim(anim, entity, model, ticks, yRotOffsetRad, xRotRad, standPose, poseData);
+                    return applyAnim(anim, entity, model, ticks, yRotOffsetDeg, xRotDeg, standPose, poseData);
                 }
             }
         }
         
         StandActionAnimation idleAnim = getIdleAnim(entity);
         if (idleAnim != null) {
-            return applyAnim(idleAnim, entity, model, ticks, yRotOffsetRad, xRotRad, standPose, poseData);
+            return applyAnim(idleAnim, entity, model, ticks, yRotOffsetDeg, xRotDeg, standPose, poseData);
         }
         
         return false;
@@ -97,10 +99,10 @@ public class GeckoStandAnimator implements IStandAnimator {
     
     protected <T extends StandEntity> boolean applyAnim(StandActionAnimation anim, 
             @Nullable T entity, StandEntityModel<T> model, float ticks, 
-            float yRotOffsetRad, float xRotRad, StandPose standPose, StandPoseData poseData) {
+            float yRotOffsetDeg, float xRotDeg, StandPose standPose, StandPoseData poseData) {
         curAnim = anim;
         poseData.edit().standPose(standPose);
-        return poseData.standPose.applyAnim(entity, model, anim, ticks, yRotOffsetRad, xRotRad, poseData);
+        return poseData.standPose.applyAnim(entity, model, anim, ticks, yRotOffsetDeg, xRotDeg, poseData);
         
     }
     
@@ -146,6 +148,9 @@ public class GeckoStandAnimator implements IStandAnimator {
                 for (Transformation tf : transformations) {
                     Keyframe[] keyframes = tf.keyframes(animContext);
                     lerpKeyframes(keyframes, seconds, animSpeed);
+                    if (tf.target() == Targets.ROTATE) {
+                        TEMP.mul(MathUtil.DEG_TO_RAD);
+                    }
                     tf.target().apply(modelPart, TEMP);
                 }
             }
@@ -192,14 +197,14 @@ public class GeckoStandAnimator implements IStandAnimator {
     }
 
     @Override
-    public <T extends StandEntity> void renderBarrageSwings(T entity, StandEntityModel<T> model, float yRotOffsetRad, float xRotRad,
+    public <T extends StandEntity> void renderBarrageSwings(T entity, StandEntityModel<T> model, float yRotOffsetDeg, float xRotDeg,
             MatrixStack matrixStack, IVertexBuilder buffer, int packedLight, int packedOverlay, float red, float green,
             float blue, float alpha) {
         BarrageSwings swings = entity.getBarrageSwings();
         if (swings != null) {
             for (BarrageSwing swing : swings.getSwings()) {
                 swing.poseAndRender(entity, model, 
-                        matrixStack, buffer, yRotOffsetRad, xRotRad, 
+                        matrixStack, buffer, yRotOffsetDeg, xRotDeg, 
                         packedLight, packedOverlay, red, green, blue, alpha);
             }
         }

@@ -60,6 +60,8 @@ public abstract class StandEntityModel<T extends StandEntity> extends AgeableMod
     private IStandAnimator legacyStandAnimHandler;
     
     protected VisibilityMode visibilityMode = VisibilityMode.ALL;
+    protected float yRotDeg;
+    protected float xRotDeg;
     protected float yRotRad;
     protected float xRotRad;
     protected float ticks;
@@ -166,18 +168,20 @@ public abstract class StandEntityModel<T extends StandEntity> extends AgeableMod
     public void setupAnim(@Nonnull T entity, float walkAnimPos, float walkAnimSpeed, float ticks, float yRotationOffset, float xRotation) {
         float partialTick = ticks - entity.tickCount;
         StandPoseData poseData = entity.getCurPose(partialTick);
-        poseStand(entity, poseData, ticks, yRotationOffset * MathUtil.DEG_TO_RAD, xRotation * MathUtil.DEG_TO_RAD);
+        poseStand(entity, poseData, ticks, yRotationOffset, xRotation);
     }
     
-    public void poseStand(@Nullable T entity, StandPoseData pose, float ticks, float yRotOffsetRad, float xRotRad) {
-        this.yRotRad = yRotOffsetRad;
-        this.xRotRad = xRotRad;
+    public void poseStand(@Nullable T entity, StandPoseData pose, float ticks, float yRotOffsetDeg, float xRotDeg) {
+        this.yRotDeg = yRotOffsetDeg;
+        this.xRotDeg = xRotDeg;
+        this.yRotRad = yRotOffsetDeg * MathUtil.DEG_TO_RAD;
+        this.xRotRad = xRotDeg * MathUtil.DEG_TO_RAD;
         this.standPose = pose.standPose;
         
         IStandAnimator standAnimator = getAnimator();
-        if (standAnimator != null && standAnimator.poseStand(entity, this, pose, ticks, yRotOffsetRad, xRotRad)) {}
+        if (standAnimator != null && standAnimator.poseStand(entity, this, pose, ticks, yRotOffsetDeg, xRotDeg)) {}
         else if (standAnimator != legacyStandAnimHandler && !GeckoStandAnimator.IS_TESTING_GECKO) {
-            legacyStandAnimHandler.poseStand(entity, this, pose, ticks, yRotOffsetRad, xRotRad);
+            legacyStandAnimHandler.poseStand(entity, this, pose, ticks, yRotOffsetDeg, xRotDeg);
         }
         
         this.ticks = ticks;
@@ -341,7 +345,7 @@ public abstract class StandEntityModel<T extends StandEntity> extends AgeableMod
     public void render(T entity, MatrixStack matrixStack, IVertexBuilder buffer, 
             int packedLight, int packedOverlay, float red, float green, float blue, float alpha) {
         renderToBuffer(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
-        getAnimator().renderBarrageSwings(entity, this, yRotRad, xRotRad, 
+        getAnimator().renderBarrageSwings(entity, this, yRotDeg, xRotDeg, 
                 matrixStack, buffer, 
                 packedLight, packedOverlay, red, green, blue, alpha);
     }

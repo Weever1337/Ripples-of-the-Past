@@ -7,14 +7,14 @@ import net.minecraft.entity.Entity;
 public class AnimContext {
     @Nullable public Entity entity;
     public float ticks;
-    public float yRotOffsetRad;
-    public float xRotRad;
+    public float yRotOffsetDeg;
+    public float xRotDeg;
     
-    public static AnimContext makeContext(Entity entity, float ticks, float yRotOffsetRad, float xRotRad) {
+    public static AnimContext makeContext(Entity entity, float ticks, float yRotOffsetDeg, float xRotDeg) {
         INSTANCE.entity = entity;
         INSTANCE.ticks = ticks;
-        INSTANCE.yRotOffsetRad = yRotOffsetRad;
-        INSTANCE.xRotRad = xRotRad;
+        INSTANCE.yRotOffsetDeg = yRotOffsetDeg;
+        INSTANCE.xRotDeg = xRotDeg;
         return INSTANCE;
     }
     

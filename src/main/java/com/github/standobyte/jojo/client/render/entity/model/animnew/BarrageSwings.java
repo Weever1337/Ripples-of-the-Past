@@ -109,7 +109,7 @@ public class BarrageSwings {
         }
         
         public abstract <T extends StandEntity> void poseAndRender(T entity, StandEntityModel<T> model, 
-                MatrixStack matrixStack, IVertexBuilder buffer, float yRotOffsetRad, float xRotRad, 
+                MatrixStack matrixStack, IVertexBuilder buffer, float yRotOffsetDeg, float xRotDeg, 
                 int packedLight, int packedOverlay, float red, float green, float blue, float alpha);
     }
     
@@ -158,16 +158,16 @@ public class BarrageSwings {
         
         @Override
         public <T extends StandEntity> void poseAndRender(T entity, StandEntityModel<T> model, 
-                MatrixStack matrixStack, IVertexBuilder buffer, float yRotOffsetRad, float xRotRad, 
+                MatrixStack matrixStack, IVertexBuilder buffer, float yRotOffsetDeg, float xRotDeg, 
                 int packedLight, int packedOverlay, float red, float green, float blue, float alpha) {
             model.setVisibility(entity, side == HandSide.LEFT ? VisibilityMode.LEFT_ARM_ONLY : VisibilityMode.RIGHT_ARM_ONLY, false);
             float loopCompletion = ticks / ticksMax;
             double zAdditional = (0.5F - Math.abs(0.5F - loopCompletion));
-            Vector3d offsetRot = new Vector3d(offset.x, -offset.y, offset.z + zAdditional).xRot(xRotRad);
+            Vector3d offsetRot = new Vector3d(offset.x, -offset.y, offset.z + zAdditional).xRot(xRotDeg * MathUtil.DEG_TO_RAD);
             matrixStack.pushPose();
             matrixStack.translate(offsetRot.x, offsetRot.y, -offsetRot.z);
             model.resetPose(entity);
-            barrageAnim.poseStand(entity, model, ticks, yRotOffsetRad, xRotRad, 
+            barrageAnim.poseStand(entity, model, ticks, yRotOffsetDeg, xRotDeg, 
                     StandPoseData.start().standPose(model.standPose).actionPhase(entity.getCurrentTaskPhase()).end());
             ModelRenderer arm = model.getArm(side);
             arm.zRot = arm.zRot + HumanoidStandModel.barrageHitEasing(loopCompletion) * zRot;

@@ -1,6 +1,6 @@
 package com.github.standobyte.jojo.client.render.entity.model.animnew.floatquery;
 
-import com.github.standobyte.jojo.util.general.MathUtil;
+import net.minecraft.util.math.MathHelper;
 
 public class FloatQuery implements IFloatSupplier {
     private final QueryType queryType;
@@ -52,9 +52,9 @@ public class FloatQuery implements IFloatSupplier {
         case NUMERIC_LITERAL:
             return value;
         case HEAD_X_ROTATION:
-            return animContext.xRotRad;
+            return animContext.xRotDeg;
         case HEAD_Y_ROTATION:
-            return MathUtil.wrapRadians(animContext.yRotOffsetRad);
+            return MathHelper.wrapDegrees(animContext.yRotOffsetDeg);
         }
         throw new AssertionError();
     }
