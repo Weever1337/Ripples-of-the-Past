@@ -3,11 +3,10 @@ package com.github.standobyte.jojo.client.render.entity.model.animnew.stand;
 import javax.annotation.Nullable;
 
 import com.github.standobyte.jojo.action.stand.StandEntityAction.Phase;
-import com.github.standobyte.jojo.client.render.entity.model.animnew.floatquery.AnimContext;
 import com.github.standobyte.jojo.client.render.entity.model.animnew.mojang.Animation;
+import com.github.standobyte.jojo.client.render.entity.model.animnew.molang.AnimContext;
 import com.github.standobyte.jojo.client.render.entity.model.stand.StandEntityModel;
 import com.github.standobyte.jojo.entity.stand.StandEntity;
-import com.github.standobyte.jojo.entity.stand.StandPose;
 
 import it.unimi.dsi.fastutil.floats.Float2ObjectMap;
 import net.minecraft.util.math.MathHelper;
@@ -65,7 +64,7 @@ public class StandActionAnimation {
             animTime = anim.looping() ? (ticks / 20f) % anim.lengthInSeconds() : ticks / 20f;
         }
         
-        AnimContext animContext = AnimContext.makeContext(entity, ticks, yRotOffsetDeg, xRotDeg);
+        AnimContext animContext = AnimContext.fillContext(entity, ticks, yRotOffsetDeg, xRotDeg);
         GeckoStandAnimator.animateSecs(model, anim, animTime, ANIM_SPEED, animContext);
         
         return true;

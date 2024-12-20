@@ -6,10 +6,10 @@ import java.util.Optional;
 import java.util.function.IntFunction;
 import java.util.stream.StreamSupport;
 
-import com.github.standobyte.jojo.client.render.entity.model.animnew.floatquery.KeyframeWithQuery;
 import com.github.standobyte.jojo.client.render.entity.model.animnew.mojang.Animation;
 import com.github.standobyte.jojo.client.render.entity.model.animnew.mojang.Transformation;
 import com.github.standobyte.jojo.client.render.entity.model.animnew.mojang.Transformation.Interpolation;
+import com.github.standobyte.jojo.client.render.entity.model.animnew.molang.KeyframeWithQuery;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -74,9 +74,6 @@ public class ParseGeckoAnims {
                 JsonArray rotVecJson = rotVecJsonElem.getAsJsonArray();
                 
                 KeyframeWithQuery rotVec = KeyframeWithQuery.parseJsonVec(rotVecJson);
-                if (target == Transformation.Targets.TRANSLATE) {
-                    rotVec.mul(1, -1, 1);
-                }
                 
                 String easingName = Optional.ofNullable(rotation.get("easing"))
                         .map(JsonElement::getAsString)

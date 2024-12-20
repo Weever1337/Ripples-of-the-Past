@@ -15,6 +15,7 @@ import org.apache.logging.log4j.Logger;
 import com.github.standobyte.jojo.JojoMod;
 import com.github.standobyte.jojo.client.render.entity.model.animnew.ParseGeckoAnims;
 import com.github.standobyte.jojo.client.render.entity.model.animnew.mojang.Animation;
+import com.github.standobyte.jojo.client.render.entity.model.animnew.molang.MolangInterpreter;
 import com.github.standobyte.jojo.client.render.entity.model.animnew.stand.GeckoStandAnimator;
 import com.github.standobyte.jojo.client.render.entity.model.stand.StandModelRegistry;
 import com.github.standobyte.jojo.client.render.entity.model.stand.StandModelRegistry.StandModelRegistryObj;
@@ -77,6 +78,7 @@ public class GeckoAnimLoader extends ReloadListener<Map<ResourceLocation, JsonEl
 
     @Override
     protected void apply(Map<ResourceLocation, JsonElement> pObject, IResourceManager pResourceManager, IProfiler pProfiler) {
+        MolangInterpreter.init();
         loadedAnims.clear();
         StandModelRegistry.values().forEach(StandModelRegistryObj::beforeGeckoAnimReload);
         

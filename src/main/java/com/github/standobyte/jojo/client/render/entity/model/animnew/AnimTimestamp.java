@@ -5,11 +5,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.github.standobyte.jojo.client.render.entity.model.animnew.floatquery.AnimContext;
-import com.github.standobyte.jojo.client.render.entity.model.animnew.floatquery.KeyframeWithQuery;
 import com.github.standobyte.jojo.client.render.entity.model.animnew.mojang.Animation;
 import com.github.standobyte.jojo.client.render.entity.model.animnew.mojang.Keyframe;
 import com.github.standobyte.jojo.client.render.entity.model.animnew.mojang.Transformation;
+import com.github.standobyte.jojo.client.render.entity.model.animnew.molang.AnimContext;
+import com.github.standobyte.jojo.client.render.entity.model.animnew.molang.KeyframeWithQuery;
 import com.github.standobyte.jojo.client.render.entity.model.animnew.stand.GeckoStandAnimator;
 
 import net.minecraft.util.math.vector.Vector3f;
@@ -34,11 +34,11 @@ public class AnimTimestamp {
         }
         
         Map<String, List<Transformation>> boneAnimations = new HashMap<>();
+        AnimContext.clearContext();
         for (Map.Entry<String, List<Transformation>> entry : anim.boneAnimations().entrySet()) {
             List<Transformation> timestampTransforms = new ArrayList<>();
             for (Transformation tf : entry.getValue()) {
-                AnimContext emptyCtx = AnimContext.clearContext();
-                Keyframe[] keyframes = tf.keyframes(emptyCtx);
+                Keyframe[] keyframes = tf.keyframes();
                 Vector3f vec = GeckoStandAnimator.lerpKeyframes(keyframes, timeInSeconds, 1);
                 
                 KeyframeWithQuery timestampKeyframe = KeyframeWithQuery.constant(vec).withKeyframe(0, Interpolations.LINEAR);

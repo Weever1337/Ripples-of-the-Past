@@ -10,11 +10,11 @@ import javax.annotation.Nullable;
 
 import com.github.standobyte.jojo.client.render.entity.model.animnew.BarrageSwings;
 import com.github.standobyte.jojo.client.render.entity.model.animnew.BarrageSwings.BarrageSwing;
-import com.github.standobyte.jojo.client.render.entity.model.animnew.floatquery.AnimContext;
 import com.github.standobyte.jojo.client.render.entity.model.animnew.mojang.Animation;
 import com.github.standobyte.jojo.client.render.entity.model.animnew.mojang.Keyframe;
 import com.github.standobyte.jojo.client.render.entity.model.animnew.mojang.Transformation;
 import com.github.standobyte.jojo.client.render.entity.model.animnew.mojang.Transformation.Targets;
+import com.github.standobyte.jojo.client.render.entity.model.animnew.molang.AnimContext;
 import com.github.standobyte.jojo.client.render.entity.model.stand.StandEntityModel;
 import com.github.standobyte.jojo.entity.stand.StandEntity;
 import com.github.standobyte.jojo.entity.stand.StandPose;
@@ -146,10 +146,13 @@ public class GeckoStandAnimator implements IStandAnimator {
             if (modelPart != null) {
                 List<Transformation> transformations = entry.getValue();
                 for (Transformation tf : transformations) {
-                    Keyframe[] keyframes = tf.keyframes(animContext);
+                    Keyframe[] keyframes = tf.keyframes();
                     lerpKeyframes(keyframes, seconds, animSpeed);
                     if (tf.target() == Targets.ROTATE) {
                         TEMP.mul(MathUtil.DEG_TO_RAD);
+                    }
+                    else if (tf.target() == Targets.TRANSLATE) {
+                        TEMP.mul(1, -1, 1);
                     }
                     tf.target().apply(modelPart, TEMP);
                 }
