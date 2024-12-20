@@ -69,9 +69,11 @@ public class PillarmanBladeBarrage extends PillarmanAction {
                                 if (targetLiving.getLookAngle().dot(projectile.getDeltaMovement().reverse().normalize())
                                         >= MathHelper.cos((float) (30.0 + MathHelper.clamp(10F, 0, 16) * 30.0 / 16.0) * MathUtil.DEG_TO_RAD)) {
                                 	event.setCanceled(true);
-                                	PillarmanUtil.sparkEffect(projectile, 12);
-                                	world.playSound(null, projectile.getX(), projectile.getY(), projectile.getZ(), 
-                                			SoundEvents.ANVIL_LAND, projectile.getSoundSource(), 0.4F, 1.35F);
+                                	if (!projectile.isOnGround() && !projectile.isInWall()) {
+                                		PillarmanUtil.sparkEffect(projectile, 12);
+                                    	world.playSound(null, projectile.getX(), projectile.getY(), projectile.getZ(), 
+                                    			SoundEvents.ANVIL_LAND, projectile.getSoundSource(), 0.4F, 1.35F);
+                                	}
                                 }
                             });
                     return false;

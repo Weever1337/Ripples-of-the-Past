@@ -10,6 +10,7 @@ import java.util.function.UnaryOperator;
 import com.github.standobyte.jojo.JojoMod;
 import com.github.standobyte.jojo.client.controls.HudControlSettings;
 import com.github.standobyte.jojo.client.particle.AirStreamParticle;
+import com.github.standobyte.jojo.client.particle.AtmosphericRiftParticle;
 import com.github.standobyte.jojo.client.particle.BloodParticle;
 import com.github.standobyte.jojo.client.particle.CDRestorationParticle;
 import com.github.standobyte.jojo.client.particle.DivineSandstormParticle;
@@ -475,6 +476,7 @@ public class ClientSetup {
         mc.particleEngine.register(ModParticles.RPS_PAPER.get(),            RPSPickPartile.Factory::new);
         mc.particleEngine.register(ModParticles.RPS_SCISSORS.get(),         RPSPickPartile.Factory::new);
         mc.particleEngine.register(ModParticles.SANDSTORM.get(),         DivineSandstormParticle.Factory::new);
+        mc.particleEngine.register(ModParticles.RIFT.get(),         AtmosphericRiftParticle.Factory::new);
         mc.particleEngine.register(ModParticles.LIGHT_SPARK.get(),       LightGlintParticle.Factory::new);
 
         CustomParticlesHelper.saveSprites(mc);

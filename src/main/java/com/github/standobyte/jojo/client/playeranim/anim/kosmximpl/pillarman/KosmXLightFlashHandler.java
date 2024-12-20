@@ -5,6 +5,7 @@ import com.github.standobyte.jojo.client.playeranim.anim.interfaces.BasicToggleA
 import com.github.standobyte.jojo.client.playeranim.kosmx.KosmXPlayerAnimatorInstalled.AnimLayerHandler;
 import com.github.standobyte.jojo.client.playeranim.kosmx.anim.modifier.KosmXFixedFadeModifier;
 import com.github.standobyte.jojo.client.playeranim.kosmx.anim.modifier.KosmXHandsideMirrorModifier;
+import com.github.standobyte.jojo.client.playeranim.kosmx.anim.modifier.KosmXHeadRotationModifier;
 
 import dev.kosmx.playerAnim.api.layered.IAnimation;
 import dev.kosmx.playerAnim.api.layered.ModifierLayer;
@@ -24,7 +25,7 @@ public class KosmXLightFlashHandler extends AnimLayerHandler<ModifierLayer<IAnim
     @Override
     protected ModifierLayer<IAnimation> createAnimLayer(AbstractClientPlayerEntity player) {
         return new ModifierLayer<>(null, 
-                new KosmXHandsideMirrorModifier(player));
+                new KosmXHandsideMirrorModifier(player), new KosmXHeadRotationModifier());
     }
     
 

@@ -7,6 +7,9 @@ import com.github.standobyte.jojo.client.ClientUtil;
 import com.github.standobyte.jojo.init.ModEntityTypes;
 import com.github.standobyte.jojo.init.ModParticles;
 import com.github.standobyte.jojo.init.ModSounds;
+import com.github.standobyte.jojo.init.power.non_stand.hamon.ModHamonActions;
+import com.github.standobyte.jojo.init.power.non_stand.pillarman.ModPillarmanActions;
+import com.github.standobyte.jojo.power.impl.nonstand.INonStandPower;
 import com.github.standobyte.jojo.util.mc.damage.DamageUtil;
 
 import net.minecraft.entity.Entity;
@@ -16,6 +19,7 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.Pose;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
+import net.minecraft.particles.IParticleData;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -31,6 +35,7 @@ public class PillarmanDivineSandstormEntity extends ModdedProjectileEntity {
     private float particlesCount;
     private int duration;
     private float xOriginOffset;
+    private boolean atmosphericRift;
 
     public PillarmanDivineSandstormEntity(World world, LivingEntity entity, float offsetX) {
         super(ModEntityTypes.PILLARMAN_DIVINE_SANDSTORM.get(), entity, world);
@@ -39,7 +44,7 @@ public class PillarmanDivineSandstormEntity extends ModdedProjectileEntity {
     
     public PillarmanDivineSandstormEntity setRadius(float radius) {
         this.radius = radius;
-        this.particlesCount = radius * 2;
+        this.particlesCount = isAtmospheric() ? radius * 10 : radius * 2;
         Vector3d pos = getBoundingBox().getCenter();
         refreshDimensions();
         setBoundingBox(new AxisAlignedBB(pos, pos).inflate(radius));
@@ -49,6 +54,23 @@ public class PillarmanDivineSandstormEntity extends ModdedProjectileEntity {
     public PillarmanDivineSandstormEntity setDamage(float damage) {
         this.damage = damage;
         return this;
+    }
+    
+    public PillarmanDivineSandstormEntity setAtmospheric(boolean atmosphericRift) {
+        this.atmosphericRift = atmosphericRift;
+        return this;
+    }
+    
+    public boolean isAtmospheric() {
+    	return atmosphericRift;
+    }
+    
+    public IParticleData setParticle() {
+    	if (isAtmospheric()) {
+    		return ModParticles.RIFT.get();
+    	} else {
+    		return ModParticles.SANDSTORM.get();
+    	}
     }
     
     public PillarmanDivineSandstormEntity setDuration(int ticks) {
@@ -78,11 +100,8 @@ public class PillarmanDivineSandstormEntity extends ModdedProjectileEntity {
                         (random.nextDouble() - 1.0),
                         (random.nextDouble() - 1.0))
                         .normalize().scale(random.nextDouble() * radius));
-                
-                level.addParticle(ModParticles.SANDSTORM.get(), false, sparkVec.x, sparkVec.y, sparkVec.z, 0, 0, 0);
+                level.addParticle(setParticle(), false, sparkVec.x, sparkVec.y, sparkVec.z, 0, 0, 0);
             }
-            level.playSound(ClientUtil.getClientPlayer(), center.x, center.y, center.z, ModSounds.MAGICIANS_RED_FIRE_BLAST.get(), 
-                    SoundCategory.AMBIENT, 0.1F, 1.0F);
         }
     }
 
@@ -100,8 +119,14 @@ public class PillarmanDivineSandstormEntity extends ModdedProjectileEntity {
     protected void afterBlockHit(BlockRayTraceResult blockRayTraceResult, boolean blockDestroyed) {
         super.afterBlockHit(blockRayTraceResult, blockDestroyed);
         Vector3d center = getBoundingBox().getCenter();
-        level.playSound(ClientUtil.getClientPlayer(), center.x, center.y, center.z, SoundEvents.GENERIC_EXPLODE, 
-                SoundCategory.AMBIENT, 0.7F, 1.0F);
+        if (isAtmospheric()) {
+        	level.playSound(ClientUtil.getClientPlayer(), center.x, center.y, center.z, SoundEvents.WITHER_BREAK_BLOCK, 
+                    SoundCategory.AMBIENT, 0.3F, 1.0F);
+        } else {
+        	level.playSound(ClientUtil.getClientPlayer(), center.x, center.y, center.z, SoundEvents.GENERIC_EXPLODE, 
+                    SoundCategory.AMBIENT, 0.7F, 1.0F);
+        }
+        
     }
     
     @Override
@@ -184,6 +209,7 @@ public class PillarmanDivineSandstormEntity extends ModdedProjectileEntity {
         nbt.putInt("Duration", duration);
         nbt.putFloat("Particles", particlesCount);
         nbt.putFloat("XOriginOffset", xOriginOffset);
+        nbt.putBoolean("atmosphericRift", atmosphericRift);
     }
 
     @Override
@@ -194,6 +220,7 @@ public class PillarmanDivineSandstormEntity extends ModdedProjectileEntity {
         duration = nbt.getInt("Duration");
         particlesCount = nbt.getFloat("Particles");
         xOriginOffset = nbt.getFloat("XOriginOffset");
+        atmosphericRift = nbt.getBoolean("atmosphericRift");
     }
     
     @Override
@@ -203,6 +230,7 @@ public class PillarmanDivineSandstormEntity extends ModdedProjectileEntity {
         buffer.writeVarInt(duration);
         buffer.writeFloat(particlesCount);
         buffer.writeFloat(xOriginOffset);
+        buffer.writeBoolean(atmosphericRift);
     }
 
     @Override
@@ -211,7 +239,8 @@ public class PillarmanDivineSandstormEntity extends ModdedProjectileEntity {
         setRadius(additionalData.readFloat());
         setDuration(additionalData.readVarInt());
         particlesCount = additionalData.readFloat();
-        this.xOriginOffset = additionalData.readFloat();
+        xOriginOffset = additionalData.readFloat();
+        atmosphericRift = additionalData.readBoolean();
     }   
     
 }

@@ -9,6 +9,7 @@ import com.github.standobyte.jojo.client.playeranim.anim.ModPlayerAnimations;
 import com.github.standobyte.jojo.init.ModSounds;
 import com.github.standobyte.jojo.init.power.non_stand.ModPowers;
 import com.github.standobyte.jojo.power.impl.nonstand.INonStandPower;
+import com.github.standobyte.jojo.power.impl.nonstand.type.pillarman.PillarmanUtil;
 import com.github.standobyte.jojo.power.impl.nonstand.type.pillarman.PillarmanData.Mode;
 import com.github.standobyte.jojo.util.mc.damage.DamageUtil;
 import com.github.standobyte.jojo.util.mc.damage.KnockbackCollisionImpact;
@@ -88,7 +89,8 @@ public class PillarmanBladeSlash extends PillarmanAction implements IPlayerActio
                     LivingEntity targetEntity = (LivingEntity) entity;
                     PlayerEntity pEntity = (PlayerEntity) user;
                     if (entity.hurt(EntityDamageSource.playerAttack(pEntity), DamageUtil.addArmorPiercing(VampirismClawLacerate.getDamage(world, user) + 1F, 15F, targetEntity))) {
-                        world.playSound(null, targetEntity.getX(), targetEntity.getEyeY(), targetEntity.getZ(), sound, targetEntity.getSoundSource(), volume, pitch);
+                    	PillarmanUtil.sparkEffect(targetEntity, 9);
+                    	world.playSound(null, targetEntity.getX(), targetEntity.getEyeY(), targetEntity.getZ(), sound, targetEntity.getSoundSource(), volume, pitch);
                         targetEntity.knockback(0.75F, user.getX() - targetEntity.getX(), user.getZ() - targetEntity.getZ());
                         KnockbackCollisionImpact.getHandler(targetEntity).ifPresent(cap -> cap
                                 .onPunchSetKnockbackImpact(targetEntity.getDeltaMovement(), user)

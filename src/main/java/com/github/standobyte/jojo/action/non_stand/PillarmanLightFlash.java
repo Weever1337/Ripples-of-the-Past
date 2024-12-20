@@ -28,7 +28,7 @@ public class PillarmanLightFlash extends PillarmanAction {
     
     @Override
     public void onHoldTickClientEffect(LivingEntity user, INonStandPower power, int ticksHeld, boolean reqFulfilled, boolean reqStateChanged) {
-        if (reqFulfilled) {
+        if (reqFulfilled && ticksHeld > 10) {
         	for (int i = 0; i <= 24; i++) {
         		user.level.addParticle(ModParticles.LIGHT_SPARK.get(), true, user.getX(), user.getY() + 0.8, user.getZ(), 
         				(Math.random() - 0.5F) / 4, (Math.random() - 0.5F) / 4, (Math.random() - 0.5F) / 4);
