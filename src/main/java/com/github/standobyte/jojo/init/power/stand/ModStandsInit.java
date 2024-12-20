@@ -251,6 +251,7 @@ public class ModStandsInit {
     public static final RegistryObject<StandEntityHeavyAttack> THE_WORLD_KICK = ACTIONS.register("the_world_kick", 
             () -> new TheWorldKick(new StandEntityHeavyAttack.Builder()
                     .resolveLevelToUnlock(1)
+                    .standPose(TheWorldKick.KICK_POSE)
                     .punchSound(ModSounds.THE_WORLD_KICK_HEAVY)
                     .shout(ModSounds.DIO_DIE)
                     .partsRequired(StandPart.LEGS)));
