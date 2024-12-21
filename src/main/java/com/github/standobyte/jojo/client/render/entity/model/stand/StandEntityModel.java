@@ -306,6 +306,9 @@ public abstract class StandEntityModel<T extends StandEntity> extends AgeableMod
     }
 
     public abstract ModelRenderer getArm(HandSide side);
+    public ModelRenderer getArmNoXRot(HandSide side) {
+        return getArm(side);
+    }
 
     @Override
     public abstract Iterable<ModelRenderer> headParts();

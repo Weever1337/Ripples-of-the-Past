@@ -28,7 +28,8 @@ public abstract class ArmBarrageSwing<T extends Entity, M extends EntityModel<T>
         if (side == HandSide.RIGHT) {
             leftOffset *= -1;
         }
-        zRot = MathUtil.wrapRadians((float) (Math.PI / 2 - MathHelper.atan2(upOffset, leftOffset)));
+        double atan = MathHelper.atan2(upOffset, leftOffset);
+        zRot = maxOffset == 0 ? 0 : MathUtil.wrapRadians((float) (Math.PI / 2 - atan));
         offset = new Vector3d(leftOffset, upOffset, frontOffset);
     }
     

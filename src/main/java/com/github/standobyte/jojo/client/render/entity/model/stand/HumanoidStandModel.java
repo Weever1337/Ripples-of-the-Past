@@ -611,6 +611,17 @@ public class HumanoidStandModel<T extends StandEntity> extends StandEntityModel<
         return null;
     }
     
+    @Override
+    public ModelRenderer getArmNoXRot(HandSide side) {
+        switch (side) {
+        case LEFT:
+            return leftArmBone != null ? leftArmBone : leftArm;
+        case RIGHT:
+            return rightArmBone != null ? rightArmBone : rightArm;
+        }
+        return null;
+    }
+    
     protected ModelRenderer getForeArm(HandSide side) {
         switch (side) {
         case LEFT:
@@ -635,6 +646,16 @@ public class HumanoidStandModel<T extends StandEntity> extends StandEntityModel<
             return leftLegXRot != null ? leftLegXRot : leftLeg;
         case RIGHT:
             return rightLegXRot != null ? rightLegXRot : rightLeg;
+        }
+        return null;
+    }
+    
+    public ModelRenderer getLegNoXRot(HandSide side) {
+        switch (side) {
+        case LEFT:
+            return leftLegBone != null ? leftLegBone : leftLeg;
+        case RIGHT:
+            return rightLegBone != null ? rightLegBone : rightLeg;
         }
         return null;
     }

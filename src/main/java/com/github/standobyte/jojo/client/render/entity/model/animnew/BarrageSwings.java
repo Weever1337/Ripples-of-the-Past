@@ -9,7 +9,6 @@ import java.util.Random;
 
 import com.github.standobyte.jojo.client.render.entity.model.animnew.stand.StandActionAnimation;
 import com.github.standobyte.jojo.client.render.entity.model.animnew.stand.StandPoseData;
-import com.github.standobyte.jojo.client.render.entity.model.stand.HumanoidStandModel;
 import com.github.standobyte.jojo.client.render.entity.model.stand.StandEntityModel;
 import com.github.standobyte.jojo.client.render.entity.model.stand.StandEntityModel.VisibilityMode;
 import com.github.standobyte.jojo.entity.stand.StandEntity;
@@ -119,8 +118,9 @@ public class BarrageSwings {
         protected final Vector3d offset;
         protected final float zRot;
         
-        public TwoHandedBarrageLoopSwing(StandActionAnimation barrageAnim, float ticks, float ticksMax, HandSide side, double maxOffset) {
-            super(barrageAnim, ticks, ticksMax);
+        public TwoHandedBarrageLoopSwing(StandActionAnimation barrageAnim, float startingAnim, float animMax, 
+                HandSide side, double maxOffset) {
+            super(barrageAnim, startingAnim, animMax);
             this.side = side;
             double upOffset = (RANDOM.nextDouble() - 0.5) * maxOffset;
             double leftOffset = RANDOM.nextDouble() * maxOffset / 2;
@@ -128,7 +128,8 @@ public class BarrageSwings {
             if (side == HandSide.RIGHT) {
                 leftOffset *= -1;
             }
-            zRot = MathUtil.wrapRadians((float) (Math.PI / 2 - MathHelper.atan2(upOffset, leftOffset)));
+            double atan = MathHelper.atan2(upOffset, leftOffset);
+            zRot = maxOffset == 0 ? 0 : MathUtil.wrapRadians((float) (Math.PI / 2 - atan));
             offset = new Vector3d(leftOffset, upOffset, frontOffset);
         }
         
@@ -145,11 +146,10 @@ public class BarrageSwings {
                     if (entity.getRandom().nextBoolean()) side = side.getOpposite();
                     
                     for (int i = 0; i < swingsToAdd; i++) {
-                        float f = ((float) i / (float) swingsToAdd
-                                + (entity.getRandom().nextFloat() - 0.5F) * 0.4F / swingsToAdd)
-                                * loopLen * 0.5F;
-                        side = side.getOpposite();
+                        float x = ((float) i + (entity.getRandom().nextFloat() - 0.5F) * 0.4F) / swingsToAdd;
+                        float f = x * loopLen * 0.5F;
                         swings.addSwing(new BarrageSwings.TwoHandedBarrageLoopSwing(barrageAnim, f, loopLen, side, maxOffset));
+                        side = side.getOpposite();
                     }
                 }
             }
@@ -162,15 +162,20 @@ public class BarrageSwings {
                 int packedLight, int packedOverlay, float red, float green, float blue, float alpha) {
             model.setVisibility(entity, side == HandSide.LEFT ? VisibilityMode.LEFT_ARM_ONLY : VisibilityMode.RIGHT_ARM_ONLY, false);
             float loopCompletion = ticks / ticksMax;
-            double zAdditional = (0.5F - Math.abs(0.5F - loopCompletion));
+            float zMult = loopCompletion < 0.5 ? loopCompletion * 2 : (1 - loopCompletion) * 2;
+            double zAdditional = 0.5 * zMult;
             Vector3d offsetRot = new Vector3d(offset.x, -offset.y, offset.z + zAdditional).xRot(xRotDeg * MathUtil.DEG_TO_RAD);
             matrixStack.pushPose();
             matrixStack.translate(offsetRot.x, offsetRot.y, -offsetRot.z);
             model.resetPose(entity);
+            float ticks = this.ticks;
+            if (side == HandSide.LEFT) {
+                ticks += ticksMax * 0.5f;
+            }
             barrageAnim.poseStand(entity, model, ticks, yRotOffsetDeg, xRotDeg, 
                     StandPoseData.start().standPose(model.standPose).actionPhase(entity.getCurrentTaskPhase()).end());
-            ModelRenderer arm = model.getArm(side);
-            arm.zRot = arm.zRot + HumanoidStandModel.barrageHitEasing(loopCompletion) * zRot;
+            ModelRenderer arm = model.getArmNoXRot(side);
+            arm.zRot = arm.zRot + zMult * zRot;
             model.applyXRotation();
             model.renderToBuffer(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha * 0.75F);
             matrixStack.popPose();
