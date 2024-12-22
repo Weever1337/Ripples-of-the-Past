@@ -171,13 +171,12 @@ public class BarrageSwings {
             matrixStack.pushPose();
             matrixStack.translate(offsetRot.x, offsetRot.y, -offsetRot.z);
             model.resetPose(entity);
-            float ticks = this.ticks + animTimeOffset;
             StandPoseData standPose = StandPoseData.start()
                     .standPose(model.standPose)
                     .actionPhase(StandEntityAction.Phase.PERFORM)
-                    .animTime(ticks)
+                    .animTime(ticks + animTimeOffset)
                     .end();
-            barrageAnim.poseStand(entity, model, ticks, yRotOffsetDeg, xRotDeg, standPose);
+            barrageAnim.poseStand(entity, model, yRotOffsetDeg, xRotDeg, standPose);
             ModelRenderer arm = model.getArmNoXRot(side);
             arm.zRot = arm.zRot + zMult * zRot;
             model.applyXRotation();

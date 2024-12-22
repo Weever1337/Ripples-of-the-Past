@@ -67,8 +67,8 @@ public abstract class StandEntityModel<T extends StandEntity> extends AgeableMod
     public StandPose standPose;
 
     private boolean initialized = false;
-    public float idleLoopTickStamp = 0;
     
+    @Deprecated public float idleLoopTickStamp = 0;
     @Deprecated private ModelPose<T> poseReset;
     @Deprecated protected IModelPose<T> idlePose;
     @Deprecated protected IModelPose<T> idleLoop;

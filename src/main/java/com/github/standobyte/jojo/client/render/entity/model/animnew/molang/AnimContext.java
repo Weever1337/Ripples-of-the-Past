@@ -9,20 +9,18 @@ import team.unnamed.mocha.runtime.binding.Binding;
 @Binding("query")
 public class AnimContext {
     @Nullable public Entity entity;
-    public float ticks;
     @Binding("head_y_rotation") public double head_y_rotation = 0;
     @Binding("head_x_rotation") public double head_x_rotation = 0;
     
-    public static AnimContext fillContext(Entity entity, float ticks, float yRotOffsetDeg, float xRotDeg) {
+    public static AnimContext fillContext(Entity entity, float yRotOffsetDeg, float xRotDeg) {
         _INSTANCE.entity = entity;
-        _INSTANCE.ticks = ticks;
         _INSTANCE.head_y_rotation = MathHelper.wrapDegrees(yRotOffsetDeg);
         _INSTANCE.head_x_rotation = xRotDeg;
         return _INSTANCE;
     }
     
     public static AnimContext clearContext() {
-        return fillContext(null, 0, 0, 0);
+        return fillContext(null, 0, 0);
     }
     
     

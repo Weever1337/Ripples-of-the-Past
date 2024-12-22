@@ -80,8 +80,7 @@ public class GeckoStandAnimator implements IStandAnimator {
                 }
                 
                 model.idleLoopTickStamp = ticks;
-                return applyAnim(summonAnim, entity, model, ticks, yRotOffsetDeg, xRotDeg, 
-                        standPose, poseData);
+                return applyAnim(summonAnim, entity, model, yRotOffsetDeg, xRotDeg, standPose, poseData);
             }
         }
         
@@ -92,25 +91,24 @@ public class GeckoStandAnimator implements IStandAnimator {
             if (anims != null) {
                 StandActionAnimation anim = standPose.getAnim(anims, entity);
                 if (anim != null) {
-                    return applyAnim(anim, entity, model, ticks, yRotOffsetDeg, xRotDeg, standPose, poseData);
+                    return applyAnim(anim, entity, model, yRotOffsetDeg, xRotDeg, standPose, poseData);
                 }
             }
         }
         
         StandActionAnimation idleAnim = getIdleAnim(entity);
         if (idleAnim != null) {
-            return applyAnim(idleAnim, entity, model, ticks, yRotOffsetDeg, xRotDeg, standPose, poseData);
+            return applyAnim(idleAnim, entity, model, yRotOffsetDeg, xRotDeg, standPose, poseData);
         }
         
         return exists;
     }
     
-    protected <T extends StandEntity> boolean applyAnim(StandActionAnimation anim, 
-            @Nullable T entity, StandEntityModel<T> model, float ticks, 
-            float yRotOffsetDeg, float xRotDeg, StandPose standPose, StandPoseData poseData) {
+    protected <T extends StandEntity> boolean applyAnim(StandActionAnimation anim, @Nullable T entity, 
+            StandEntityModel<T> model, float yRotOffsetDeg, float xRotDeg, StandPose standPose, StandPoseData poseData) {
         curAnim = anim;
         poseData.edit().standPose(standPose);
-        poseData.standPose.applyAnim(entity, model, anim, ticks, yRotOffsetDeg, xRotDeg, poseData);
+        poseData.standPose.applyAnim(entity, model, anim, yRotOffsetDeg, xRotDeg, poseData);
         return true;
         
     }

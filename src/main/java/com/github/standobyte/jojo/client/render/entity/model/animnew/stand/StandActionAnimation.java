@@ -34,7 +34,7 @@ public class StandActionAnimation {
     
     
     public void poseStand(@Nullable StandEntity entity, StandEntityModel<?> model, 
-            float ticks, float yRotOffsetDeg, float xRotDeg, StandPoseData poseData) {
+            float yRotOffsetDeg, float xRotDeg, StandPoseData poseData) {
         boolean appliedPhaseAnim = false;
         if (poseData.actionPhase.isPresent() && phasesTimeline != null) {
             Phase taskPhase = poseData.actionPhase.get();
@@ -81,10 +81,10 @@ public class StandActionAnimation {
         }
         
         if (!appliedPhaseAnim) {
-            animTime = anim.looping() ? (ticks / 20f) % anim.lengthInSeconds() : ticks / 20f;
+            animTime = anim.looping() ? (poseData.animTime / 20f) % anim.lengthInSeconds() : poseData.animTime / 20f;
         }
         
-        AnimContext animContext = AnimContext.fillContext(entity, ticks, yRotOffsetDeg, xRotDeg);
+        AnimContext animContext = AnimContext.fillContext(entity, yRotOffsetDeg, xRotDeg);
         GeckoStandAnimator.animateSecs(model, anim, animTime, ANIM_SPEED, animContext);
     }
     

@@ -116,7 +116,7 @@ public class KeyframeWithQuery {
                         // TODO Do more testing with Mocha to figure out if it's me using bad practices, or it's a bug and I should open an issue on their GitHub
                         MochaFunction function = interpreter.prepareEval(molang);
                         badBytecodeError = true;
-                        JojoMod.getLogger().warn("Failed to compile a Molang expression ({}) into bytecode. From now on they will be interpreted.", molang, eCompile);
+                        JojoMod.getLogger().error("Failed to compile a Molang expression ({}) into bytecode. From now on they will be interpreted.", molang/*, eCompile*/);
                         return function;
                     }
                 }

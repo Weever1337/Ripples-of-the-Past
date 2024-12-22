@@ -175,6 +175,7 @@ public class StandEntity extends LivingEntity implements IStandManifestation, IE
     private ManualStandMovementLock manualMovementLocks = new ManualStandMovementLock(this);
     
     protected StandPose standPose = StandPose.SUMMON;
+    protected int setPoseTime;
     public int punchComboCount = 0;
     public int gradualSummonWeaknessTicks;
     public int unsummonTicks;
@@ -699,8 +700,11 @@ public class StandEntity extends LivingEntity implements IStandManifestation, IE
 
     public void setStandPose(StandPose pose) {
         if (this.standPose != pose) {
-            if (level.isClientSide() && pose == StandPose.BARRAGE) {
-                getBarrageSwingsHolder().resetSwingTime();
+            if (level.isClientSide()) {
+                this.setPoseTime = tickCount;
+                if (pose == StandPose.BARRAGE) {
+                    getBarrageSwingsHolder().resetSwingTime();
+                }
             }
             this.standPose = pose;
         }
@@ -722,7 +726,8 @@ public class StandEntity extends LivingEntity implements IStandManifestation, IE
         }
         Optional<StandEntityTask> curTask = getCurrentTask();
         StandPoseDataFill poseData = StandPoseData.start()
-                .standPose(pose);
+                .standPose(pose)
+                .animTime(tickCount - setPoseTime + partialTick);
         curTask.ifPresent(task -> {
             poseData
             .actionPhase(Optional.of(task.getPhase()))

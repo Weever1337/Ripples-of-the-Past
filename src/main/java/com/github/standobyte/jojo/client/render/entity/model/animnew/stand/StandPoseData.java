@@ -8,8 +8,8 @@ import com.github.standobyte.jojo.entity.stand.StandPose;
 public class StandPoseData {
     public StandPose standPose = StandPose.IDLE;
     public Optional<Phase> actionPhase = Optional.empty();
-    public float phaseCompletion = 0;
     public float animTime = 0;
+    public float phaseCompletion = 0;
     
     public static StandPoseDataFill start() {
         INSTANCE.standPose = StandPose.IDLE;
