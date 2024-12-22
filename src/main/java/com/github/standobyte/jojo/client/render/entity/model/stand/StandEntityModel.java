@@ -112,6 +112,16 @@ public abstract class StandEntityModel<T extends StandEntity> extends AgeableMod
         }
     }
     
+    protected void clearAllCubes() {
+        headParts().forEach(this::clearAllCubes);
+        bodyParts().forEach(this::clearAllCubes);
+    }
+    
+    protected void clearAllCubes(ModelRenderer modelPart) {
+        modelPart.cubes.clear();
+        modelPart.children.forEach(this::clearAllCubes);
+    }
+    
     public void setAnimatorSupplier(Supplier<IStandAnimator> supplier) {
         this.getDefaultGeckoAnimator = supplier;
     }
@@ -124,6 +134,10 @@ public abstract class StandEntityModel<T extends StandEntity> extends AgeableMod
             }
         }
         return legacyStandAnimHandler;
+    }
+    
+    public Supplier<IStandAnimator> getGeckoAnimator() {
+        return getDefaultGeckoAnimator;
     }
 
     public static final void setRotationAngle(ModelRenderer modelRenderer, float x, float y, float z) {

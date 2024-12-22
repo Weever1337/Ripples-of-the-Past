@@ -36,8 +36,11 @@ public abstract class StandModelLayerRenderer<T extends StandEntity, M extends S
         this.model = model;
         this.texture = texture;
         this.useParentModel = useParentModel;
-        if (!useParentModel && model != null) {
-            model.afterInit();
+        if (model != null) {
+            model.setAnimatorSupplier(getParentModel().getGeckoAnimator());
+            if (!useParentModel) {
+                model.afterInit();
+            }
         }
     }
 

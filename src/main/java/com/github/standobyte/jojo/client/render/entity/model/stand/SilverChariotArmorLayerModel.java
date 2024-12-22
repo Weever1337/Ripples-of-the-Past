@@ -1,16 +1,11 @@
 package com.github.standobyte.jojo.client.render.entity.model.stand;
 
-import com.github.standobyte.jojo.JojoMod;
-import com.github.standobyte.jojo.client.render.entity.model.stand.StandModelRegistry.StandModelRegistryObj;
-import com.github.standobyte.jojo.entity.stand.stands.SilverChariotEntity;
-
 import net.minecraft.client.renderer.model.ModelRenderer;
-import net.minecraft.util.ResourceLocation;
 
 // Made with Blockbench 3.9.2
 
 
-public class SilverChariotArmorLayerModel extends HumanoidStandModel<SilverChariotEntity> {
+public class SilverChariotArmorLayerModel extends SilverChariotModel {
     private ModelRenderer rightTorsoTube;
     private ModelRenderer leftTorsoTube;
     private ModelRenderer leftShoulder;
@@ -18,10 +13,6 @@ public class SilverChariotArmorLayerModel extends HumanoidStandModel<SilverChari
 
     public SilverChariotArmorLayerModel() {
         super();
-        
-        StandModelRegistryObj baseModel = StandModelRegistry.getRegisteredModel(
-                new ResourceLocation(JojoMod.MOD_ID, "silver_chariot"));
-        getDefaultGeckoAnimator = baseModel::getDefaultGeckoAnims;
 
         root = new ModelRenderer(this);
         root.setPos(0.0F, 24.0F, 0.0F);

@@ -1,5 +1,7 @@
 package com.github.standobyte.jojo.client.render.entity.model.stand;
 
+import java.util.function.Function;
+
 import com.github.standobyte.jojo.action.stand.MagiciansRedFlameBurst;
 import com.github.standobyte.jojo.action.stand.MagiciansRedRedBind;
 import com.github.standobyte.jojo.action.stand.StandEntityAction;
@@ -12,7 +14,9 @@ import com.github.standobyte.jojo.entity.stand.stands.MagiciansRedEntity;
 import com.github.standobyte.jojo.util.general.MathUtil;
 import com.mojang.blaze3d.matrix.MatrixStack;
 
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.model.ModelRenderer;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.vector.Vector3f;
 
 // Made with Blockbench 3.9.2
@@ -23,9 +27,13 @@ public class MagiciansRedModel extends HumanoidStandModel<MagiciansRedEntity> {
     private ModelRenderer beakLower;
     private ModelRenderer feather;
     private ModelRenderer feather2;
-
+    
     public MagiciansRedModel() {
-        super();
+        this(RenderType::entityTranslucent, 128, 128);
+    }
+
+    public MagiciansRedModel(Function<ResourceLocation, RenderType> renderType, int texWidth, int texHeight) {
+        super(renderType, texWidth, texHeight);
 
         root = new ModelRenderer(this);
         root.setPos(0.0F, 24.0F, 0.0F);
