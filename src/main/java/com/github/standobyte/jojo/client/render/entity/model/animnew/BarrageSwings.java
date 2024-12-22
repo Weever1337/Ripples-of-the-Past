@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import com.github.standobyte.jojo.action.stand.StandEntityAction;
 import com.github.standobyte.jojo.client.render.entity.model.animnew.stand.StandActionAnimation;
 import com.github.standobyte.jojo.client.render.entity.model.animnew.stand.StandPoseData;
 import com.github.standobyte.jojo.client.render.entity.model.stand.StandEntityModel;
@@ -33,7 +34,7 @@ public class BarrageSwings {
     }
     
     public void updateSwings(Minecraft mc) {
-        if (!mc.isPaused() && hasSwings()) {
+        if (!mc.isPaused() && !barrageSwings.isEmpty()) {
             float timeDelta = mc.getDeltaFrameTime();
             Iterator<BarrageSwing> iter = barrageSwings.iterator();
             while (iter.hasNext()) {
@@ -50,20 +51,12 @@ public class BarrageSwings {
         return barrageSwings;
     }
     
-    public boolean hasSwings() {
-        return !barrageSwings.isEmpty();
-    }
-    
     public void setLoopCount(float loopCount) {
         this.loopLast = loopCount;
     }
     
     public float getLoopCount() {
         return loopLast;
-    }
-    
-    public void resetSwingTime() {
-        loopLast = -1;
     }
     
     
@@ -74,17 +67,18 @@ public class BarrageSwings {
         map.put("TWO_HANDED", TwoHandedBarrageLoopSwing::addSwing);
     });
     
-    public static <T extends StandEntity> void onBarrageAnim(String key, T entity, StandEntityModel<T> model, 
+    public static <T extends StandEntity> boolean onBarrageAnim(String key, T entity, StandEntityModel<T> model, 
             StandActionAnimation barrageAnim, float entityTicks, float curAnimTime) {
         AddBarrageSwing addSwingFunction = BARRAGE_SWING_TYPES.get(key);
         if (addSwingFunction != null) {
-            addSwingFunction.addSwing(entity, model, entity.getBarrageSwings(), barrageAnim, entityTicks, curAnimTime);
+            return addSwingFunction.addSwing(entity, model, entity.getBarrageSwings(), barrageAnim, entityTicks, curAnimTime);
         }
+        return false;
     }
     
     @FunctionalInterface
     public static interface AddBarrageSwing {
-        <T extends StandEntity> void addSwing(T entity, StandEntityModel<T> model, BarrageSwings swings, 
+        <T extends StandEntity> boolean addSwing(T entity, StandEntityModel<T> model, BarrageSwings swings, 
                 StandActionAnimation barrageAnim, float entityTicks, float curAnimTimeSecs);
     }
     
@@ -137,12 +131,14 @@ public class BarrageSwings {
             offset = new Vector3d(leftOffset, upOffset, frontOffset);
         }
         
-        public static <T extends StandEntity> void addSwing(T entity, StandEntityModel<T> model, BarrageSwings swings, 
+        public static <T extends StandEntity> boolean addSwing(T entity, StandEntityModel<T> model, BarrageSwings swings, 
                 StandActionAnimation barrageAnim, float entityTicks, float curAnimTimeSecs) {
+            if (!entity.getCurrentTaskPhase().filter(phase -> phase == StandEntityAction.Phase.PERFORM).isPresent()) return false;
+            
             float lastLoop = swings.getLoopCount();
             float loopLen = 4;
             float loop = entityTicks / loopLen;
-            if (lastLoop > 0 && loop > lastLoop) {
+            if (entity.animWasBarraging && loop > lastLoop) {
                 float hits = StandStatFormulas.getBarrageHitsPerSecond(entity.getAttackSpeed()) / 20F * Math.min(loop - lastLoop, 1) * loopLen;
                 int swingsToAdd = MathUtil.fractionRandomInc(hits);
                 if (swingsToAdd > 0) {
@@ -160,6 +156,7 @@ public class BarrageSwings {
                 }
             }
             swings.setLoopCount(loop);
+            return true;
         }
         
         @Override
@@ -174,8 +171,13 @@ public class BarrageSwings {
             matrixStack.pushPose();
             matrixStack.translate(offsetRot.x, offsetRot.y, -offsetRot.z);
             model.resetPose(entity);
-            barrageAnim.poseStand(entity, model, ticks + animTimeOffset, yRotOffsetDeg, xRotDeg, 
-                    StandPoseData.start().standPose(model.standPose).actionPhase(entity.getCurrentTaskPhase()).end());
+            float ticks = this.ticks + animTimeOffset;
+            StandPoseData standPose = StandPoseData.start()
+                    .standPose(model.standPose)
+                    .actionPhase(StandEntityAction.Phase.PERFORM)
+                    .animTime(ticks)
+                    .end();
+            barrageAnim.poseStand(entity, model, ticks, yRotOffsetDeg, xRotDeg, standPose);
             ModelRenderer arm = model.getArmNoXRot(side);
             arm.zRot = arm.zRot + zMult * zRot;
             model.applyXRotation();

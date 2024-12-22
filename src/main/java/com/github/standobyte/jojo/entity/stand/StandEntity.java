@@ -29,6 +29,7 @@ import com.github.standobyte.jojo.client.ClientUtil;
 import com.github.standobyte.jojo.client.particle.custom.CustomParticlesHelper;
 import com.github.standobyte.jojo.client.render.entity.model.animnew.BarrageSwings;
 import com.github.standobyte.jojo.client.render.entity.model.animnew.stand.StandPoseData;
+import com.github.standobyte.jojo.client.render.entity.model.animnew.stand.StandPoseData.StandPoseDataFill;
 import com.github.standobyte.jojo.client.render.entity.model.stand.StandEntityModel;
 import com.github.standobyte.jojo.client.render.entity.pose.anim.barrage.BarrageSwingsHolder;
 import com.github.standobyte.jojo.client.sound.barrage.BarrageHitSoundHandler;
@@ -188,6 +189,7 @@ public class StandEntity extends LivingEntity implements IStandManifestation, IE
     private BarrageSwingsHolder<?, ?> barrageSwingsOld;
     private BarrageSwings barrageSwings;
     private final BarrageHitSoundHandler barrageSounds;
+    public boolean animWasBarraging = false;
     
     public ActionTarget clFrontTarget = ActionTarget.EMPTY;
 
@@ -699,7 +701,6 @@ public class StandEntity extends LivingEntity implements IStandManifestation, IE
         if (this.standPose != pose) {
             if (level.isClientSide() && pose == StandPose.BARRAGE) {
                 getBarrageSwingsHolder().resetSwingTime();
-                getBarrageSwings().resetSwingTime();
             }
             this.standPose = pose;
         }
@@ -719,11 +720,16 @@ public class StandEntity extends LivingEntity implements IStandManifestation, IE
             setStandPose(StandPose.IDLE);
             pose = StandPose.IDLE;
         }
-        return StandPoseData.start()
-                .standPose(pose)
-                .actionPhase(getCurrentTaskPhase())
-                .phaseCompletion(getCurrentTaskPhaseCompletion(partialTick))
-                .end();
+        Optional<StandEntityTask> curTask = getCurrentTask();
+        StandPoseDataFill poseData = StandPoseData.start()
+                .standPose(pose);
+        curTask.ifPresent(task -> {
+            poseData
+            .actionPhase(Optional.of(task.getPhase()))
+            .phaseCompletion(task.getPhaseCompletion(partialTick))
+            .animTime(task.getTick() + partialTick);
+        });
+        return poseData.end();
     }
     
     public void onSetPoseAnimEnded() {
@@ -2056,6 +2062,7 @@ public class StandEntity extends LivingEntity implements IStandManifestation, IE
     }
     
 
+    @Deprecated
     public BarrageSwingsHolder<?, ?> getBarrageSwingsHolder() {
         if (!level.isClientSide()) {
             throw new IllegalStateException("Barrage swing animating class is only available on the client!");

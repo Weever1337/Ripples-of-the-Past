@@ -3,8 +3,10 @@ package com.github.standobyte.jojo.client.render.entity.model.animnew.stand;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
@@ -20,6 +22,7 @@ import com.github.standobyte.jojo.client.render.entity.model.stand.StandEntityMo
 import com.github.standobyte.jojo.entity.stand.StandEntity;
 import com.github.standobyte.jojo.entity.stand.StandPose;
 import com.github.standobyte.jojo.util.general.MathUtil;
+import com.google.common.collect.Streams;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.mojang.blaze3d.matrix.MatrixStack;
@@ -176,15 +179,22 @@ public class GeckoStandAnimator implements IStandAnimator {
                 float time = Float.parseFloat(keyframeEntry.getKey());
                 JsonElement value = keyframeEntry.getValue();
                 Iterable<JsonElement> instructions = value.isJsonArray() ? value.getAsJsonArray() : Collections.singleton(value);
-                for (JsonElement instrJson : instructions) {
-                    if (JSONUtils.isStringValue(instrJson)) {
-                        String instr = instrJson.getAsString();
-                        String[] assignment = instr.split("[ ]*=[ ]*");
-                        if (assignment.length == 2) {
-                            if (assignment[1].endsWith(";")) assignment[1] = assignment[1].substring(0, assignment[1].length() - 1);
-                            standAnim.parseAssignmentInstruction(assignment[0], assignment[1], time);
-                        }
-                    }
+                Map<String, String> assignmentMap = Streams.stream(instructions)
+                        .filter(JSONUtils::isStringValue)
+                        .map(JsonElement::getAsString)
+                        .map(instruction -> instruction.split("[ ]*=[ ]*"))
+                        .filter(assignment -> assignment.length == 2)
+                        .peek(assignment -> {
+                            if (assignment[1].endsWith(";")) {
+                                assignment[1] = assignment[1].substring(0, assignment[1].length() - 1);
+                            }
+                        })
+                        .collect(Collectors.toMap(assignment -> assignment[0], assignment -> assignment[1], 
+                                (u, v) -> { throw new IllegalStateException(String.format("Duplicate key %s", u)); }, LinkedHashMap::new));
+                while (!assignmentMap.isEmpty()) {
+                    Map.Entry<String, String> assignment = assignmentMap.entrySet().iterator().next();
+                    standAnim.parseAssignmentInstruction(assignment.getKey(), assignment.getValue(), time, assignmentMap);
+                    assignmentMap.remove(assignment.getKey());
                 }
             }
         }
@@ -196,12 +206,14 @@ public class GeckoStandAnimator implements IStandAnimator {
 
     @Override
     public <T extends StandEntity> void addBarrageSwings(T entity, StandEntityModel<T> model, float ticks) {
+        boolean isBarraging = false;
         if (curAnim != null) {
             String barrageType = curAnim.getStringTimelineVal(TimelineKeys.BARRAGE, curAnim.animTime);
             if (barrageType != null) {
-                BarrageSwings.onBarrageAnim(barrageType, entity, model, curAnim, ticks, curAnim.animTime);
+                isBarraging = BarrageSwings.onBarrageAnim(barrageType, entity, model, curAnim, ticks, curAnim.animTime);
             }
         }
+        entity.animWasBarraging = isBarraging;
     }
 
     @Override

@@ -5,6 +5,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import com.github.standobyte.jojo.action.stand.StandEntityAction.Phase;
@@ -20,9 +21,9 @@ public class StandActionAnimation {
     public static final float ANIM_SPEED = 1;
     public final Animation anim;
     
-    @Nullable public AnimObjTimeline<Phase> phasesTimeline;
-    @Nullable public Map<String, AnimObjTimeline<String>> stringValTimelines = new HashMap<>();
-    @Nullable public Map<String, AnimObjTimeline<Double>> numericValTimelines = new HashMap<>();
+    @Nullable protected AnimObjTimeline<AnimActionPhase> phasesTimeline;
+    @Nullable protected Map<String, AnimObjTimeline<String>> stringValTimelines = new HashMap<>();
+    @Nullable protected Map<String, AnimObjTimeline<Double>> numericValTimelines = new HashMap<>();
     
     public float animTime;
     
@@ -34,39 +35,52 @@ public class StandActionAnimation {
     
     public void poseStand(@Nullable StandEntity entity, StandEntityModel<?> model, 
             float ticks, float yRotOffsetDeg, float xRotDeg, StandPoseData poseData) {
+        boolean appliedPhaseAnim = false;
         if (poseData.actionPhase.isPresent() && phasesTimeline != null) {
             Phase taskPhase = poseData.actionPhase.get();
             
-            Float curPhaseTime = null;
-            Float nextPhaseTime = null;
-            Float2ObjectMap.Entry<Phase> prevAnimPhase = null;
-            for (Float2ObjectMap.Entry<Phase> animPhase : phasesTimeline.getEntries()) {
-                if (animPhase.getValue().ordinal() > taskPhase.ordinal()) {
-                    curPhaseTime = prevAnimPhase != null ? prevAnimPhase.getFloatKey() : 0;
-                    nextPhaseTime = animPhase.getFloatKey();
+            Float2ObjectMap.Entry<AnimActionPhase> curPhase = null;
+            Float2ObjectMap.Entry<AnimActionPhase> nextPhase = null;
+            
+            @Nonnull Float2ObjectMap.Entry<AnimActionPhase> iterPrevPhase = null;
+            for (Float2ObjectMap.Entry<AnimActionPhase> animPhase : phasesTimeline.getEntries()) {
+                if (taskPhase.ordinal() < animPhase.getValue().phase.ordinal()) {
+                    curPhase = iterPrevPhase;
+                    nextPhase = animPhase;
                     break;
                 }
-                prevAnimPhase = animPhase;
+                iterPrevPhase = animPhase;
             }
-            if (curPhaseTime == null) {
-                curPhaseTime = prevAnimPhase.getValue() == taskPhase ? prevAnimPhase.getFloatKey() : anim.lengthInSeconds();
-                nextPhaseTime = anim.lengthInSeconds();
-            }
-            
-            if (poseData.phaseCompletion >= 0) {
-                animTime = MathHelper.lerp(poseData.phaseCompletion, curPhaseTime, nextPhaseTime);
-            }
-            else if (poseData.animTime >= 0) {
-                animTime = curPhaseTime + poseData.animTime / 20f;
-                if (entity != null && animTime >= anim.lengthInSeconds()) {
-                    entity.onSetPoseAnimEnded();
+            if (curPhase == null) {
+                if (taskPhase == iterPrevPhase.getValue().phase) {
+                    curPhase = iterPrevPhase;
                 }
             }
-            else {
-                animTime = curPhaseTime;
+            if (curPhase != null) {
+                float curPhaseTime = curPhase.getFloatKey();
+                float nextPhaseTime = nextPhase != null ? nextPhase.getFloatKey() : anim.lengthInSeconds();
+                switch (curPhase.getValue().timeAnimMode) {
+                case FIT_PHASE_LENGTH:
+                    animTime = MathHelper.lerp(poseData.phaseCompletion, curPhaseTime, nextPhaseTime);
+                    break;
+                case PRESERVE_PHASE_LENGTH:
+                    animTime = curPhaseTime + poseData.animTime / 20f;
+                    if (entity != null && animTime >= anim.lengthInSeconds()) {
+                        entity.onSetPoseAnimEnded();
+                    }
+                    break;
+                case LOOP_BACK:
+                    float loopLen = nextPhaseTime - curPhase.getValue().loopBackTo;
+                    animTime = curPhaseTime + (poseData.animTime / 20f) % loopLen;
+                    break;
+                default:
+                    break;
+                }
+                appliedPhaseAnim = true;
             }
         }
-        else {
+        
+        if (!appliedPhaseAnim) {
             animTime = anim.looping() ? (ticks / 20f) % anim.lengthInSeconds() : ticks / 20f;
         }
         
@@ -75,14 +89,15 @@ public class StandActionAnimation {
     }
     
     
-    public void parseAssignmentInstruction(String field, String value, float keyframeTime) {
+    public void parseAssignmentInstruction(String field, String value, float keyframeTime, Map<String, String> assignmentMap) {
         switch (field) {
         case "phase":
             Phase phase = Phase.valueOf(value);
             if (phasesTimeline == null) {
                 phasesTimeline = new AnimObjTimeline<>();
             }
-            phasesTimeline.add(keyframeTime, phase);
+            AnimActionPhase animPhase = parseAnimPhase(phase, assignmentMap);
+            phasesTimeline.add(keyframeTime, animPhase);
             break;
         default:
             if (stringValTimelines == null) {
@@ -92,6 +107,18 @@ public class StandActionAnimation {
             timeline.add(keyframeTime, value);
             break;
         }
+    }
+    
+    protected AnimActionPhase parseAnimPhase(Phase phase, Map<String, String> assignmentMap) {
+        if (assignmentMap.containsKey("phase.loopBack")) {
+            try {
+                float loopBackTo = Float.parseFloat(assignmentMap.get("phase.loopBack"));
+                assignmentMap.remove("phase.loopBack");
+                return AnimActionPhase.loopBack(phase, loopBackTo);
+            }
+            catch (NumberFormatException e) {}
+        }
+        return new AnimActionPhase(phase, AnimActionPhase.Mode.FIT_PHASE_LENGTH);
     }
     
     public void onFinishedParsing() {

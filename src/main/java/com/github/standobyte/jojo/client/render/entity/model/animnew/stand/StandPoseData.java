@@ -8,14 +8,14 @@ import com.github.standobyte.jojo.entity.stand.StandPose;
 public class StandPoseData {
     public StandPose standPose = StandPose.IDLE;
     public Optional<Phase> actionPhase = Optional.empty();
-    public float phaseCompletion = -1;
-    public float animTime = -1;
+    public float phaseCompletion = 0;
+    public float animTime = 0;
     
     public static StandPoseDataFill start() {
         INSTANCE.standPose = StandPose.IDLE;
         INSTANCE.actionPhase = Optional.empty();
-        INSTANCE.phaseCompletion = -1;
-        INSTANCE.animTime = -1;
+        INSTANCE.phaseCompletion = 0;
+        INSTANCE.animTime = 0;
         return CHAINABLE_FILL_INSTANCE;
     }
     
