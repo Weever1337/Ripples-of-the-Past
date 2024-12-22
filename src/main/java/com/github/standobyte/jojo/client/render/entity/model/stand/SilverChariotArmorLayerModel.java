@@ -13,6 +13,7 @@ public class SilverChariotArmorLayerModel extends SilverChariotModel {
 
     public SilverChariotArmorLayerModel() {
         super();
+        isLayerModel = true;
 
         root = new ModelRenderer(this);
         root.setPos(0.0F, 24.0F, 0.0F);

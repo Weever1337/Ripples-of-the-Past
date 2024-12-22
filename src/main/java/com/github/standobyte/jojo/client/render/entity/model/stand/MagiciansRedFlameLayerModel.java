@@ -9,6 +9,7 @@ public class MagiciansRedFlameLayerModel extends MagiciansRedModel {
 
     public MagiciansRedFlameLayerModel() {
         super(tex -> Atlases.translucentCullBlockSheet(), 64, 64);
+        isLayerModel = true;
         
         clearAllCubes();
         leftForeArm.addChild(new FlameModelRenderer(this).setFireSprites(MagiciansRedRenderer.FIRE_0_SPRITE, MagiciansRedRenderer.FIRE_1_SPRITE)

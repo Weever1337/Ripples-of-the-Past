@@ -21,7 +21,7 @@ public class BarrageSwingsHolder<T extends Entity, M extends EntityModel<T>> {
     }
     
     public void updateSwings(Minecraft mc) {
-        if (!mc.isPaused() && hasSwings()) {
+        if (!mc.isPaused() && !barrageSwings.isEmpty()) {
             float timeDelta = mc.getDeltaFrameTime();
             Iterator<AdditionalBarrageSwing<T, M>> iter = barrageSwings.iterator();
             while (iter.hasNext()) {

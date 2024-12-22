@@ -57,6 +57,7 @@ public abstract class StandEntityModel<T extends StandEntity> extends AgeableMod
     protected Map<String, ModelPartDefaultState> namedModelParts = new HashMap<>();
     protected Supplier<IStandAnimator> getDefaultGeckoAnimator;
     private IStandAnimator legacyStandAnimHandler;
+    public boolean isLayerModel = false;
     
     protected VisibilityMode visibilityMode = VisibilityMode.ALL;
     protected float yRotDeg;

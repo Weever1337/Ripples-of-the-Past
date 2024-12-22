@@ -130,9 +130,11 @@ public class LegacyStandAnimator<T extends StandEntity> implements IStandAnimato
     public <A extends StandEntity> void renderBarrageSwings(A entity, StandEntityModel<A> model, float yRotOffsetDeg, float xRotDeg, 
             MatrixStack matrixStack, IVertexBuilder buffer, 
             int packedLight, int packedOverlay, float red, float green, float blue, float alpha) {
-        BarrageSwingsHolder<T, StandEntityModel<T>> barrageSwings = (BarrageSwingsHolder<T, StandEntityModel<T>>) entity.getBarrageSwingsHolder();
-        barrageSwings.renderBarrageSwings((StandEntityModel<T>) model, (T) entity, matrixStack, buffer, 
-                packedLight, packedOverlay, yRotOffsetDeg * MathUtil.DEG_TO_RAD, xRotDeg * MathUtil.DEG_TO_RAD, red, green, blue, alpha);
+        if (!model.isLayerModel) {
+            BarrageSwingsHolder<T, StandEntityModel<T>> barrageSwings = (BarrageSwingsHolder<T, StandEntityModel<T>>) entity.getBarrageSwingsHolder();
+            barrageSwings.renderBarrageSwings((StandEntityModel<T>) model, (T) entity, matrixStack, buffer, 
+                    packedLight, packedOverlay, yRotOffsetDeg * MathUtil.DEG_TO_RAD, xRotDeg * MathUtil.DEG_TO_RAD, red, green, blue, alpha);
+        }
     }
 
 }

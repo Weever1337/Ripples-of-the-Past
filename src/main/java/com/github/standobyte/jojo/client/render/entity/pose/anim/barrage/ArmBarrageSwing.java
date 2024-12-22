@@ -38,12 +38,13 @@ public abstract class ArmBarrageSwing<T extends Entity, M extends EntityModel<T>
             float yRotOffsetRad, float xRotRad, 
             int packedLight, int packedOverlay, float red, float green, float blue, float alpha) {
         setArmOnlyModelVisibility(entity, model, side);
-        double zAdditional = (0.5F - Math.abs(0.5F - ticks / ticksMax));
+        float animRatio = ticks / ticksMax;
+        double zAdditional = (0.5F - Math.abs(0.5F - animRatio));
         Vector3d offsetRot = new Vector3d(offset.x, -offset.y, offset.z + zAdditional).xRot(xRotRad);
         matrixStack.pushPose();
         matrixStack.translate(offsetRot.x, offsetRot.y, -offsetRot.z);
-        barrageAnim.animateSwing(entity, model, ticks / ticksMax, side, yRotOffsetRad, xRotRad, zRot);
-        barrageAnim.beforeSwingAfterimageRender(matrixStack, model, ticks / ticksMax, side);
+        barrageAnim.animateSwing(entity, model, animRatio, side, yRotOffsetRad, xRotRad, zRot);
+        barrageAnim.beforeSwingAfterimageRender(matrixStack, model, animRatio, side);
         model.renderToBuffer(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha * 0.75F);
         matrixStack.popPose();
     }

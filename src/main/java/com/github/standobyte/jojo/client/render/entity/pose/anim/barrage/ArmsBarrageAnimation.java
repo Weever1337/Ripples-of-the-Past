@@ -88,7 +88,7 @@ public abstract class ArmsBarrageAnimation<T extends LivingEntity, M extends Ent
         
         for (int i = 0; i < swingsToAdd; i++) {
             float f = ((float) i / (float) swingsToAdd
-                    + (entity.getRandom().nextFloat() - 0.5F) * 0.4F / hits)
+                    + (entity.getRandom().nextFloat() - 0.5F) * 0.4F / (float) swingsToAdd)
                     * getLoopLen() * 0.5F;
             if (switchesArms()) side = side.getOpposite();
             addSwing(entity, swings, side, f, maxOffset);
