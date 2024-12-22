@@ -15,6 +15,7 @@ import com.github.standobyte.jojo.client.render.entity.model.animnew.mojang.Keyf
 import com.github.standobyte.jojo.client.render.entity.model.animnew.mojang.Transformation;
 import com.github.standobyte.jojo.client.render.entity.model.animnew.mojang.Transformation.Targets;
 import com.github.standobyte.jojo.client.render.entity.model.animnew.molang.AnimContext;
+import com.github.standobyte.jojo.client.render.entity.model.animnew.stand.StandActionAnimation.TimelineKeys;
 import com.github.standobyte.jojo.client.render.entity.model.stand.StandEntityModel;
 import com.github.standobyte.jojo.entity.stand.StandEntity;
 import com.github.standobyte.jojo.entity.stand.StandPose;
@@ -193,13 +194,12 @@ public class GeckoStandAnimator implements IStandAnimator {
     }
 
 
-    protected String barrageType;
     @Override
     public <T extends StandEntity> void addBarrageSwings(T entity, StandEntityModel<T> model, float ticks) {
-        if (curAnim != null && curAnim.barrageTimeline != null) {
-            barrageType = curAnim.barrageTimeline.getCurValue(curAnim.animTime);
+        if (curAnim != null) {
+            String barrageType = curAnim.getStringTimelineVal(TimelineKeys.BARRAGE, curAnim.animTime);
             if (barrageType != null) {
-                BarrageSwings.onBarrageAnim(barrageType, entity, model, curAnim, ticks);
+                BarrageSwings.onBarrageAnim(barrageType, entity, model, curAnim, ticks, curAnim.animTime);
             }
         }
     }

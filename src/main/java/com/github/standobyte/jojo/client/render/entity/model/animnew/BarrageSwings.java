@@ -74,16 +74,18 @@ public class BarrageSwings {
         map.put("TWO_HANDED", TwoHandedBarrageLoopSwing::addSwing);
     });
     
-    public static <T extends StandEntity> void onBarrageAnim(String key, T entity, StandEntityModel<T> model, StandActionAnimation barrageAnim, float ticks) {
+    public static <T extends StandEntity> void onBarrageAnim(String key, T entity, StandEntityModel<T> model, 
+            StandActionAnimation barrageAnim, float entityTicks, float curAnimTime) {
         AddBarrageSwing addSwingFunction = BARRAGE_SWING_TYPES.get(key);
         if (addSwingFunction != null) {
-            addSwingFunction.addSwing(entity, model, entity.getBarrageSwings(), barrageAnim, ticks);
+            addSwingFunction.addSwing(entity, model, entity.getBarrageSwings(), barrageAnim, entityTicks, curAnimTime);
         }
     }
     
     @FunctionalInterface
     public static interface AddBarrageSwing {
-        <T extends StandEntity> void addSwing(T entity, StandEntityModel<T> model, BarrageSwings swings, StandActionAnimation barrageAnim, float ticks);
+        <T extends StandEntity> void addSwing(T entity, StandEntityModel<T> model, BarrageSwings swings, 
+                StandActionAnimation barrageAnim, float entityTicks, float curAnimTimeSecs);
     }
     
     
@@ -114,13 +116,15 @@ public class BarrageSwings {
     
     
     public static class TwoHandedBarrageLoopSwing extends BarrageSwing {
+        protected float animTimeOffset;
         protected final HandSide side;
         protected final Vector3d offset;
         protected final float zRot;
         
         public TwoHandedBarrageLoopSwing(StandActionAnimation barrageAnim, float startingAnim, float animMax, 
-                HandSide side, double maxOffset) {
+                HandSide side, double maxOffset, float animTimeOffset) {
             super(barrageAnim, startingAnim, animMax);
+            this.animTimeOffset = animTimeOffset;
             this.side = side;
             double upOffset = (RANDOM.nextDouble() - 0.5) * maxOffset;
             double leftOffset = RANDOM.nextDouble() * maxOffset / 2;
@@ -133,10 +137,11 @@ public class BarrageSwings {
             offset = new Vector3d(leftOffset, upOffset, frontOffset);
         }
         
-        public static <T extends StandEntity> void addSwing(T entity, StandEntityModel<T> model, BarrageSwings swings, StandActionAnimation barrageAnim, float ticks) {
+        public static <T extends StandEntity> void addSwing(T entity, StandEntityModel<T> model, BarrageSwings swings, 
+                StandActionAnimation barrageAnim, float entityTicks, float curAnimTimeSecs) {
             float lastLoop = swings.getLoopCount();
             float loopLen = 4;
-            float loop = ticks / loopLen;
+            float loop = entityTicks / loopLen;
             if (lastLoop > 0 && loop > lastLoop) {
                 float hits = StandStatFormulas.getBarrageHitsPerSecond(entity.getAttackSpeed()) / 20F * Math.min(loop - lastLoop, 1) * loopLen;
                 int swingsToAdd = MathUtil.fractionRandomInc(hits);
@@ -148,7 +153,8 @@ public class BarrageSwings {
                     for (int i = 0; i < swingsToAdd; i++) {
                         float x = ((float) i + (entity.getRandom().nextFloat() - 0.5F) * 0.4F) / swingsToAdd;
                         float f = x * loopLen * 0.5F;
-                        swings.addSwing(new BarrageSwings.TwoHandedBarrageLoopSwing(barrageAnim, f, loopLen, side, maxOffset));
+                        float addTime = (side == HandSide.LEFT ? loopLen * 0.5f : 0) + (curAnimTimeSecs - curAnimTimeSecs % loopLen);
+                        swings.addSwing(new BarrageSwings.TwoHandedBarrageLoopSwing(barrageAnim, f, loopLen, side, maxOffset, addTime));
                         side = side.getOpposite();
                     }
                 }
@@ -168,11 +174,7 @@ public class BarrageSwings {
             matrixStack.pushPose();
             matrixStack.translate(offsetRot.x, offsetRot.y, -offsetRot.z);
             model.resetPose(entity);
-            float ticks = this.ticks;
-            if (side == HandSide.LEFT) {
-                ticks += ticksMax * 0.5f;
-            }
-            barrageAnim.poseStand(entity, model, ticks, yRotOffsetDeg, xRotDeg, 
+            barrageAnim.poseStand(entity, model, ticks + animTimeOffset, yRotOffsetDeg, xRotDeg, 
                     StandPoseData.start().standPose(model.standPose).actionPhase(entity.getCurrentTaskPhase()).end());
             ModelRenderer arm = model.getArmNoXRot(side);
             arm.zRot = arm.zRot + zMult * zRot;
