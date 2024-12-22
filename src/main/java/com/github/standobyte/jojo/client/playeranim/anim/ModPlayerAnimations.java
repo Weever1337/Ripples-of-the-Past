@@ -37,6 +37,8 @@ public class ModPlayerAnimations {
     public static BasicToggleAnim bladeSlash;
     public static BasicToggleAnim lightFlash;
     public static BasicToggleAnim lightFlashDecoy;
+    public static BasicToggleAnim atmosphericRift;
+    public static BasicToggleAnim pillarmanPossession;
 
     /** 
      * This string must match the full name of the class and the package it's in.<br>
@@ -166,6 +168,14 @@ public class ModPlayerAnimations {
         lightFlashDecoy = PlayerAnimationHandler.getPlayerAnimator().registerBasicAnimLayer(
                 "com.github.standobyte.jojo.client.playeranim.anim.kosmximpl.pillarman.KosmXLightFlashDecoyHandler",
                 new ResourceLocation(JojoMod.MOD_ID, "light_flash_decoy"), 1);
+        
+        atmosphericRift = PlayerAnimationHandler.getPlayerAnimator().registerBasicAnimLayer(
+                "com.github.standobyte.jojo.client.playeranim.anim.kosmximpl.pillarman.KosmXAtmosphericRiftHandler",
+                new ResourceLocation(JojoMod.MOD_ID, "atmospheric_rift"), 1);
+        
+        pillarmanPossession = PlayerAnimationHandler.getPlayerAnimator().registerBasicAnimLayer(
+                "com.github.standobyte.jojo.client.playeranim.anim.kosmximpl.pillarman.KosmXPillarmanPossessionHandler",
+                new ResourceLocation(JojoMod.MOD_ID, "pillar_man_possession"), 1);
     }
 
 }

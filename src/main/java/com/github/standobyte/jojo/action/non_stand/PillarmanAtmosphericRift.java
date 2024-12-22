@@ -75,11 +75,11 @@ public class PillarmanAtmosphericRift extends PillarmanDivineSandstorm {
 
     @Override
     public boolean clHeldStartAnim(PlayerEntity user) {
-        return ModPlayerAnimations.divineSandstorm.setAnimEnabled(user, true);
+        return ModPlayerAnimations.atmosphericRift.setAnimEnabled(user, true);
     }
     
     @Override
     public void clHeldStopAnim(PlayerEntity user) {
-        ModPlayerAnimations.divineSandstorm.setAnimEnabled(user, false);
+        ModPlayerAnimations.atmosphericRift.setAnimEnabled(user, false);
     }
 }

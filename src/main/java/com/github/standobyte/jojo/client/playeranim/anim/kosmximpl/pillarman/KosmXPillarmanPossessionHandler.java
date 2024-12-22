@@ -5,6 +5,7 @@ import com.github.standobyte.jojo.client.playeranim.anim.interfaces.BasicToggleA
 import com.github.standobyte.jojo.client.playeranim.kosmx.KosmXPlayerAnimatorInstalled.AnimLayerHandler;
 import com.github.standobyte.jojo.client.playeranim.kosmx.anim.modifier.KosmXFixedFadeModifier;
 import com.github.standobyte.jojo.client.playeranim.kosmx.anim.modifier.KosmXHandsideMirrorModifier;
+import com.github.standobyte.jojo.client.playeranim.kosmx.anim.modifier.KosmXHeadRotationModifier;
 
 import dev.kosmx.playerAnim.api.layered.IAnimation;
 import dev.kosmx.playerAnim.api.layered.ModifierLayer;
@@ -14,22 +15,20 @@ import net.minecraft.client.entity.player.AbstractClientPlayerEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.ResourceLocation;
 
-public class KosmXPillarManPunchHandler extends AnimLayerHandler<ModifierLayer<IAnimation>> implements BasicToggleAnim {
-    private static final float SPEED = 2;
+public class KosmXPillarmanPossessionHandler extends AnimLayerHandler<ModifierLayer<IAnimation>> implements BasicToggleAnim {
+    private static final float SPEED = 1.0F;
 
-    public KosmXPillarManPunchHandler(ResourceLocation id) {
+    public KosmXPillarmanPossessionHandler(ResourceLocation id) {
         super(id);
     }
 
     @Override
     protected ModifierLayer<IAnimation> createAnimLayer(AbstractClientPlayerEntity player) {
-        return new ModifierLayer<>(null, 
-                new KosmXHandsideMirrorModifier(player), 
-                new SpeedModifier(SPEED));
+        return new ModifierLayer<>(null);
     }
     
 
-    private static final ResourceLocation ANIM = new ResourceLocation(JojoMod.MOD_ID, "pillar_man_punch");
+    private static final ResourceLocation ANIM = new ResourceLocation(JojoMod.MOD_ID, "pillar_man_possession");
     @Override
     public boolean setAnimEnabled(PlayerEntity player, boolean enabled) {
         if (enabled) {
