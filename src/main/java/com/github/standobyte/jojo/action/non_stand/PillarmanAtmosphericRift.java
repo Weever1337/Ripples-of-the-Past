@@ -37,7 +37,6 @@ public class PillarmanAtmosphericRift extends PillarmanDivineSandstorm {
                     		(Math.random() - 0.5) / 2, (Math.random() - 0.5) / 2, (Math.random() - 0.5) / 2);
                 }
         	}
-            
         }
     }
     

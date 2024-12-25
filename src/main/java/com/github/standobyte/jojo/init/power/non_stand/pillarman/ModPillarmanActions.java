@@ -102,7 +102,7 @@ public class ModPillarmanActions {
             () -> new PillarmanBladeDashAttack(new NonStandAction.Builder().energyCost(50F).holdToFire(10, true).holdType(40).heldWalkSpeed(0)));
 
     public static final RegistryObject<PillarmanAction> PILLARMAN_BLADE_BARRAGE = ACTIONS.register("pillarman_blade_barrage", 
-            () -> new PillarmanBladeBarrage(new PillarmanAction.Builder().holdEnergyCost(2.5F).heldWalkSpeed(0.2F)));
+            () -> new PillarmanBladeBarrage(new PillarmanAction.Builder().holdEnergyCost(1F).heldWalkSpeed(0.2F)));
 
 
 

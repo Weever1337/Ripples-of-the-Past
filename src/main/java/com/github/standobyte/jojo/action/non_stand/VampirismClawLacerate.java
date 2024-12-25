@@ -83,7 +83,7 @@ public class VampirismClawLacerate extends VampirismAction implements IPlayerAct
                     punchPerform(user.level, user, playerPower, target, ModSounds.THE_WORLD_PUNCH_HEAVY_ENTITY.get(), 1.2F, 0.8F); // TODO separate sound event
                 }
                 break;
-            case 8:
+            case 12:
                 stopAction();
                 break;
             }

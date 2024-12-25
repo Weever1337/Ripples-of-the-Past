@@ -45,8 +45,8 @@ public class PillarmanBladeBarrage extends PillarmanAction {
     
     @Override
     protected ActionConditionResult checkHeldItems(LivingEntity user, INonStandPower power) {
-        if (!MCUtil.areHandsFree(user, Hand.MAIN_HAND, Hand.OFF_HAND)) {
-            return conditionMessage("hands");
+        if (!MCUtil.isHandFree(user, Hand.MAIN_HAND)) {
+            return conditionMessage("hand");
         }
         return ActionConditionResult.POSITIVE;
     }
@@ -56,15 +56,16 @@ public class PillarmanBladeBarrage extends PillarmanAction {
         Entity attacker = source.getDirectEntity();
         if (attacker instanceof ProjectileEntity || attacker instanceof ModdedProjectileEntity) {
             LivingEntity targetLiving = event.getEntityLiving();
-            return INonStandPower.getNonStandPowerOptional(targetLiving).map(power -> {
-                Action<?> heldAction = power.getHeldAction(true);
+            return INonStandPower.getNonStandPowerOptional(targetLiving).map(power -> 
+            {Action<?> heldAction = power.getHeldAction(true);
                 if (heldAction == ModPillarmanActions.PILLARMAN_BLADE_BARRAGE.get()) {
                     World world = attacker.level;
                     if (attacker instanceof ModdedProjectileEntity) {
                         ModdedProjectileEntity projectile = (ModdedProjectileEntity) attacker;
                         return projectile.canBeEvaded(targetLiving) && (!projectile.standDamage());
                 	}
-                    world.getEntitiesOfClass(ProjectileEntity.class, targetLiving.getBoundingBox().inflate(targetLiving.getAttributeValue(ForgeMod.REACH_DISTANCE.get())), 
+                    world.getEntitiesOfClass(ProjectileEntity.class, targetLiving.getBoundingBox()
+                    		.inflate(targetLiving.getAttributeValue(ForgeMod.REACH_DISTANCE.get())), 
                             entity -> entity.isAlive() && !entity.isPickable()).forEach(projectile -> {
                                 if (targetLiving.getLookAngle().dot(projectile.getDeltaMovement().reverse().normalize())
                                         >= MathHelper.cos((float) (30.0 + MathHelper.clamp(10F, 0, 16) * 30.0 / 16.0) * MathUtil.DEG_TO_RAD)) {
@@ -145,7 +146,7 @@ public class PillarmanBladeBarrage extends PillarmanAction {
         if (requirementsFulfilled) {
             if (ticksHeld % 2 == 0) {
                 user.swinging = false;
-                user.swing(ticksHeld % 4 == 0 ? Hand.MAIN_HAND : Hand.OFF_HAND);
+                user.swing(Hand.MAIN_HAND);
             }
         }
     }

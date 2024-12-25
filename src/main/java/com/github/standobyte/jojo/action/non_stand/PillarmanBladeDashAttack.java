@@ -2,6 +2,7 @@ package com.github.standobyte.jojo.action.non_stand;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -16,6 +17,8 @@ import com.github.standobyte.jojo.client.playeranim.anim.interfaces.WindupAttack
 import com.github.standobyte.jojo.init.ModSounds;
 import com.github.standobyte.jojo.init.power.non_stand.ModPowers;
 import com.github.standobyte.jojo.power.impl.nonstand.INonStandPower;
+import com.github.standobyte.jojo.power.impl.nonstand.type.hamon.HamonData;
+import com.github.standobyte.jojo.power.impl.nonstand.type.pillarman.PillarmanData;
 import com.github.standobyte.jojo.power.impl.nonstand.type.pillarman.PillarmanData.Mode;
 import com.github.standobyte.jojo.power.impl.nonstand.type.pillarman.PillarmanUtil;
 import com.github.standobyte.jojo.util.general.MathUtil;
@@ -44,7 +47,7 @@ public class PillarmanBladeDashAttack extends PillarmanAction implements IPlayer
     protected ActionConditionResult checkSpecificConditions(LivingEntity user, INonStandPower power, ActionTarget target) {
         return ActionConditionResult.noMessage(user.isOnGround());
     }
-    
+
     @Override
     public boolean holdOnly(INonStandPower power) {
         return false;
@@ -52,12 +55,12 @@ public class PillarmanBladeDashAttack extends PillarmanAction implements IPlayer
     
     @Override
     public int getHoldDurationMax(INonStandPower power) {
-        return 120;
+        return Integer.MAX_VALUE;
     }
     
     @Override
     public void startedHolding(World world, LivingEntity user, INonStandPower power, ActionTarget target, boolean requirementsFulfilled) {
-        if (requirementsFulfilled && world.isClientSide()) {
+        if (requirementsFulfilled && !world.isClientSide()) {
         	power.getTypeSpecificData(ModPowers.PILLAR_MAN.get()).get().setBladesVisible(true);
             /*ClientTickingSoundsHelper.playStoppableEntitySound(user, ModSounds.HAMON_SYO_CHARGE.get(), 
                     1.0F, 1.0F, false, entity -> power.getHeldAction() == this);*/ //there should be it's own sfx
@@ -80,8 +83,7 @@ public class PillarmanBladeDashAttack extends PillarmanAction implements IPlayer
     }
     
     @Override
-    public Instance createContinuousActionInstance(
-            LivingEntity user, PlayerUtilCap userCap, INonStandPower power) {
+    public Instance createContinuousActionInstance(LivingEntity user, PlayerUtilCap userCap, INonStandPower power) {
         if (user.level.isClientSide() && user instanceof PlayerEntity) {
             getPlayerAnim().setAttackAnim((PlayerEntity) user);
         }
@@ -106,7 +108,8 @@ public class PillarmanBladeDashAttack extends PillarmanAction implements IPlayer
      
     public static class Instance extends ContinuousActionInstance<PillarmanBladeDashAttack, INonStandPower> {
         private Set<UUID> damagedEntities = new HashSet<>();
-        
+        PillarmanData pillarman = playerPower.getTypeSpecificData(ModPowers.PILLAR_MAN.get()).get();
+
         public Instance(LivingEntity user, PlayerUtilCap userCap, 
                 INonStandPower playerPower, PillarmanBladeDashAttack action, float spentEnergy) {
             super(user, userCap, playerPower, action);
@@ -119,7 +122,7 @@ public class PillarmanBladeDashAttack extends PillarmanAction implements IPlayer
         
         @Override
         public void playerTick() {
-        	 List<LivingEntity> targets = user.level.getEntitiesOfClass(LivingEntity.class, kickHitbox(user), 
+        	 List<LivingEntity> targets = user.level.getEntitiesOfClass(LivingEntity.class, slashHitbox(user), 
                      entity -> !entity.is(user) && user.canAttack(entity));
              for (LivingEntity target : targets) {
                  if (damagedEntities.add(target.getUUID())) {
@@ -136,18 +139,17 @@ public class PillarmanBladeDashAttack extends PillarmanAction implements IPlayer
                      }
                  }
              }
-        	
             switch (getTick()) {
             case 1:
                 if (user.level.isClientSide()) {
                     user.level.playSound(ClientUtil.getClientPlayer(), user.getX(), user.getEyeY(), user.getZ(), 
                             ModSounds.HAMON_SYO_SWING.get(), user.getSoundSource(), 1.0f, 1.0f);
                     user.swing(Hand.MAIN_HAND, true);
-                    playerPower.getTypeSpecificData(ModPowers.PILLAR_MAN.get()).get().setBladesVisible(true);
+                    pillarman.setBladesVisible(true);
                 }
                 break;
             case 15:
-            	playerPower.getTypeSpecificData(ModPowers.PILLAR_MAN.get()).get().setBladesVisible(false);
+            	pillarman.setBladesVisible(false);
                 stopAction();
                 break;
             }
@@ -165,7 +167,6 @@ public class PillarmanBladeDashAttack extends PillarmanAction implements IPlayer
                 getAction().getPlayerAnim().stopAnim((PlayerEntity) user);
             }
         }
-        
     }
        
     private static boolean dealPhysicalDamage(World world, LivingEntity user, Entity target) {
@@ -173,7 +174,7 @@ public class PillarmanBladeDashAttack extends PillarmanAction implements IPlayer
         		DamageUtil.addArmorPiercing(VampirismClawLacerate.getDamage(world, user) + 1F, 15F, (LivingEntity) target));
     }
     
-    public static AxisAlignedBB kickHitbox(LivingEntity user) {
+    public static AxisAlignedBB slashHitbox(LivingEntity user) {
         float xzAngle = -user.yRot * MathUtil.DEG_TO_RAD;
         Vector3d lookVec = new Vector3d(Math.sin(xzAngle), 0, Math.cos(xzAngle));
         Vector3d hitboxXZCenter = user.position().add(lookVec.scale(user.getBbWidth() * 0.75F));

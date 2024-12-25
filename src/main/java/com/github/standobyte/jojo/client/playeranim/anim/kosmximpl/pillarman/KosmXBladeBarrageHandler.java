@@ -17,7 +17,7 @@ import net.minecraft.util.HandSide;
 import net.minecraft.util.ResourceLocation;
 
 public class KosmXBladeBarrageHandler extends AnimLayerHandler<ModifierLayer<IAnimation>> implements BasicToggleAnim {
-	private static final float SPEED = 3.5F;
+	private static final float SPEED = 3.25F;
 
     public KosmXBladeBarrageHandler(ResourceLocation id) {
         super(id);

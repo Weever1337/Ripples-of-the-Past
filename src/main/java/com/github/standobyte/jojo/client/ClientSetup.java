@@ -43,6 +43,7 @@ import com.github.standobyte.jojo.client.render.entity.layerrenderer.LadybugBroo
 import com.github.standobyte.jojo.client.render.entity.layerrenderer.PillarmanBladesLayer;
 import com.github.standobyte.jojo.client.render.entity.layerrenderer.PillarmanLayer;
 import com.github.standobyte.jojo.client.render.entity.layerrenderer.TornadoOverdriveEffectLayer;
+import com.github.standobyte.jojo.client.render.entity.layerrenderer.VampireEyesLayer;
 import com.github.standobyte.jojo.client.render.entity.layerrenderer.WindCloakLayer;
 import com.github.standobyte.jojo.client.render.entity.layerrenderer.ZombieLayer;
 import com.github.standobyte.jojo.client.render.entity.layerrenderer.barrage.BarrageFistAfterimagesLayer;
@@ -351,6 +352,7 @@ public class ClientSetup {
         addBipedLayers(renderer, slim);
         renderer.addLayer(new GlovesLayer<>(renderer, new GlovesModel<>(0.3F, slim), slim));
         renderer.addLayer(new WindCloakLayer<>(renderer));
+        renderer.addLayer(new VampireEyesLayer<>(renderer));
     }
     
     private static <T extends LivingEntity, M extends BipedModel<T>> void addLayersToEntities(EntityRenderer<?> renderer) {
