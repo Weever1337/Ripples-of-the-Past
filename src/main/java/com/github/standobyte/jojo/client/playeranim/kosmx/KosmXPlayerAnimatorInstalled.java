@@ -10,7 +10,6 @@ import com.github.standobyte.jojo.client.playeranim.PlayerAnimationHandler;
 import com.github.standobyte.jojo.client.playeranim.PlayerAnimationHandler.BendablePart;
 import com.github.standobyte.jojo.client.playeranim.kosmx.anim.KosmXKeyframeAnimPlayer;
 import com.github.standobyte.jojo.client.playeranim.kosmx.anim.modifier.KosmXFixedFadeModifier;
-import com.github.standobyte.jojo.client.playeranim.kosmx.anim.playermotion.KosmXFrontMotionModifier;
 import com.github.standobyte.jojo.util.general.MathUtil;
 import com.mojang.blaze3d.matrix.MatrixStack;
 
@@ -65,12 +64,10 @@ public class KosmXPlayerAnimatorInstalled extends PlayerAnimationHandler.PlayerA
     
     @Override
     public void onRenderFrameStart(float partialTick) {
-        KosmXFrontMotionModifier.onRenderFrameStart();
     }
     
     @Override
     public void onRenderFrameEnd(float partialTick) {
-        KosmXFrontMotionModifier.onRenderFrameEnd(partialTick);
     }
     
     @Override
@@ -229,6 +226,29 @@ public class KosmXPlayerAnimatorInstalled extends PlayerAnimationHandler.PlayerA
     public void setupLayerFirstPersonRender(BipedModel<?> layerModel) {
         if (layerModel instanceof IPlayerModel && AnimUtils.disableFirstPersonAnim) {
             ((IPlayerModel) layerModel).playerAnimator_prepForFirstPersonRender();
+        }
+    }
+    
+    @Override
+    public void onItemLikeLayerRender(MatrixStack matrixStack, LivingEntity entity, HandSide side) {
+        if (Helper.isBendEnabled() && entity instanceof IAnimatedPlayer) {
+            IAnimatedPlayer player = (IAnimatedPlayer) entity;
+            if (player.playerAnimator_getAnimation().isActive()) {
+                AnimationProcessor anim = player.playerAnimator_getAnimation();
+
+                Vec3f data = anim.get3DTransform(side == HandSide.LEFT ? "leftArm" : "rightArm", TransformType.BEND, new Vec3f(0f, 0f, 0f));
+
+                Pair<Float, Float> pair = new Pair<>(data.getX(), data.getY());
+
+                float offset = 0.25f;
+                matrixStack.translate(0, offset, 0);
+                float bend = pair.getRight();
+                float axisf = - pair.getLeft();
+                Vector3f axis = new Vector3f((float) Math.cos(axisf), 0, (float) Math.sin(axisf));
+                matrixStack.mulPose(axis.rotation(bend));
+                matrixStack.translate(0, - offset, 0);
+
+            }
         }
     }
     

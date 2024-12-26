@@ -9,7 +9,7 @@ import com.github.standobyte.jojo.power.impl.nonstand.type.pillarman.PillarmanDa
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.particles.ParticleTypes;
-import net.minecraft.util.EntityDamageSource;
+import net.minecraft.util.DamageSource;
 import net.minecraft.world.World;
 
 public class PillarmanAtmosphericRift extends PillarmanDivineSandstorm {
@@ -36,7 +36,8 @@ public class PillarmanAtmosphericRift extends PillarmanDivineSandstorm {
         }
         return 0;
     }
-    
+
+    public static final DamageSource FINAL_MODE_SELF_DAMAGE = (new DamageSource("generic")).bypassArmor(); // TODO separate msgId & death message in lang files
     @Override
     protected void holdTick(World world, LivingEntity user, INonStandPower power, int ticksHeld, ActionTarget target, boolean requirementsFulfilled) {
         if (!world.isClientSide()) {
@@ -50,7 +51,7 @@ public class PillarmanAtmosphericRift extends PillarmanDivineSandstorm {
                 world.addFreshEntity(sanstormWave);
                 PlayerEntity playerentity = user instanceof PlayerEntity ? (PlayerEntity)user : null;
                 if (playerentity == null || !playerentity.abilities.instabuild) {
-                    user.hurt(EntityDamageSource.GENERIC, 2F); // TODO separate DamageSource with a death message
+                    user.hurt(FINAL_MODE_SELF_DAMAGE, 2F);
                 }
             }
         }

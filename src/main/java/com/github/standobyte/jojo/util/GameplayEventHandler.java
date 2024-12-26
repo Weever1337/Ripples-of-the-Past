@@ -1,5 +1,7 @@
 package com.github.standobyte.jojo.util;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -57,6 +59,7 @@ import com.github.standobyte.jojo.network.packets.fromserver.SpawnParticlePacket
 import com.github.standobyte.jojo.potion.BleedingEffect;
 import com.github.standobyte.jojo.potion.HamonSpreadEffect;
 import com.github.standobyte.jojo.potion.IApplicableEffect;
+import com.github.standobyte.jojo.potion.StatusEffect;
 import com.github.standobyte.jojo.potion.VampireSunBurnEffect;
 import com.github.standobyte.jojo.power.IPower;
 import com.github.standobyte.jojo.power.IPower.PowerClassification;
@@ -104,6 +107,7 @@ import net.minecraft.entity.item.PaintingEntity;
 import net.minecraft.entity.item.PaintingType;
 import net.minecraft.entity.item.TNTEntity;
 import net.minecraft.entity.item.minecart.TNTMinecartEntity;
+import net.minecraft.entity.monster.CreeperEntity;
 import net.minecraft.entity.monster.StrayEntity;
 import net.minecraft.entity.player.ChatVisibility;
 import net.minecraft.entity.player.PlayerEntity;
@@ -1214,8 +1218,22 @@ public class GameplayEventHandler {
         HamonUtil.onProjectileImpact(event.getEntity(), event.getRayTraceResult());
     }
     
-    @SubscribeEvent(priority = EventPriority.LOWEST)
+    @SubscribeEvent
     public static void onExplosionDetonate(ExplosionEvent.Detonate event) {
+        Explosion explosion = event.getExplosion();
+        if (explosion.getExploder() instanceof CreeperEntity) {
+            CreeperEntity creeper = (CreeperEntity) explosion.getExploder();
+            Collection<Effect> effects = new ArrayList<>(creeper.getActiveEffectsMap().keySet());
+            effects.forEach(effect -> {
+                if (effect == ModStatusEffects.BLEEDING.get() || effect instanceof StatusEffect && ((StatusEffect) effect).isUncurable()) {
+                    creeper.removeEffect(effect);
+                }
+            });
+        }
+    }
+    
+    @SubscribeEvent(priority = EventPriority.LOWEST)
+    public static void onExplosionDetonate2(ExplosionEvent.Detonate event) {
         Explosion explosion = event.getExplosion();
         
         event.getAffectedEntities().forEach(entity -> {

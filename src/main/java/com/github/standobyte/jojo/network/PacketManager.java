@@ -66,7 +66,7 @@ import com.github.standobyte.jojo.network.packets.fromserver.PhotoDataPacket;
 import com.github.standobyte.jojo.network.packets.fromserver.PhotoForOtherPlayerPacket;
 import com.github.standobyte.jojo.network.packets.fromserver.PhotoIdAssignedPacket;
 import com.github.standobyte.jojo.network.packets.fromserver.PlaySoundAtClientPacket;
-import com.github.standobyte.jojo.network.packets.fromserver.PlaySoundAtStandEntityPacket;
+import com.github.standobyte.jojo.network.packets.fromserver.PlaySoundAtEntityPacket;
 import com.github.standobyte.jojo.network.packets.fromserver.PlayVoiceLinePacket;
 import com.github.standobyte.jojo.network.packets.fromserver.PreviousPowerTypesPacket;
 import com.github.standobyte.jojo.network.packets.fromserver.PreviousStandTypesPacket;
@@ -152,7 +152,7 @@ import net.minecraftforge.fml.network.PacketDistributor;
 import net.minecraftforge.fml.network.PacketDistributor.TargetPoint;
 import net.minecraftforge.fml.network.simple.SimpleChannel;
 
-// FIXME barrage clashes cause client logs getting spammed with network exceptions (either the payload is an EmptyByteBuf or "Received invalid discriminator byte" error)
+// FIXME (!) in LAN, client logs get spammed with network exceptions (either the payload is an EmptyByteBuf or "Received invalid discriminator byte" error)
 public class PacketManager {
     private static final String PROTOCOL_VERSION = "1";
     private static SimpleChannel serverChannel;
@@ -282,7 +282,7 @@ public class PacketManager {
         registerMessage(serverChannel, new TrPlayerVisualDetailPacket.Handler(),           Optional.of(NetworkDirection.PLAY_TO_CLIENT));
         registerMessage(serverChannel, new PlayVoiceLinePacket.Handler(),                  Optional.of(NetworkDirection.PLAY_TO_CLIENT));
         registerMessage(serverChannel, new PlaySoundAtClientPacket.Handler(),              Optional.of(NetworkDirection.PLAY_TO_CLIENT));
-        registerMessage(serverChannel, new PlaySoundAtStandEntityPacket.Handler(),         Optional.of(NetworkDirection.PLAY_TO_CLIENT));
+        registerMessage(serverChannel, new PlaySoundAtEntityPacket.Handler(),              Optional.of(NetworkDirection.PLAY_TO_CLIENT));
         registerMessage(serverChannel, new TrBarrageHitSoundPacket.Handler(),              Optional.of(NetworkDirection.PLAY_TO_CLIENT));
         registerMessage(serverChannel, new TimeStopInstancePacket.Handler(),               Optional.of(NetworkDirection.PLAY_TO_CLIENT));
         registerMessage(serverChannel, new TimeStopPlayerStatePacket.Handler(),            Optional.of(NetworkDirection.PLAY_TO_CLIENT));

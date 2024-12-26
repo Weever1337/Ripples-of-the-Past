@@ -27,6 +27,9 @@ import com.github.standobyte.jojo.capability.entity.PlayerUtilCapProvider;
 import com.github.standobyte.jojo.capability.entity.player.PlayerClientBroadcastedSettings;
 import com.github.standobyte.jojo.client.ClientUtil;
 import com.github.standobyte.jojo.client.particle.custom.CustomParticlesHelper;
+import com.github.standobyte.jojo.client.render.entity.model.animnew.BarrageSwings;
+import com.github.standobyte.jojo.client.render.entity.model.animnew.stand.StandPoseData;
+import com.github.standobyte.jojo.client.render.entity.model.animnew.stand.StandPoseData.StandPoseDataFill;
 import com.github.standobyte.jojo.client.render.entity.model.stand.StandEntityModel;
 import com.github.standobyte.jojo.client.render.entity.pose.anim.barrage.BarrageSwingsHolder;
 import com.github.standobyte.jojo.client.sound.barrage.BarrageHitSoundHandler;
@@ -73,6 +76,7 @@ import net.minecraft.entity.ai.attributes.ModifiableAttributeInstance;
 import net.minecraft.entity.effect.LightningBoltEntity;
 import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.passive.AnimalEntity;
+import net.minecraft.entity.passive.TameableEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.entity.projectile.ProjectileEntity;
@@ -171,6 +175,8 @@ public class StandEntity extends LivingEntity implements IStandManifestation, IE
     private ManualStandMovementLock manualMovementLocks = new ManualStandMovementLock(this);
     
     protected StandPose standPose = StandPose.SUMMON;
+    protected int setPoseTime;
+    public int punchComboCount = 0;
     public int gradualSummonWeaknessTicks;
     public int unsummonTicks;
     public StandRelativeOffset unsummonOffset = offsetDefault.copy();
@@ -181,8 +187,10 @@ public class StandEntity extends LivingEntity implements IStandManifestation, IE
     private int alphaTicks;
 
     private IPunch lastPunch;
-    private BarrageSwingsHolder<?, ?> barrageSwings;
+    private BarrageSwingsHolder<?, ?> barrageSwingsOld;
+    private BarrageSwings barrageSwings;
     private final BarrageHitSoundHandler barrageSounds;
+    public boolean animWasBarraging = false;
     
     public ActionTarget clFrontTarget = ActionTarget.EMPTY;
 
@@ -212,10 +220,12 @@ public class StandEntity extends LivingEntity implements IStandManifestation, IE
         if (level.isClientSide()) {
             this.alphaTicks = this.summonLockTicks;
             this.barrageSounds = initBarrageHitSoundHandler();
+            this.barrageSwings = initBarrageSwings();
         }
         else {
             this.summonPoseRandomByte = random.nextInt(128);
             this.barrageSounds = null;
+            this.barrageSwings = null;
         }
         init(this);
     }
@@ -227,10 +237,10 @@ public class StandEntity extends LivingEntity implements IStandManifestation, IE
     
     private <T extends StandEntity> void init(T thisEntity) {
         if (level.isClientSide()) {
-            this.barrageSwings = new BarrageSwingsHolder<T, StandEntityModel<T>>();
+            this.barrageSwingsOld = new BarrageSwingsHolder<T, StandEntityModel<T>>();
         }
         else {
-            this.barrageSwings = null;
+            this.barrageSwingsOld = null;
         }
     }
     
@@ -690,8 +700,11 @@ public class StandEntity extends LivingEntity implements IStandManifestation, IE
 
     public void setStandPose(StandPose pose) {
         if (this.standPose != pose) {
-            if (level.isClientSide() && pose == StandPose.BARRAGE) {
-                getBarrageSwingsHolder().resetSwingTime();
+            if (level.isClientSide()) {
+                this.setPoseTime = tickCount;
+                if (pose == StandPose.BARRAGE) {
+                    getBarrageSwingsHolder().resetSwingTime();
+                }
             }
             this.standPose = pose;
         }
@@ -703,6 +716,41 @@ public class StandEntity extends LivingEntity implements IStandManifestation, IE
 
     public int getSummonPoseRandomByte() {
         return summonPoseRandomByte;
+    }
+    
+    public StandPoseData getCurPose(float partialTick) {
+        StandPose pose = getStandPose();
+        if (pose == StandPose.SUMMON && this.isArmsOnlyMode()) {
+            setStandPose(StandPose.IDLE);
+            pose = StandPose.IDLE;
+        }
+        Optional<StandEntityTask> curTask = getCurrentTask();
+        StandPoseDataFill poseData = StandPoseData.start()
+                .standPose(pose)
+                .animTime(tickCount - setPoseTime + partialTick);
+        if (curTask.isPresent()) {
+            StandEntityTask task = curTask.get();
+            int ticksMax = task.getStartingTicks();
+            if (task.getPhase() == StandEntityAction.Phase.BUTTON_HOLD && getUserPower() != null) {
+                int holdToFire = task.getAction().getHoldDurationToFire(userPower);
+                if (holdToFire > 0) {
+                    ticksMax = holdToFire;
+                }
+            }
+            
+            poseData
+            .actionPhase(Optional.of(task.getPhase()))
+            .phaseCompletion(StandEntityTask.getPhaseCompletion(ticksMax - task.getTick(), ticksMax, partialTick))
+            .animTime(task.getTick() + partialTick);
+        }
+        return poseData.end();
+    }
+    
+    public void onSetPoseAnimEnded() {
+        setStandPose(getCurrentTask().map(task -> {
+            IStandPower userPower = getUserPower();
+            return userPower != null ? task.getAction().getStandPose(userPower, this, task) : null;
+        }).orElse(StandPose.IDLE));
     }
 
 
@@ -1563,7 +1611,7 @@ public class StandEntity extends LivingEntity implements IStandManifestation, IE
 
     
     /**
-     * @deprecated use {@link StandEntity#aimWithThisOrUser(double, ActionTarget)}, which returns an {@link ActionTarget} instance
+     * @deprecated use {@link StandEntity#aimWithThisOrUser(double, ActionTarget, boolean)}, which returns an {@link ActionTarget} instance
      */
     @Deprecated
     public RayTraceResult aimWithStandOrUser(double reachDistance, ActionTarget currentTarget) {
@@ -1585,7 +1633,12 @@ public class StandEntity extends LivingEntity implements IStandManifestation, IE
         return aim;
     }
     
+    @Deprecated
     public ActionTarget aimWithThisOrUser(double reachDistance, ActionTarget currentTarget) {
+        return aimWithThisOrUser(reachDistance, currentTarget, true);
+    }
+    
+    public ActionTarget aimWithThisOrUser(double reachDistance, ActionTarget currentTarget, boolean friendlyFire) {
         ActionTarget target;
         if (currentTarget.getType() != TargetType.EMPTY && isTargetInReach(currentTarget)) {
             target = currentTarget;
@@ -1595,11 +1648,11 @@ public class StandEntity extends LivingEntity implements IStandManifestation, IE
             if (!isManuallyControlled()) {
                 LivingEntity user = getUser();
                 if (user != null) {
-                    aim = precisionRayTrace(user, reachDistance);
+                    aim = precisionRayTrace(user, reachDistance, 0, friendlyFire);
                 }
             }
             if (aim == null || aim.getType() == RayTraceResult.Type.MISS) {
-                aim = precisionRayTrace(this, reachDistance);
+                aim = precisionRayTrace(this, reachDistance, 0, friendlyFire);
             }
             
             target = ActionTarget.fromRayTraceResult(aim);
@@ -1642,8 +1695,17 @@ public class StandEntity extends LivingEntity implements IStandManifestation, IE
 
     @Nonnull
     public RayTraceResult precisionRayTrace(Entity aimingEntity, double reachDistance, double rayTraceInflate) {
+        return precisionRayTrace(aimingEntity, reachDistance, rayTraceInflate, true);
+    }
+
+    @Nonnull
+    public RayTraceResult precisionRayTrace(Entity aimingEntity, double reachDistance, double rayTraceInflate, boolean friendlyFire) {
+        Predicate<Entity> filter = canTarget();
+        if (!friendlyFire) {
+            filter = filter.and(this::canHarm);
+        }
         RayTraceResult[] targets = JojoModUtil.rayTraceMultipleEntities(aimingEntity, 
-                reachDistance, canTarget(), rayTraceInflate, getPrecision());
+                reachDistance, filter, rayTraceInflate, getPrecision());
         if (targets.length == 1) {
             return targets[0];
         }
@@ -1691,7 +1753,7 @@ public class StandEntity extends LivingEntity implements IStandManifestation, IE
 
     public boolean punch(StandEntityTask task, IHasStandPunch punch, ActionTarget target) {
         if (!level.isClientSide()) {
-            ActionTarget finalTarget = aimWithThisOrUser(getAimDistance(getUser()), target);
+            ActionTarget finalTarget = aimWithThisOrUser(getAimDistance(getUser()), target, false);
             target = finalTarget.getType() != TargetType.EMPTY && isTargetInReach(finalTarget) ? finalTarget : ActionTarget.EMPTY;
             setTaskTarget(target);
         }
@@ -1834,7 +1896,14 @@ public class StandEntity extends LivingEntity implements IStandManifestation, IE
         LivingEntity user = getUser();
         if (user != null) {
             boolean canHarm = MCUtil.canHarm(user, entity);
-            return canHarm && !(entity instanceof AnimalEntity && entity.isPassengerOfSameVehicle(user));
+            if (canHarm && entity instanceof AnimalEntity) {
+                canHarm &= !entity.isPassengerOfSameVehicle(user);
+                if (canHarm && entity instanceof TameableEntity) {
+                    LivingEntity tameableOwner = ((TameableEntity) entity).getOwner();
+                    canHarm &= !(tameableOwner != null && tameableOwner == user);
+                }
+            }
+            return canHarm;
         }
         
         return true;
@@ -2007,7 +2076,19 @@ public class StandEntity extends LivingEntity implements IStandManifestation, IE
     }
     
 
+    @Deprecated
     public BarrageSwingsHolder<?, ?> getBarrageSwingsHolder() {
+        if (!level.isClientSide()) {
+            throw new IllegalStateException("Barrage swing animating class is only available on the client!");
+        }
+        return this.barrageSwingsOld;
+    }
+    
+    protected BarrageSwings initBarrageSwings() {
+        return new BarrageSwings();
+    }
+    
+    public BarrageSwings getBarrageSwings() {
         if (!level.isClientSide()) {
             throw new IllegalStateException("Barrage swing animating class is only available on the client!");
         }

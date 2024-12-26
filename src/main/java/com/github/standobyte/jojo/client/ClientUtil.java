@@ -50,7 +50,6 @@ import net.minecraft.client.renderer.model.SimpleBakedModel;
 import net.minecraft.client.renderer.texture.MissingTextureSprite;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.resources.I18n;
-import net.minecraft.client.settings.ParticleStatus;
 import net.minecraft.client.settings.PointOfView;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
@@ -456,8 +455,8 @@ public class ClientUtil {
                 0, 0, 0, true));
     }
     
-    public static boolean decreasedParticlesSetting() {
-        return Minecraft.getInstance().options.particles == ParticleStatus.DECREASED;
+    public static int particlesSetting() {
+        return Minecraft.getInstance().options.particles.getId();
     }
     
     public static float[] rgb(int color) {
@@ -545,12 +544,6 @@ public class ClientUtil {
         }
     }
     
-    /**
-     * Placeholder - 1.16's ModelRenderers do not have scale fields
-     */
-    public static void scaleModelPart(ModelRenderer modelRenderer, Vector3f scaleVec) {
-    }
-    
     public static void setRotationAngle(ModelRenderer modelRenderer, float x, float y, float z) {
         modelRenderer.xRot = x;
         modelRenderer.yRot = y;
@@ -580,6 +573,25 @@ public class ClientUtil {
     @Deprecated
     public static void clearCubes(ModelRenderer modelRenderer) {
         modelRenderer.cubes.clear();
+    }
+    
+    public static void clearBipedCubes(BipedModel<?> model) {
+        model.head.cubes.clear();
+        model.body.cubes.clear();
+        model.leftArm.cubes.clear();
+        model.rightArm.cubes.clear();
+        model.leftLeg.cubes.clear();
+        model.rightLeg.cubes.clear();
+    }
+    
+    public static void clearBipedCubes(PlayerModel<?> model) {
+        clearBipedCubes((BipedModel<?>) model);
+        model.hat.cubes.clear();
+        model.jacket.cubes.clear();
+        model.leftSleeve.cubes.clear();
+        model.rightSleeve.cubes.clear();
+        model.leftPants.cubes.clear();
+        model.rightPants.cubes.clear();
     }
     
     public static void editLatestCube(ModelRenderer modelRenderer, Consumer<ModelRenderer.ModelBox> edit) {

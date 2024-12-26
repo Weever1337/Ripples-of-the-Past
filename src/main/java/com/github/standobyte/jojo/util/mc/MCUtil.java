@@ -12,6 +12,7 @@ import java.util.OptionalInt;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -132,6 +133,7 @@ import net.minecraftforge.event.ForgeEventFactory;
 import net.minecraftforge.event.entity.PlaySoundAtEntityEvent;
 import net.minecraftforge.registries.IForgeRegistry;
 import net.minecraftforge.registries.IForgeRegistryEntry;
+import net.minecraftforge.registries.RegistryManager;
 
 public class MCUtil {
     public static final IFormattableTextComponent EMPTY_TEXT = new StringTextComponent("");
@@ -335,6 +337,16 @@ public class MCUtil {
     }
     
     
+    public static boolean isLocalServer(MinecraftServer server, Entity serverPlayer) {
+        if (server.isDedicatedServer() || !(serverPlayer instanceof ServerPlayerEntity)) {
+            return false;
+        }
+        ServerPlayerEntity player = (ServerPlayerEntity) serverPlayer;
+        PlayerEntity clientPlayer = ClientUtil.getClientPlayer();
+        return clientPlayer != null && player.getUUID().equals(clientPlayer.getUUID());
+    }
+    
+    
     
     public static Collection<BlockPos> explosionBlocks(BlockPos center, float radius, World world) {
         Set<BlockPos> set = new HashSet<>();
@@ -379,6 +391,17 @@ public class MCUtil {
         }
         
         return set;
+    }
+    
+    public static void iterateOverBlocks(int minX, int minY, int minZ, int maxX, int maxY, int maxZ, Consumer<BlockPos> action) {
+        for (int x = minX; x <= maxX; ++x) {
+            for (int y = minY; y <= maxY; ++y) {
+                for (int z = minZ; z <= maxZ; ++z) {
+                    BlockPos pos = new BlockPos(x, y, z);
+                    action.accept(pos);
+                }
+            }
+        }
     }
     
     
@@ -703,21 +726,7 @@ public class MCUtil {
             Block.popResource(world, pair.getSecond(), pair.getFirst());
         }
         
-        final double radius = 64;
-        for (ServerPlayerEntity player : world.players()) {
-            if (player.level.dimension() == world.dimension()) {
-                double x = player.getX();
-                double y = player.getY();
-                double z = player.getZ();
-
-                double xDiff = x < minX ? minX - x : x > maxX ? x - maxX : 0;
-                double yDiff = y < minY ? minY - y : y > maxY ? y - maxY : 0;
-                double zDiff = z < minZ ? minZ - z : z > maxZ ? z - maxZ : 0;
-                if (xDiff * xDiff + yDiff * yDiff + zDiff * zDiff < radius * radius) {
-                    PacketManager.sendToClient(packet, player);
-                }
-            }
-        }
+        packet.sendToPlayers(world, minX, minY, minZ, maxX, maxY, maxZ);
         
         return blocksBroken;
     }
@@ -969,7 +978,10 @@ public class MCUtil {
         return areHandsFree(entity, hand);
     }
     
-    // TODO areBothHandsFree method?
+    public static boolean areBothHandsFree(LivingEntity entity) {
+        return areHandsFree(entity, Hand.MAIN_HAND, Hand.OFF_HAND);
+    }
+    
     public static boolean areHandsFree(LivingEntity entity, Hand... hands) {
         if (entity.level.isClientSide() && entity.is(ClientUtil.getClientPlayer()) && ClientUtil.arePlayerHandsBusy()) {
             return false;
@@ -1048,6 +1060,10 @@ public class MCUtil {
         return server.isDedicatedServer() ? "en_us" : ClientUtil.getCurrentLanguageCode();
     }
     
+    
+    public static <V extends IForgeRegistryEntry<V>> IForgeRegistry<V> getRegistry(IForgeRegistryEntry<?> regEntry) {
+        return RegistryManager.ACTIVE.getRegistry(((IForgeRegistryEntry<V>) regEntry).getRegistryType());
+    }
     
     
     public static class EntityEvents { // TODO entity event constants

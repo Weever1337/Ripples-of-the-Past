@@ -58,6 +58,7 @@ import com.github.standobyte.jojo.power.impl.stand.StandUtil;
 import com.github.standobyte.jojo.util.general.GeneralUtil;
 import com.github.standobyte.jojo.util.general.MathUtil;
 import com.github.standobyte.jojo.util.general.ObjectWrapper;
+import com.github.standobyte.jojo.util.mod.JojoModUtil;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -88,7 +89,6 @@ import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.Style;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
-import net.minecraft.world.GameType;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.EventPriority;
@@ -495,7 +495,7 @@ public class ActionsOverlayGui extends AbstractGui {
     }
     
     protected boolean hudRenders() {
-        return mc.gameMode.getPlayerMode() != GameType.SPECTATOR && !mc.options.hideGui && !mc.player.isDeadOrDying();
+        return !JojoModUtil.tmpSpectatorCantUsePowers(mc.player) && !mc.options.hideGui && !mc.player.isDeadOrDying();
     }
     
     protected boolean[] hotbarIsRendered = new boolean[4];
@@ -1354,7 +1354,16 @@ public class ActionsOverlayGui extends AbstractGui {
             }
             
             ElementTransparency transparency = customKeybindActionTransparency.get(mode.powerClassification);
-            float alpha = transparency.getAlpha(partialTick);
+            float alpha;
+            HudTextRender renderMode = ClientModSettings.getSettingsReadOnly().hudTextRender;
+            switch (renderMode) {
+            case NEVER:
+                alpha = 0;
+                break;
+            default:
+                alpha = transparency.getAlpha(partialTick);
+                break;
+            }
             
             if (alpha > 0) {
                 if (!hotbarsEnabled) alpha = mulAlpha(alpha, 0.25F);
@@ -1378,8 +1387,7 @@ public class ActionsOverlayGui extends AbstractGui {
         case NEVER:
             return 0;
         case FADE_OUT:
-            float alpha = transparency.getAlpha(partialTick);
-            return alpha;
+            return transparency.getAlpha(partialTick);
         default:
             return 1;
         }

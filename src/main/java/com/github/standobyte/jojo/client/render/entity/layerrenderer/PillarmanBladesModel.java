@@ -2,10 +2,9 @@ package com.github.standobyte.jojo.client.render.entity.layerrenderer;
 
 import java.util.Collections;
 
-import com.github.standobyte.jojo.client.ClientUtil;
 import com.google.common.collect.ImmutableList;
 
-import net.minecraft.client.renderer.entity.model.PlayerModel;
+import net.minecraft.client.renderer.entity.model.BipedModel;
 import net.minecraft.client.renderer.model.ModelRenderer;
 import net.minecraft.entity.LivingEntity;
 
@@ -14,40 +13,40 @@ import net.minecraft.entity.LivingEntity;
 // Paste this class into your mod and generate all required imports
 
 
-public class PillarmanBladesModel extends PlayerModel<LivingEntity> {
-	private final ModelRenderer BladeRight;
-	private final ModelRenderer BladeLeft;
+public class PillarmanBladesModel<T extends LivingEntity> extends BipedModel<T> {
+	public final ModelRenderer bladeRight;
+	public final ModelRenderer bladeLeft;
 
 	public PillarmanBladesModel(boolean slim) {
-		super(0, slim);
+		super(0);
 		texWidth = 16;
 		texHeight = 16;
 
 
 		rightArm.setTexSize(texWidth, texHeight);
-		ClientUtil.clearCubes(rightArm);
+		rightArm.cubes.clear();
 
-		BladeRight = new ModelRenderer(this);
-		BladeRight.setPos(-0.9F, 9.0F, 5.9F);
-		rightArm.addChild(BladeRight);
-		setRotationAngle(BladeRight, 0.0F, 3.1416F, 0.0F);
-		BladeRight.texOffs(0, 0).addBox(0.2F, -2.8F, -1.0F, 1.0F, 3.0F, 5.0F, 0.0F, false);
-		BladeRight.texOffs(0, 8).addBox(0.2F, -2.8F, -4.0F, 1.0F, 2.0F, 3.0F, 0.0F, false);
-		BladeRight.texOffs(10, 0).addBox(0.2F, -2.8F, -6.0F, 1.0F, 1.0F, 2.0F, 0.0F, false);
-		BladeRight.texOffs(6, 11).addBox(0.2F, -3.8F, -7.0F, 1.0F, 1.0F, 4.0F, 0.0F, false);
+		bladeRight = new ModelRenderer(this);
+		bladeRight.setPos(-0.9F, 9.0F, 5.9F);
+		rightArm.addChild(bladeRight);
+		setRotationAngle(bladeRight, 0.0F, 3.1416F, 0.0F);
+		bladeRight.texOffs(0, 0).addBox(0.2F, -2.8F, -1.0F, 1.0F, 3.0F, 5.0F, 0.0F, false);
+		bladeRight.texOffs(0, 8).addBox(0.2F, -2.8F, -4.0F, 1.0F, 2.0F, 3.0F, 0.0F, false);
+		bladeRight.texOffs(10, 0).addBox(0.2F, -2.8F, -6.0F, 1.0F, 1.0F, 2.0F, 0.0F, false);
+		bladeRight.texOffs(6, 11).addBox(0.2F, -3.8F, -7.0F, 1.0F, 1.0F, 4.0F, 0.0F, false);
 
 		leftArm.setTexSize(texWidth, texHeight);
-		ClientUtil.clearCubes(leftArm);
+		leftArm.cubes.clear();
 		
 
-		BladeLeft = new ModelRenderer(this);
-		BladeLeft.setPos(2.3F, 9.0F, 5.9F);
-		leftArm.addChild(BladeLeft);
-		setRotationAngle(BladeLeft, 0.0F, 3.1416F, 0.0F);
-		BladeLeft.texOffs(0, 0).addBox(0.2F, -2.8F, -1.0F, 1.0F, 3.0F, 5.0F, 0.0F, false);
-		BladeLeft.texOffs(0, 8).addBox(0.2F, -2.8F, -4.0F, 1.0F, 2.0F, 3.0F, 0.0F, false);
-		BladeLeft.texOffs(10, 0).addBox(0.2F, -2.8F, -6.0F, 1.0F, 1.0F, 2.0F, 0.0F, false);
-		BladeLeft.texOffs(6, 11).addBox(0.2F, -3.8F, -7.0F, 1.0F, 1.0F, 4.0F, 0.0F, false);
+		bladeLeft = new ModelRenderer(this);
+		bladeLeft.setPos(2.3F, 9.0F, 5.9F);
+		leftArm.addChild(bladeLeft);
+		setRotationAngle(bladeLeft, 0.0F, 3.1416F, 0.0F);
+		bladeLeft.texOffs(0, 0).addBox(0.2F, -2.8F, -1.0F, 1.0F, 3.0F, 5.0F, 0.0F, false);
+		bladeLeft.texOffs(0, 8).addBox(0.2F, -2.8F, -4.0F, 1.0F, 2.0F, 3.0F, 0.0F, false);
+		bladeLeft.texOffs(10, 0).addBox(0.2F, -2.8F, -6.0F, 1.0F, 1.0F, 2.0F, 0.0F, false);
+		bladeLeft.texOffs(6, 11).addBox(0.2F, -3.8F, -7.0F, 1.0F, 1.0F, 4.0F, 0.0F, false);
 	}
 	
 	@Override

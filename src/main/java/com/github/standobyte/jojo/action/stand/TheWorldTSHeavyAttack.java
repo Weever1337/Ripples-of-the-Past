@@ -42,7 +42,7 @@ import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.World;
 
 public class TheWorldTSHeavyAttack extends StandEntityAction implements IHasStandPunch {
-    public static final StandPose TS_PUNCH_POSE = new StandPose("TS_PUNCH");
+    public static final StandPose TS_PUNCH_POSE = new StandPose("timeBreaker");
     private final Supplier<TimeStopInstant> theWorldTimeStopBlink;
     
     @Deprecated
@@ -82,7 +82,7 @@ public class TheWorldTSHeavyAttack extends StandEntityAction implements IHasStan
             StandEntity stand = (StandEntity) power.getStandManifestation();
             return ActionTarget.fromRayTraceResult(
                     stand.precisionRayTrace(stand.isManuallyControlled() ? stand : user, stand.getMaxRange(),
-                            stand.getPrecision() / 16F));
+                            stand.getPrecision() / 16F, false));
         }
         return super.targetBeforePerform(world, user, power, target);
     }

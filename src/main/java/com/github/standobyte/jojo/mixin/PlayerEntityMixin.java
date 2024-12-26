@@ -106,11 +106,12 @@ public abstract class PlayerEntityMixin extends LivingEntityMixin implements Pla
      *   render hp/hunger/etc.
      *   tick the player
      *     tick status effects
-     *   allow the power HUD to be opened
+     *   allow the power HUD to be opened (remove JojoModUtil.tmpSpectatorCantUsePowers(LivingEntity))
      *   ...?
      */
     @Override
     public void jojoPossessEntity(@Nullable Entity entity, boolean asAlive, IForgeRegistryEntry<?> context) {
+        if (entity == this) return;
         jojoPossessedEntity.setOwner(entity);
         if (!level.isClientSide()) {
             ServerPlayerEntity player = ((ServerPlayerEntity) (Entity) this);
@@ -189,7 +190,7 @@ public abstract class PlayerEntityMixin extends LivingEntityMixin implements Pla
         forgeCapNbt.putBoolean("PossessAsAlive", jojoPossessingAsAlive);
         if (jojoPossessionContext != null) {
             CompoundNBT ctxNbt = new CompoundNBT();
-            IForgeRegistry<?> retrievedRegistry = RegistryManager.ACTIVE.getRegistry(jojoPossessionContext.getRegistryName());
+            IForgeRegistry<?> retrievedRegistry = MCUtil.getRegistry(jojoPossessionContext);
             if (retrievedRegistry != null) {
                 ctxNbt.putString("Registry", retrievedRegistry.getRegistryName().toString());
                 ctxNbt.putString("Obj", jojoPossessionContext.getRegistryName().toString());

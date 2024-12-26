@@ -35,7 +35,7 @@ public class KosmXStoneFormLayer extends AnimLayerHandler<ModifierLayer<IAnimati
         }
     }
     
-    private ResourceLocation getAnimPath(PlayerEntity player) { // TODO sync pillar man pose variant with all clients
+    private ResourceLocation getAnimPath(PlayerEntity player) { // FIXME sync pillar man pose variant with all clients
         return POSES[player.getRandom().nextInt(POSES.length)];
     }
     

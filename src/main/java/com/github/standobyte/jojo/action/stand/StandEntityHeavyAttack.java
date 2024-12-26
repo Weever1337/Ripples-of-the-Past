@@ -30,6 +30,8 @@ import com.github.standobyte.jojo.entity.stand.StandPose;
 import com.github.standobyte.jojo.entity.stand.StandRelativeOffset;
 import com.github.standobyte.jojo.entity.stand.StandStatFormulas;
 import com.github.standobyte.jojo.init.ModSounds;
+import com.github.standobyte.jojo.network.NetworkUtil;
+import com.github.standobyte.jojo.network.packets.fromserver.LotsOfBlocksBrokenPacket;
 import com.github.standobyte.jojo.power.impl.stand.IStandPower;
 import com.github.standobyte.jojo.power.impl.stand.StandInstance.StandPart;
 import com.github.standobyte.jojo.power.impl.stand.StandUtil;
@@ -46,6 +48,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.fluid.FluidState;
+import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
@@ -231,11 +234,6 @@ public class StandEntityHeavyAttack extends StandEntityAction implements IHasSta
     }
     
     @Override
-    public StandPose getStandPose(IStandPower standPower, StandEntity standEntity, StandEntityTask task) {
-        return isFinisher ? StandPose.HEAVY_ATTACK_FINISHER : super.getStandPose(standPower, standEntity, task);
-    }
-    
-    @Override
     public boolean greenSelection(IStandPower power, ActionConditionResult conditionCheck) {
         return isFinisher && conditionCheck.isPositive();
     }
@@ -247,6 +245,14 @@ public class StandEntityHeavyAttack extends StandEntityAction implements IHasSta
     @Override
     public boolean isLegalInHud(IStandPower power) {
         return !isFinisher;
+    }
+    
+    @Deprecated
+    void setIsFinisher() {
+        isFinisher = true;
+        if (standPose == StandPose.HEAVY_ATTACK) {
+            standPose = StandPose.HEAVY_ATTACK_FINISHER;
+        }
     }
     
     public boolean canBeParried() {
@@ -269,7 +275,7 @@ public class StandEntityHeavyAttack extends StandEntityAction implements IHasSta
         public Builder setFinisherVariation(Supplier<? extends StandEntityHeavyAttack> variation) {
             if (variation != null) {
                 this.finisherVariation = variation;
-                variation.get().isFinisher = true;
+                variation.get().setIsFinisher();
                 addExtraUnlockable(this.finisherVariation);
             }
             return getThis();
@@ -306,7 +312,7 @@ public class StandEntityHeavyAttack extends StandEntityAction implements IHasSta
         
         @Override
         protected boolean onAttack(StandEntity stand, Entity target, StandEntityDamageSource dmgSource, float damage) {
-            // FIXME heavy punch clashes
+            // TODO heavy punch clashes
 //            if (target instanceof StandEntity) {
 //                StandEntity targetStand = (StandEntity) target;
 //                StandEntityAction opponentTask = targetStand.getCurrentTaskAction();
@@ -315,9 +321,9 @@ public class StandEntityHeavyAttack extends StandEntityAction implements IHasSta
 //                    if (opponentAttack.canBeParried()
 //                            && targetStand.getCurrentTaskPhase().get() == StandEntityAction.Phase.WINDUP
 //                            && targetStand.canBlockOrParryFromAngle(dmgSource.getSourcePosition())) {
-//                        // TODO MORE spark particles
-//                        // TODO "loser gets knocked back" what did i mean?
-//                        // TODO a few ticks of freeze?
+//                        // MORE spark particles
+//                        // "loser gets knocked back" what did i mean?
+//                        // a few ticks of freeze?
 //                        targetStand.stopTask(true);
 //                        
 //                        SoundEvent thisSound = this.getImpactSound();
@@ -481,8 +487,14 @@ public class StandEntityHeavyAttack extends StandEntityAction implements IHasSta
             }
             
             @Override
+            public void finalizeExplosion(boolean pSpawnParticles) {
+                super.finalizeExplosion(pSpawnParticles);
+                remainingBlocksShockWave();
+            }
+            
+            @Override
             protected void explodeBlocks() {
-                if (JojoModUtil.breakingBlocksEnabled(level) && level instanceof ServerWorld) {
+                if (level instanceof ServerWorld) {
                     ServerWorld world = (ServerWorld) level;
                     List<BlockPos> toBlow = getToBlow();
                     LivingEntity standUser = StandUtil.getStandUser(attacker);
@@ -628,11 +640,47 @@ public class StandEntityHeavyAttack extends StandEntityAction implements IHasSta
                 return blocksToBlow;
             }
             
+            protected void remainingBlocksShockWave() {
+                if (!level.isClientSide()) {
+                    LotsOfBlocksBrokenPacket blocksShockwaveVisual = new LotsOfBlocksBrokenPacket();
+                    Vector3d pos = getPosition();
+                    double radius = this.radius;
+                    int minX = MathHelper.floor(pos.x - radius);
+                    int minY = MathHelper.floor(pos.y - radius);
+                    int minZ = MathHelper.floor(pos.z - radius);
+                    int maxX = MathHelper.ceil(pos.x + radius);
+                    int maxY = MathHelper.ceil(pos.y + radius);
+                    int maxZ = MathHelper.ceil(pos.z + radius);
+                    boolean test = true;
+                    MCUtil.iterateOverBlocks(minX, minY, minZ, maxX, maxY, maxZ, blockPos -> {
+                        if (test || pos.distanceToSqr(blockPos.getX() + 0.5, blockPos.getX() + 0.5, blockPos.getX() + 0.5) > radius + 0.5) {
+                            BlockState blockState = level.getBlockState(blockPos);
+                            if (!blockState.isAir(level, blockPos)) {
+                                blocksShockwaveVisual.addBlock(blockPos, blockState);
+                            }
+                        }
+                    });
+                    blocksShockwaveVisual.sendToPlayers((ServerWorld) level, minX, minY, minZ, maxX, maxY, maxZ);
+                }
+            }
+            
             @Override
             protected void playSound() {}
             
             @Override
             protected void spawnParticles() {}
+            
+            @Override
+            public void toBuf(PacketBuffer buf) {
+                NetworkUtil.writeVecApproximate(buf, explosionDirection);
+                buf.writeEnum(blockInteraction);
+            }
+            
+            @Override
+            public void fromBuf(PacketBuffer buf) {
+                explosionDirection = NetworkUtil.readVecApproximate(buf);
+                blockInteraction = buf.readEnum(Explosion.Mode.class);
+            }
             
             @Override
             public ResourceLocation getExplosionType() {
