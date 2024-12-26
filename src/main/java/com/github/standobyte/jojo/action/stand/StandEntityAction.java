@@ -15,7 +15,6 @@ import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import com.github.standobyte.jojo.JojoMod;
 import com.github.standobyte.jojo.action.Action;
 import com.github.standobyte.jojo.action.ActionConditionResult;
 import com.github.standobyte.jojo.action.ActionTarget;
@@ -305,7 +304,6 @@ public abstract class StandEntityAction extends StandAction implements IStandPha
     @Override
     protected
     final void perform(World world, LivingEntity user, IStandPower power, ActionTarget target) {
-        JojoMod.LOGGER.debug("qweqwe");
         invokeForStand(power, stand -> {
             if (stand.getCurrentTask().map(task -> {
                 if (task.getPhase() == Phase.BUTTON_HOLD) {
