@@ -9,27 +9,25 @@ import com.github.standobyte.jojo.client.playeranim.kosmx.anim.modifier.KosmXHea
 
 import dev.kosmx.playerAnim.api.layered.IAnimation;
 import dev.kosmx.playerAnim.api.layered.ModifierLayer;
-import dev.kosmx.playerAnim.api.layered.modifier.SpeedModifier;
 import dev.kosmx.playerAnim.core.util.Ease;
 import net.minecraft.client.entity.player.AbstractClientPlayerEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.HandSide;
 import net.minecraft.util.ResourceLocation;
 
-public class KosmXUnnaturalAgilityLayer extends AnimLayerHandler<ModifierLayer<IAnimation>> implements BasicToggleAnim {
-	private static final float SPEED = 1.25F;
+public class KosmXAtmosphericRiftHandler extends AnimLayerHandler<ModifierLayer<IAnimation>> implements BasicToggleAnim {
 
-    public KosmXUnnaturalAgilityLayer(ResourceLocation id) {
+    public KosmXAtmosphericRiftHandler(ResourceLocation id) {
         super(id);
     }
 
     @Override
     protected ModifierLayer<IAnimation> createAnimLayer(AbstractClientPlayerEntity player) {
-        return new ModifierLayer<>(null, new SpeedModifier(SPEED));
+        return new ModifierLayer<>(null, new KosmXHeadRotationModifier());
     }
     
-    
-    private static final ResourceLocation ANIM = new ResourceLocation(JojoMod.MOD_ID, "unnatural_agility");
+
+    private static final ResourceLocation ANIM = new ResourceLocation(JojoMod.MOD_ID, "atmospheric_rift");
     @Override
     public boolean setAnimEnabled(PlayerEntity player, boolean enabled) {
         enabled &= !player.isPassenger();
