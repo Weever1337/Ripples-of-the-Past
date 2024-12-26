@@ -135,7 +135,7 @@ dependencies {
 }
 
 jar {
-	archiveClassifier = ''
+	archiveClassifier = 'no-gecko'
     manifest {
         attributes([
             "Specification-Title": "Ripples of the Past",
@@ -149,7 +149,7 @@ jar {
 }
 
 shadowJar {
-    archiveClassifier = 'fat'
+    archiveClassifier = ''
     configurations = [project.configurations.shade]
     relocate 'team.unnamed.mocha', "dependency.${project.group}.mocha"
     relocate 'javassist', "dependency.${project.group}.javassist"
