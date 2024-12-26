@@ -688,6 +688,11 @@ public abstract class StandEntityAction extends StandAction implements IStandPha
             this.userWalkSpeed = MathHelper.clamp(factor, 0F, 1F);
             return getThis();
         }
+        
+        @Override
+        public T standPose(StandPose pose) {
+            return super.standPose(pose);
+        }
 
         public T standOffsetFront() {
             // FIXME barrage-like offset
