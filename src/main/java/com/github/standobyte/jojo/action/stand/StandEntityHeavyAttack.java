@@ -309,7 +309,7 @@ public class StandEntityHeavyAttack extends StandEntityAction implements IHasSta
         
         @Override
         protected boolean onAttack(StandEntity stand, Entity target, StandEntityDamageSource dmgSource, float damage) {
-            // FIXME heavy punch clashes
+            // TODO heavy punch clashes
 //            if (target instanceof StandEntity) {
 //                StandEntity targetStand = (StandEntity) target;
 //                StandEntityAction opponentTask = targetStand.getCurrentTaskAction();
@@ -318,9 +318,9 @@ public class StandEntityHeavyAttack extends StandEntityAction implements IHasSta
 //                    if (opponentAttack.canBeParried()
 //                            && targetStand.getCurrentTaskPhase().get() == StandEntityAction.Phase.WINDUP
 //                            && targetStand.canBlockOrParryFromAngle(dmgSource.getSourcePosition())) {
-//                        // TODO MORE spark particles
-//                        // TODO "loser gets knocked back" what did i mean?
-//                        // TODO a few ticks of freeze?
+//                        // MORE spark particles
+//                        // "loser gets knocked back" what did i mean?
+//                        // a few ticks of freeze?
 //                        targetStand.stopTask(true);
 //                        
 //                        SoundEvent thisSound = this.getImpactSound();
