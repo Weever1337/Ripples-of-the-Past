@@ -228,7 +228,7 @@ public class PillarmanData extends TypeSpecificData {
         	    ServerPlayerEntity player = (ServerPlayerEntity) user;
         	    switch (mode) {
         	    case WIND:
-        	        // TODO make a single trigger with a mod predicate for that
+        	        // TODO make a single trigger with a mode predicate for that
         	        ModCriteriaTriggers.PILLARMAN_WIND_MODE.get().trigger(player);
         	        break;
         	    case HEAT:

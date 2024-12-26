@@ -77,6 +77,6 @@ public class PillarmanBladesLayer<T extends LivingEntity, M extends EntityModel<
     @Override
     public void renderHandFirstPerson(HandSide side, MatrixStack matrixStack, IRenderTypeBuffer buffer, int light,
             AbstractClientPlayerEntity player, PlayerRenderer playerRenderer) {
-        // TODO render blades in 1st person
+        // FIXME render blades in 1st person
     }
 }
