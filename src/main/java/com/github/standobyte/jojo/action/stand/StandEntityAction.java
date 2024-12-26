@@ -12,8 +12,10 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import com.github.standobyte.jojo.JojoMod;
 import com.github.standobyte.jojo.action.Action;
 import com.github.standobyte.jojo.action.ActionConditionResult;
 import com.github.standobyte.jojo.action.ActionTarget;
@@ -51,7 +53,6 @@ public abstract class StandEntityAction extends StandAction implements IStandPha
     protected final int standRecoveryDuration;
     private final AutoSummonMode autoSummonMode;
     private final float userWalkSpeed;
-    protected StandPose standPose;
     @Nullable
     protected final StandRelativeOffset userOffset;
     @Nullable
@@ -68,7 +69,6 @@ public abstract class StandEntityAction extends StandAction implements IStandPha
         this.standRecoveryDuration = builder.standRecoveryDuration;
         this.autoSummonMode = builder.autoSummonMode;
         this.userWalkSpeed = builder.userWalkSpeed;
-        this.standPose = builder.standPose;
         this.userOffset = builder.userOffset;
         this.userOffsetArmsOnly = builder.userOffsetArmsOnly;
         this.enablePhysics = builder.enablePhysics;
@@ -289,7 +289,14 @@ public abstract class StandEntityAction extends StandAction implements IStandPha
         if (!willFire) {
             invokeForStand(power, stand -> {
                 if (stand.getCurrentTaskAction() == this) {
-                    stand.stopTaskWithRecovery();
+                    stand.getCurrentTask().ifPresent(task -> {
+                        if (task.getAction().holdOnly(power)) {
+                            task.moveToPhase(StandEntityAction.Phase.RECOVERY, power, stand);
+                        }
+                        else {
+                            stand.stopTask();
+                        }
+                    });
                 }
             });
         }
@@ -298,6 +305,7 @@ public abstract class StandEntityAction extends StandAction implements IStandPha
     @Override
     protected
     final void perform(World world, LivingEntity user, IStandPower power, ActionTarget target) {
+        JojoMod.LOGGER.debug("qweqwe");
         invokeForStand(power, stand -> {
             if (stand.getCurrentTask().map(task -> {
                 if (task.getPhase() == Phase.BUTTON_HOLD) {
@@ -596,11 +604,11 @@ public abstract class StandEntityAction extends StandAction implements IStandPha
         return task.getPhase() == Phase.RECOVERY ? 1F : userWalkSpeed;
     }
     
-    public StandPose getStandPose(IStandPower standPower, StandEntity standEntity, StandEntityTask task) {
+    public StandPose getStandPose(IStandPower standPower, StandEntity standEntity, @Nonnull StandEntityTask task) {
         if (barrageVisuals(standEntity, standPower, task)) {
             return barrageVisuals.get().getStandPose(standPower, standEntity, task);
         }
-        return standPose;
+        return super.getStandPose(standPower, standEntity, task);
     }
     
     public void rotateStandTowardsTarget(StandEntity standEntity, ActionTarget target, StandEntityTask task) {
@@ -642,7 +650,6 @@ public abstract class StandEntityAction extends StandAction implements IStandPha
         protected int standRecoveryDuration = 0;
         protected AutoSummonMode autoSummonMode = AutoSummonMode.FULL;
         protected float userWalkSpeed = 0.5F;
-        protected StandPose standPose = StandPose.IDLE;
         @Nullable
         protected StandRelativeOffset userOffset = null;
         @Nullable
@@ -681,13 +688,6 @@ public abstract class StandEntityAction extends StandAction implements IStandPha
         
         public T standUserWalkSpeed(float factor) {
             this.userWalkSpeed = MathHelper.clamp(factor, 0F, 1F);
-            return getThis();
-        }
-        
-        public T standPose(StandPose pose) {
-            if (pose != null) {
-                this.standPose = pose;
-            }
             return getThis();
         }
 

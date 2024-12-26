@@ -17,6 +17,9 @@ import com.github.standobyte.jojo.action.ActionTarget;
 import com.github.standobyte.jojo.action.player.ContinuousActionInstance;
 import com.github.standobyte.jojo.client.ClientUtil;
 import com.github.standobyte.jojo.client.standskin.StandSkinsManager;
+import com.github.standobyte.jojo.entity.stand.StandEntity;
+import com.github.standobyte.jojo.entity.stand.StandEntityTask;
+import com.github.standobyte.jojo.entity.stand.StandPose;
 import com.github.standobyte.jojo.init.ModStatusEffects;
 import com.github.standobyte.jojo.power.IPower.PowerClassification;
 import com.github.standobyte.jojo.power.impl.stand.IStandPower;
@@ -36,6 +39,7 @@ public abstract class StandAction extends Action<IStandPower> {
     private final float resolveCooldownMultiplier;
     private final boolean isTrained;
     private final boolean autoSummonStand;
+    protected StandPose standPose;
     private final float staminaCost;
     private final float staminaCostTick;
     private final Set<StandPart> partsRequired;
@@ -47,6 +51,7 @@ public abstract class StandAction extends Action<IStandPower> {
         this.resolveCooldownMultiplier = builder.resolveCooldownMultiplier;
         this.isTrained = builder.isTrained;
         this.autoSummonStand = builder.autoSummonStand;
+        this.standPose = builder.standPose;
         this.staminaCost = builder.staminaCost;
         this.staminaCostTick = builder.staminaCostTick;
         this.partsRequired = builder.partsRequired;
@@ -176,6 +181,10 @@ public abstract class StandAction extends Action<IStandPower> {
         }
     }
     
+    public StandPose getStandPose(IStandPower standPower, StandEntity standEntity, @Nullable StandEntityTask task) {
+        return standPose;
+    }
+    
     protected boolean autoSummonStand(IStandPower power) {
         return autoSummonStand;
     }
@@ -222,6 +231,7 @@ public abstract class StandAction extends Action<IStandPower> {
         private float resolveCooldownMultiplier = 0;
         private boolean isTrained = false;
         private boolean autoSummonStand = false;
+        protected StandPose standPose = StandPose.IDLE;
         private float staminaCost = 0;
         private float staminaCostTick = 0;
         private final Set<StandPart> partsRequired = EnumSet.noneOf(StandPart.class);
@@ -250,6 +260,13 @@ public abstract class StandAction extends Action<IStandPower> {
         
         public T autoSummonStand() {
             this.autoSummonStand = true;
+            return getThis();
+        }
+        
+        public T standPose(StandPose pose) {
+            if (pose != null) {
+                this.standPose = pose;
+            }
             return getThis();
         }
 
