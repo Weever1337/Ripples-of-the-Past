@@ -6,7 +6,6 @@ import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
-import com.github.standobyte.jojo.action.non_stand.NonStandAction;
 import org.apache.commons.lang3.ArrayUtils;
 
 import com.github.standobyte.jojo.action.Action;
@@ -242,14 +241,18 @@ public abstract class NonStandPowerType<T extends TypeSpecificData> extends Forg
         return defaultQuickAccess;
     }
 
-    public List<Action<INonStandPower>> getAllActions() {
+    /**
+     * This method will only return actions that are added to the HUD by default.
+     * This does <u>not</u> include Hamon technique skills and Pillar Man actions.
+     */
+    public List<Action<INonStandPower>> getDefaultActions() {
         List<Action<INonStandPower>> allActions = new ArrayList<>();
         Collections.addAll(allActions, attacks);
         Collections.addAll(allActions, abilities);
         return allActions;
     }
 
-    public List<Action<INonStandPower>> getAllUnlockedActions(INonStandPower power) {
+    public List<Action<INonStandPower>> getUnlockedDefaultActions(INonStandPower power) {
         List<Action<INonStandPower>> allActions = new ArrayList<>();
         Collections.addAll(allActions, attacks);
         Collections.addAll(allActions, abilities);
