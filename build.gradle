@@ -134,6 +134,22 @@ dependencies {
     shade 'team.unnamed:mocha:3.0.0'
 }
 
+
+// Minifies json resource files
+import groovy.json.JsonSlurper
+import groovy.json.JsonOutput
+
+processResources {
+	inputs.property "version", project.version
+
+    doLast {
+        fileTree(dir: outputs.files.asPath, include: "**/*.json").each {
+            File file -> file.text = JsonOutput.toJson(new JsonSlurper().parse(file))
+        }
+    }
+}
+
+
 jar {
 	archiveClassifier = 'no-gecko'
     manifest {
