@@ -29,6 +29,7 @@ import com.github.standobyte.jojo.network.packets.fromserver.TrWalkmanEarbudsPac
 import com.github.standobyte.jojo.network.packets.fromserver.VampireSleepInCoffinPacket;
 import com.github.standobyte.jojo.network.packets.fromserver.ability_specific.MetEntityTypesPacket;
 import com.github.standobyte.jojo.power.IPower;
+import com.github.standobyte.jojo.power.impl.nonstand.type.vampirism.VampirismUtil;
 import com.github.standobyte.jojo.util.general.GeneralUtil;
 import com.github.standobyte.jojo.util.mc.MCUtil;
 import com.github.standobyte.jojo.util.mc.PlayerStatListener;
@@ -461,7 +462,7 @@ public class PlayerUtilCap {
     }
     
     private void tickCoffinSleepTimer() {
-        if (coffinPreventDayTimeSkip && WoodenCoffinBlock.isSleepingInCoffin(player)) {
+        if (coffinPreventDayTimeSkip && WoodenCoffinBlock.isSleepingInCoffin(player) && !VampirismUtil.isSunny(player.level)) {
             CommonReflection.setSleepCounter(player, 0);
         }
     }
