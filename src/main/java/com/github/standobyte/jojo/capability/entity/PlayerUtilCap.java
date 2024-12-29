@@ -75,10 +75,6 @@ public class PlayerUtilCap {
     private boolean hasClientInput;
     private int noClientInputTimer;
     
-    private BedType lastBedType;
-    private int ticksNoSleep;
-    private long lastSleepTime;
-    private long nextSleepTime;
     public boolean coffinPreventDayTimeSkip = false;
     
     private Set<ResourceLocation> metEntityTypesId = new HashSet<>();
@@ -108,7 +104,6 @@ public class PlayerUtilCap {
             tickKnivesRemoval();
             tickVoiceLines();
             tickClientInputTimer();
-            tickNoSleepTimer();
             tickStatUpdates();
             tickQueuedOnScreenClose();
             
@@ -125,10 +120,6 @@ public class PlayerUtilCap {
     public void onClone(PlayerUtilCap old, boolean wasDeath) {
         this.notificationsSent = old.notificationsSent;
         this.broadcastedSettings = old.broadcastedSettings;
-        
-        this.lastBedType = old.lastBedType;
-        this.ticksNoSleep = old.ticksNoSleep;
-        this.nextSleepTime = old.nextSleepTime;
     }
     
     public CompoundNBT toNBT() {
@@ -453,37 +444,6 @@ public class PlayerUtilCap {
         return noClientInputTimer;
     }
     
-    
-    
-    private void tickNoSleepTimer() {
-        if (ticksNoSleep > 0) ticksNoSleep--;
-    }
-    
-    public void onSleep(boolean isCoffin, int ticksSkipped) {
-        this.lastBedType = isCoffin ? BedType.COFFIN : BedType.BED;
-        this.lastSleepTime = player.level.dayTime();
-        this.ticksNoSleep = ticksSkipped * 2;
-        this.nextSleepTime = player.level.dayTime() + ticksNoSleep;
-    }
-    
-    public boolean canGoToSleep(boolean isCoffin) {
-        return 
-                this.lastBedType == null || 
-                !this.lastBedType.isCoffin && !isCoffin || 
-                ticksNoSleep <= 0 || 
-                nextSleepTime < player.level.dayTime() || player.level.dayTime() < lastSleepTime;
-    }
-    
-    private static enum BedType {
-        BED(false),
-        COFFIN(true);
-        
-        private final boolean isCoffin;
-        
-        private BedType(boolean isCoffin) {
-            this.isCoffin = isCoffin;
-        }
-    }
     
     
     public void onSleepingInCoffin(boolean isVampireRespawning) {
