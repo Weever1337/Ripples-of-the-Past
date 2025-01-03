@@ -14,7 +14,6 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import com.github.standobyte.jojo.action.ActionTarget.TargetType;
-import com.github.standobyte.jojo.action.config.ActionConfigField;
 import com.github.standobyte.jojo.action.config.ActionConfigSerialized;
 import com.github.standobyte.jojo.action.player.ContinuousActionInstance;
 import com.github.standobyte.jojo.advancements.ModCriteriaTriggers;
@@ -60,7 +59,7 @@ import net.minecraftforge.registries.ForgeRegistryEntry;
 public abstract class Action<P extends IPower<P, ?>> extends ForgeRegistryEntry<Action<?>> {
     private static final Map<Supplier<? extends Action<?>>, Supplier<? extends Action<?>>> SHIFT_VARIATIONS = new HashMap<>(); 
     
-    @ActionConfigField private final int holdDurationToFire;
+    private final int holdDurationToFire;
     private final int holdDurationMax;
     protected final boolean continueHolding;
     private final float heldWalkSpeed;
@@ -258,6 +257,14 @@ public abstract class Action<P extends IPower<P, ?>> extends ForgeRegistryEntry<
     
     @Nullable
     protected Action<P> replaceAction(P power, ActionTarget target) {
+        return replaceActionKostyl(power, target);
+    }
+    
+    /**
+     * Thank you, Java, very cool.
+     * Please don't override this in addons, this method going to be reserved for the main mod.
+     */
+    protected Action<P> replaceActionKostyl(P power, ActionTarget target) {
         return this;
     }
     
