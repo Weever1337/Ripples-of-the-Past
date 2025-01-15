@@ -74,6 +74,7 @@ import com.github.standobyte.jojo.power.impl.stand.StandInstance.StandPart;
 import com.github.standobyte.jojo.power.impl.stand.stats.ArmoredStandStats;
 import com.github.standobyte.jojo.power.impl.stand.stats.StandStats;
 import com.github.standobyte.jojo.power.impl.stand.type.EntityStandType;
+import com.github.standobyte.jojo.power.impl.stand.type.EntityStandType.MovementType;
 import com.github.standobyte.jojo.power.impl.stand.type.NoManifestationStandType;
 import com.github.standobyte.jojo.power.impl.stand.type.StandType;
 import com.github.standobyte.jojo.power.impl.stand.type.StandType.StandSurvivalGameplayPool;
@@ -715,6 +716,7 @@ public class ModStandsInit {
                     () -> new EntityStandType.Builder<>()
                     .color(0x4BEDE6)
                     .storyPartName(StoryPart.DIAMOND_IS_UNBREAKABLE.getName())
+                    .setMovementType(MovementType.WALKING)
                     .leftClickHotbar(
                             CRAZY_DIAMOND_PUNCH.get(), 
                             CRAZY_DIAMOND_BARRAGE.get(), 

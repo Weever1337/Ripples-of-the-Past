@@ -15,6 +15,7 @@ import com.github.standobyte.jojo.init.ModStatusEffects;
 import com.github.standobyte.jojo.network.PacketManager;
 import com.github.standobyte.jojo.network.packets.fromclient.ClStandManualMovementPacket;
 import com.github.standobyte.jojo.power.impl.stand.StandUtil;
+import com.github.standobyte.jojo.power.impl.stand.type.EntityStandType.MovementType;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
 import com.mojang.blaze3d.matrix.MatrixStack;
@@ -84,6 +85,10 @@ public class ControllerStand {
         return isProbablyControllingStand;
     }
     
+    public MovementType getMovementTypeOfStand() {
+    	return getManuallyControlledStand() == null ? MovementType.FLYING : getManuallyControlledStand().getMovementType();
+    }
+    
     @Nullable
     public StandEntity getManuallyControlledStand() {
         if (isControllingStand()) {
@@ -91,14 +96,13 @@ public class ControllerStand {
         }
         return null;
     }
-    
-    
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void onInputUpdate(InputUpdateEvent event) {
         if (isControllingStand()) {
             MovementInput input = event.getMovementInput();
-            stand.moveStandManually(input.leftImpulse, input.forwardImpulse, input.jumping, input.shiftKeyDown);
+            MovementType movementType = getMovementTypeOfStand();
+            stand.moveStandManually(input.leftImpulse, input.forwardImpulse, input.jumping, input.shiftKeyDown, movementType);
             // FIXME do not reset deltaMovement in manual control
             PacketManager.sendToServer(new ClStandManualMovementPacket(
                     stand.getX(), stand.getY(), stand.getZ(), stand.xRot, stand.yRot, stand.hadInput()));
@@ -118,7 +122,7 @@ public class ControllerStand {
     
     @SubscribeEvent(priority = EventPriority.LOW)
     public void onMouseScroll(InputEvent.MouseScrollEvent event) {
-        if (isControllingStand()) {
+        if (isControllingStand() && getMovementTypeOfStand() == MovementType.FLYING) {
             stand.manualMovementSpeed = MathHelper.clamp(stand.manualMovementSpeed + 0.025f * (float) event.getScrollDelta(), 0, 1);
         }
     }

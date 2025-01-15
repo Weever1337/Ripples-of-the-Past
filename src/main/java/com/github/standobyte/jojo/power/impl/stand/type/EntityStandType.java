@@ -38,6 +38,7 @@ public class EntityStandType<T extends StandStats> extends StandType<T> {
     private Supplier<? extends StandEntityType<? extends StandEntity>> entityTypeSupplier = null;
     private final boolean manualControlEnabled;
     private final boolean standLeapEnabled;
+    private final MovementType movementType;
     private Optional<StandAction> finisherPunch = Optional.empty();
     
     @Deprecated
@@ -47,19 +48,20 @@ public class EntityStandType<T extends StandStats> extends StandType<T> {
         super(color, partName, attacks, abilities, abilities.length > 0 ? abilities[0] : null, statsClass, defaultStats, additions);
         manualControlEnabled = true;
         standLeapEnabled = true;
+        movementType = MovementType.FLYING;
     }
     
     protected EntityStandType(EntityStandType.AbstractBuilder<?, T> builder) {
         super(builder);
         this.manualControlEnabled = builder.manualControlEnabled;
         this.standLeapEnabled = builder.standLeapEnabled;
+        this.movementType = builder.movementType;
     }
-    
-    
     
     public static abstract class AbstractBuilder<B extends AbstractBuilder<B, T>, T extends StandStats> extends StandType.AbstractBuilder<B, T> {
         private boolean manualControlEnabled = true;
         private boolean standLeapEnabled = true;
+        private MovementType movementType = MovementType.FLYING;
         
         public B disableManualControl() {
             this.manualControlEnabled = false;
@@ -69,6 +71,11 @@ public class EntityStandType<T extends StandStats> extends StandType<T> {
         public B disableStandLeap() {
             this.standLeapEnabled = false;
             return getThis();
+        }
+        
+        public B setMovementType(MovementType movementType) {
+        	this.movementType = movementType;
+        	return getThis();
         }
         
         @Override
@@ -97,7 +104,10 @@ public class EntityStandType<T extends StandStats> extends StandType<T> {
         
     }
     
-    
+    public enum MovementType {
+    	FLYING, // like all stands already. by default
+    	WALKING
+    }
     
     @Override
     public void onCommonSetup() {
@@ -285,6 +295,11 @@ public class EntityStandType<T extends StandStats> extends StandType<T> {
     @Override
     public boolean canLeap() {
         return standLeapEnabled;
+    }
+    
+    @Override
+    public MovementType getMovementType() {
+    	return movementType;
     }
 
     @Override

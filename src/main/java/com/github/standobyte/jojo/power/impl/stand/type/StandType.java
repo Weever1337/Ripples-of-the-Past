@@ -30,6 +30,7 @@ import com.github.standobyte.jojo.power.impl.stand.IStandManifestation;
 import com.github.standobyte.jojo.power.impl.stand.IStandPower;
 import com.github.standobyte.jojo.power.impl.stand.StandUtil;
 import com.github.standobyte.jojo.power.impl.stand.stats.StandStats;
+import com.github.standobyte.jojo.power.impl.stand.type.EntityStandType.MovementType;
 import com.github.standobyte.jojo.util.mc.MCUtil;
 import com.github.standobyte.jojo.util.mc.OstSoundList;
 import com.github.standobyte.jojo.util.mc.damage.IStandDamageSource;
@@ -423,6 +424,10 @@ public abstract class StandType<T extends StandStats> extends ForgeRegistryEntry
     
     public boolean canLeap() {
         return false;
+    }
+    
+    public MovementType getMovementType() {
+        return MovementType.FLYING;
     }
     
     @Nullable

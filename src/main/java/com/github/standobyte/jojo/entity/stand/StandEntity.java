@@ -50,6 +50,7 @@ import com.github.standobyte.jojo.power.impl.stand.IStandPower;
 import com.github.standobyte.jojo.power.impl.stand.StandInstance;
 import com.github.standobyte.jojo.power.impl.stand.StandUtil;
 import com.github.standobyte.jojo.power.impl.stand.stats.StandStats;
+import com.github.standobyte.jojo.power.impl.stand.type.EntityStandType.MovementType;
 import com.github.standobyte.jojo.util.general.GeneralUtil;
 import com.github.standobyte.jojo.util.general.MathUtil;
 import com.github.standobyte.jojo.util.mc.MCUtil;
@@ -319,11 +320,11 @@ public class StandEntity extends LivingEntity implements IStandManifestation, IE
     }
 
     public boolean standCanHaveNoPhysics() {
-        return true;
+        return getMovementType() == MovementType.FLYING;
     }
 
     public boolean standHasNoGravity() {
-        return true;
+        return getMovementType() == MovementType.FLYING;
     }
 
 
@@ -2075,6 +2076,13 @@ public class StandEntity extends LivingEntity implements IStandManifestation, IE
         return rangeEfficiency;
     }
     
+    public MovementType getMovementType() {
+    	if (this.getUserPower() != null) {
+    		return this.getUserPower().getType().getMovementType();
+    	}
+    	return MovementType.FLYING;
+    }
+    
 
     @Deprecated
     public BarrageSwingsHolder<?, ?> getBarrageSwingsHolder() {
@@ -2197,7 +2205,10 @@ public class StandEntity extends LivingEntity implements IStandManifestation, IE
     }
 
     protected boolean shouldHaveNoPhysics() {
-        return standCanHaveNoPhysics() && !isManuallyControlled() && !isRemotePositionFixed();
+    	if (getMovementType() == MovementType.FLYING) {
+    		return standCanHaveNoPhysics() && !isManuallyControlled() && !isRemotePositionFixed();
+    	}
+    	return standCanHaveNoPhysics();
     }
     
     public ActionConditionResult canBeManuallyControlled() {
@@ -2253,34 +2264,75 @@ public class StandEntity extends LivingEntity implements IStandManifestation, IE
 
     private boolean prevTickInput = false;
     public float manualMovementSpeed = 1;
-    public void moveStandManually(float strafe, float forward, boolean jumping, boolean sneaking) {
-        if (isManuallyControlled() && canMoveManually()) {
-            strafe = manualMovementLocks.strafe(strafe);
-            forward = manualMovementLocks.forward(forward);
-            jumping = manualMovementLocks.up(jumping);
-            sneaking = manualMovementLocks.down(sneaking);
-            boolean input = jumping || sneaking || forward != 0 || strafe != 0;
-            if (input) {
-                double speed = getAttributeValue(Attributes.MOVEMENT_SPEED);
-                double y = jumping ? speed : 0;
-                if (sneaking) {
-                    y -= speed;
-                    strafe *= 0.5;
-                    forward *= 0.5;
-                }
-                if (!prevTickInput) {
-                    setDeltaMovement(Vector3d.ZERO);
-                }
-                else {
-                    Vector3d motion = getAbsoluteMotion(new Vector3d((double)strafe, y, (double)forward), speed, this.yRot)
-                            .scale(getUserWalkSpeed() * manualMovementSpeed);
-                    setDeltaMovement(motion);
-                }
-            }
-            else if (prevTickInput) {
-                setDeltaMovement(Vector3d.ZERO);
-            }
-            prevTickInput = input;
+    public void moveStandManually(float strafe, float forward, boolean jumping, boolean sneaking, MovementType movementType) {
+        if (!isManuallyControlled() || !canMoveManually()) return;
+        boolean input;
+        double speed = getAttributeValue(Attributes.MOVEMENT_SPEED);
+        
+        switch (movementType) {
+        	case FLYING:
+		        strafe = manualMovementLocks.strafe(strafe);
+		        forward = manualMovementLocks.forward(forward);
+		        jumping = manualMovementLocks.up(jumping);
+		        sneaking = manualMovementLocks.down(sneaking);
+		        input = jumping || sneaking || forward != 0 || strafe != 0;
+		        if (input) {
+		            double y = jumping ? speed : 0;
+		            if (sneaking) {
+		                y -= speed;
+		                strafe *= 0.5;
+		                forward *= 0.5;
+		            }
+		            if (!prevTickInput) {
+		                setDeltaMovement(Vector3d.ZERO);
+		            } else {
+		                Vector3d motion = getAbsoluteMotion(new Vector3d(strafe, y, forward), speed, this.yRot)
+		                        .scale(getUserWalkSpeed() * manualMovementSpeed);
+		                setDeltaMovement(motion);
+		            }
+		        }
+		        else if (prevTickInput) {
+		            setDeltaMovement(Vector3d.ZERO);
+		        }
+		        prevTickInput = input;
+		        break;
+        	case WALKING:
+        	    strafe = this.manualMovementLocks.strafe(strafe);
+        	    forward = this.manualMovementLocks.forward(forward);
+		        jumping = this.manualMovementLocks.up(jumping);
+        	    sneaking = this.manualMovementLocks.down(sneaking);
+        	    boolean onGround = this.isOnGround();
+
+        	    input = jumping || sneaking || forward != 0.0F || strafe != 0.0F;
+
+        	    if (input) {
+        	        double movementSpeed = this.getAttributeValue(Attributes.MOVEMENT_SPEED);
+
+        	        if (sneaking) {
+        	            movementSpeed *= 0.3;
+        	        }
+
+        	        Vector3d motion = getAbsoluteMotion(new Vector3d(strafe, 0.0, forward), movementSpeed, this.yRot);
+
+        	        if (jumping && onGround) {
+                        System.out.println("a: " + motion);
+        	            motion = motion.add(0, 0.8, 0); // короче чел может зависнуть в воздухе на похуй
+                        System.out.println("b: " + motion);
+        	        }
+
+        	        this.setDeltaMovement(motion);
+        	        this.move(MoverType.SELF, this.getDeltaMovement());
+
+        	        BlockState blockState = this.level.getBlockState(this.blockPosition());
+        	        float slipperiness = blockState.getBlock().getFriction();
+        	        float friction = onGround ? slipperiness * 0.91F : 0.91F;
+        	        this.setDeltaMovement(this.getDeltaMovement().multiply(friction, 1.0, friction));
+        	    }
+
+        	    this.prevTickInput = input;
+        	    break;
+        	default:
+        		throw new IllegalStateException("Movement Type " + movementType.name() + " is not implemented.");
         }
     }
     
@@ -2307,6 +2359,11 @@ public class StandEntity extends LivingEntity implements IStandManifestation, IE
     public ManualStandMovementLock getManualMovementLocks() {
         return manualMovementLocks;
     }
+    
+    @Override
+    public boolean isOnGround() {
+    	return super.isOnGround();
+    }
 
     @Override
     public void move(MoverType type, Vector3d vec) {
@@ -2318,7 +2375,18 @@ public class StandEntity extends LivingEntity implements IStandManifestation, IE
             rangeSq *= rangeSq;
             if (distanceSqr > rangeSq) {
                 Vector3d vecToUser = user.position().subtract(position()).scale(1 - rangeSq / distanceSqr);
-                moveWithoutCollision(vecToUser);
+                switch (this.getMovementType()) {
+                    case FLYING:
+                        moveWithoutCollision(vecToUser);
+                        break;
+                    case WALKING:
+                        if (!level.isClientSide()) {
+                            setDeltaMovement(vecToUser); // TODO rework this shit
+                        }
+                        break;
+                    default:
+                        throw new IllegalStateException("Movement Type " + this.getMovementType().name() + " is not implemented.");
+                }
             }
             if (!level.isClientSide() && isManuallyControlled() && distanceSqr > 728 && user instanceof PlayerEntity) {
                 double horizontalDistSqr = distanceSqr - Math.pow(getY() - user.getY(), 2);
